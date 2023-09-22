@@ -157,8 +157,8 @@ evr #(
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
     .DEBUG("false"),
     .DEBUG_MGT("false"),
-    .DEBUG_EVR("true"),
-    .DEBUG_EVG("true"))
+    .DEBUG_EVR("false"),
+    .DEBUG_EVG("false"))
   evr (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MGT_CSR]),
