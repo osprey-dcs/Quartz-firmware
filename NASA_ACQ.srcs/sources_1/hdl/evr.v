@@ -124,7 +124,8 @@ always @(posedge acqClk) begin
     acqPPSmarker   <= acqPPSmarker_m;
     acqPPSmarker_d <= acqPPSmarker;
     if (acqPPSmarker && !acqPPSmarker_d) begin
-        acqTimestamp[32+:32] <= evrTimestamp[32:+32];
+        /* evrTimestamp seconds known to be stable */
+        acqTimestamp[32+:32] <= evrTimestamp[32+:32];
         acqTimestamp[0+:32] <= 0;
         acqPPSstrobe <= 1;
     end
