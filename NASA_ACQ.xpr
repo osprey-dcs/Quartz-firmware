@@ -100,6 +100,27 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_uartlite_0_0/bd_axi_uartlite_0_0.xci">
+          <Proxy FileSetName="bd_axi_uartlite_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
+          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_xadc_wiz_0_0/bd_xadc_wiz_0_0.xci">
+          <Proxy FileSetName="bd_xadc_wiz_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_iic_0_0/bd_axi_iic_0_0.xci">
+          <Proxy FileSetName="bd_axi_iic_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci">
+          <Proxy FileSetName="bd_marbleBootFlash_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci">
+          <Proxy FileSetName="bd_ospreyUDP_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci">
+          <Proxy FileSetName="bd_axi_lite_generic_reg_0_0"/>
+        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_0/bd_microblaze_0_0.xci">
           <Proxy FileSetName="bd_microblaze_0_0"/>
         </CompFileExtendedInfo>
@@ -132,27 +153,6 @@
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_rst_clk_wiz_1_100M_0/bd_rst_clk_wiz_1_100M_0.xci">
           <Proxy FileSetName="bd_rst_clk_wiz_1_100M_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_uartlite_0_0/bd_axi_uartlite_0_0.xci">
-          <Proxy FileSetName="bd_axi_uartlite_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
-          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_xadc_wiz_0_0/bd_xadc_wiz_0_0.xci">
-          <Proxy FileSetName="bd_xadc_wiz_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_iic_0_0/bd_axi_iic_0_0.xci">
-          <Proxy FileSetName="bd_axi_iic_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci">
-          <Proxy FileSetName="bd_marbleBootFlash_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci">
-          <Proxy FileSetName="bd_ospreyUDP_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci">
-          <Proxy FileSetName="bd_axi_lite_generic_reg_0_0"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/ad7768.v">
