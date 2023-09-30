@@ -157,8 +157,8 @@ mgtWrapper #(
     .mgtRxIsComma(rxCharIsComma),
     .mgtLinksUp(linkStatus),
     .mgtTxClk(mgtTxClk),
-    .mgtTxChars(txChars),
-    .mgtTxIsComma(txCharIsComma));
+    .mgtTxChars({MGT_COUNT{txChars}}),
+    .mgtTxIsComma({MGT_COUNT{txCharIsComma}}));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Dummy event generator for testing

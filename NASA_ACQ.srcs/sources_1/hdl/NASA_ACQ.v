@@ -66,10 +66,10 @@ module NASA_ACQ #(
     output wire [3:0] RGMII_TXD,
     output wire       RGMII_PHY_RESET_n,
 
-    input  wire [0:0] QSFP_RX_P,
-    input  wire [0:0] QSFP_RX_N,
-    output wire [0:0] QSFP_TX_P,
-    output wire [0:0] QSFP_TX_N,
+    input  wire [CFG_MGT_COUNT-1:0] QSFP_RX_P,
+    input  wire [CFG_MGT_COUNT-1:0] QSFP_RX_N,
+    output wire [CFG_MGT_COUNT-1:0] QSFP_TX_P,
+    output wire [CFG_MGT_COUNT-1:0] QSFP_TX_N,
 
     input  wire PMOD1_0,
     input  wire PMOD1_1,

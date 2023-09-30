@@ -214,29 +214,57 @@ set_property -dict {PACKAGE_PIN E4} [get_ports {QSFP_RX_P[0]}]
 set_property -dict {PACKAGE_PIN E3} [get_ports {QSFP_RX_N[0]}]
 set_property -dict {PACKAGE_PIN D2} [get_ports {QSFP_TX_P[0]}]
 set_property -dict {PACKAGE_PIN D1} [get_ports {QSFP_TX_N[0]}]
-#Q## QSFP1-1 (Fibers 2/11), Bank 116 MGT 2, X0Y6
-#Q#set_property -dict {PACKAGE_PIN C4} [get_ports {QSFP_RX_P[1]}]
-#Q#set_property -dict {PACKAGE_PIN C3} [get_ports {QSFP_RX_N[1]}]
-#Q#set_property -dict {PACKAGE_PIN B2} [get_ports {QSFP_TX_P[1]}]
-#Q#set_property -dict {PACKAGE_PIN B1} [get_ports {QSFP_TX_N[1]}]
-#Q## QSFP1-2 (Fibers 3/10), Bank 116 MGT 3, X0Y7
-#Q##set_property -dict {PACKAGE_PIN B6} [get_ports {QSFP_RX_P[2]}]
-#Q##set_property -dict {PACKAGE_PIN B5} [get_ports {QSFP_RX_N[2]}]
-#Q##set_property -dict {PACKAGE_PIN A4} [get_ports {QSFP_TX_P[2]}]
-#Q##set_property -dict {PACKAGE_PIN A3} [get_ports {QSFP_TX_N[2]}]
-#Q## QSFP1-3 (Fibers 4/9), Bank 116 MGT 0, X0Y4
-#Q##set_property -dict {PACKAGE_PIN G4} [get_ports {QSFP_RX_P[3]}]
-#Q##set_property -dict {PACKAGE_PIN G3} [get_ports {QSFP_RX_N[3]}]
-#Q##set_property -dict {PACKAGE_PIN F2} [get_ports {QSFP_TX_P[3]}]
-#Q##set_property -dict {PACKAGE_PIN F1} [get_ports {QSFP_TX_N[3]}]
+# QSFP1-1 (Fibers 2/11), Bank 116 MGT 2, X0Y6
+set_property -dict {PACKAGE_PIN C4} [get_ports {QSFP_RX_P[1]}]
+set_property -dict {PACKAGE_PIN C3} [get_ports {QSFP_RX_N[1]}]
+set_property -dict {PACKAGE_PIN B2} [get_ports {QSFP_TX_P[1]}]
+set_property -dict {PACKAGE_PIN B1} [get_ports {QSFP_TX_N[1]}]
+# QSFP1-2 (Fibers 3/10), Bank 116 MGT 3, X0Y7
+#set_property -dict {PACKAGE_PIN B6} [get_ports {QSFP_RX_P[2]}]
+#set_property -dict {PACKAGE_PIN B5} [get_ports {QSFP_RX_N[2]}]
+#set_property -dict {PACKAGE_PIN A4} [get_ports {QSFP_TX_P[2]}]
+#set_property -dict {PACKAGE_PIN A3} [get_ports {QSFP_TX_N[2]}]
+# QSFP1-3 (Fibers 4/9), Bank 116 MGT 0, X0Y4
+#set_property -dict {PACKAGE_PIN G4} [get_ports {QSFP_RX_P[3]}]
+#set_property -dict {PACKAGE_PIN G3} [get_ports {QSFP_RX_N[3]}]
+#set_property -dict {PACKAGE_PIN F2} [get_ports {QSFP_TX_P[3]}]
+#set_property -dict {PACKAGE_PIN F1} [get_ports {QSFP_TX_N[3]}]
 # Bank 116, reference clock 0
 set_property -dict {PACKAGE_PIN D6} [get_ports MGTREFCLK0_116_P]
 set_property -dict {PACKAGE_PIN D5} [get_ports MGTREFCLK0_116_N]
 create_clock -period 8.000 -name MGT_REFCLK0 [get_ports MGTREFCLK0_116_P]
-#Q## Bank 116, reference clock 1
-#Q#set_property -dict {PACKAGE_PIN F6} [get_ports MGTREFCLK1_116_P]
-#Q#set_property -dict {PACKAGE_PIN F5} [get_ports MGTREFCLK1_116_N]
-#Q#create_clock -period 6.400 -name MGT_REFCLK1 [get_ports MGTREFCLK1_116_P]
+# Bank 116, reference clock 1
+#set_property -dict {PACKAGE_PIN F6} [get_ports MGTREFCLK1_116_P]
+#set_property -dict {PACKAGE_PIN F5} [get_ports MGTREFCLK1_116_N]
+#create_clock -period 6.400 -name MGT_REFCLK1 [get_ports MGTREFCLK1_116_P]
+# QSFP2-0 (Fibers 1/12), Bank 115 MGT 1, X0Y0
+set_property -dict {PACKAGE_PIN R4} [get_ports {QSFP_RX_P[4]}]
+set_property -dict {PACKAGE_PIN R3} [get_ports {QSFP_RX_N[4]}]
+set_property -dict {PACKAGE_PIN P2} [get_ports {QSFP_TX_P[4]}]
+set_property -dict {PACKAGE_PIN P1} [get_ports {QSFP_TX_N[4]}]
+# QSFP2-1 (Fibers 2/11), Bank 115 MGT 2, X0Y1
+set_property -dict {PACKAGE_PIN N4} [get_ports {QSFP_RX_P[5]}]
+set_property -dict {PACKAGE_PIN N3} [get_ports {QSFP_RX_N[5]}]
+set_property -dict {PACKAGE_PIN M2} [get_ports {QSFP_TX_P[5]}]
+set_property -dict {PACKAGE_PIN M1} [get_ports {QSFP_TX_N[5]}]
+# QSFP2-2 (Fibers 3/10), Bank 115 MGT 3, X0Y2
+#set_property -dict {PACKAGE_PIN L4} [get_ports {QSFP_RX_P[6]}]
+#set_property -dict {PACKAGE_PIN L3} [get_ports {QSFP_RX_N[6]}]
+#set_property -dict {PACKAGE_PIN K2} [get_ports {QSFP_TX_P[6]}]
+#set_property -dict {PACKAGE_PIN K1} [get_ports {QSFP_TX_N[6]}]
+# QSFP2-3 (Fibers 4/9), Bank 115 MGT 0, X0Y3
+#set_property -dict {PACKAGE_PIN J4} [get_ports {QSFP_RX_P[7]}]
+#set_property -dict {PACKAGE_PIN J3} [get_ports {QSFP_RX_N[7]}]
+#set_property -dict {PACKAGE_PIN H2} [get_ports {QSFP_TX_P[7]}]
+#set_property -dict {PACKAGE_PIN H1} [get_ports {QSFP_TX_N[7]}]
+# Bank 115, reference clock 0
+#set_property -dict {PACKAGE_PIN H6} [get_ports MGTREFCLK0_115_P]
+#set_property -dict {PACKAGE_PIN H5} [get_ports MGTREFCLK0_115_N]
+#create_clock -period 8.000 -name MGT_REFCLK2 [get_ports MGTREFCLK0_115_P]
+# Bank 115, reference clock 1
+#set_property -dict {PACKAGE_PIN K6} [get_ports MGTREFCLK1_156_P]
+#set_property -dict {PACKAGE_PIN K5} [get_ports MGTREFCLK1_115_N]
+#create_clock -period 6.400 -name MGT_REFCLK3 [get_ports MGTREFCLK1_115_P]
 
 # Miscellaneous
 # Bank 0 setup
