@@ -508,7 +508,7 @@ MGT MGT_i (
     .gt4_txoutclkfabric_out         (), // output wire gt4_txoutclkfabric_out
     .gt4_txoutclkpcs_out            (), // output wire gt4_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt4_txcharisk_in               (txCharIsK[0]), // input wire [1:0] gt4_txcharisk_in
+    .gt4_txcharisk_in               (txCharIsK[3]), // input wire [1:0] gt4_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt4_txresetdone_out            (), // output wire gt4_txresetdone_out
 
@@ -595,7 +595,7 @@ MGT MGT_i (
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt6_gtxrxp_in                  (rxP[1]), // input wire gt6_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
-    .gt6_gtxrxn_in                  (rxN[0]), // input wire gt6_gtxrxn_in
+    .gt6_gtxrxn_in                  (rxN[1]), // input wire gt6_gtxrxn_in
     //----------------- Receive Ports - RX Buffer Bypass Ports -----------------
     .gt6_rxphmonitor_out            (), // output wire [4:0] gt6_rxphmonitor_out
     .gt6_rxphslipmonitor_out        (), // output wire [4:0] gt6_rxphslipmonitor_out
