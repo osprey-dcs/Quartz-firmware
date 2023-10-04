@@ -74,3 +74,5 @@ set_property -dict {PACKAGE_PIN L17 IOSTANDARD LVCMOS25} [get_ports {AD7768_MODE
 set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS25} [get_ports AD7768_FILTER]
 
 
+
+

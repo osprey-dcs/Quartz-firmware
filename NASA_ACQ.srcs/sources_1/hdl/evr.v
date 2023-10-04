@@ -47,6 +47,7 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
     (*MARK_DEBUG=DEBUG*) input  wire                       evgPPSmarker_a,
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
+                         output reg                        evgActive = 0,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
@@ -54,26 +55,31 @@ module evr #(
 
     input  wire                 refClkP,
     input  wire                 refClkN,
+input  wire                 refClkFOOP,
+input  wire                 refClkFOON,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN);
 
-wire mgtTxClk;
-wire [15:0] txChars;
-wire        txCharIsComma;
+localparam MGT_DATA_WIDTH = 16;
+localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
+
+wire                      mgtTxClk;
+wire [MGT_DATA_WIDTH-1:0] txChars;
+wire [MGT_BYTE_COUNT-1:0] txCharIsK;
+wire                      mgtRxClk;
+wire [MGT_DATA_WIDTH-1:0] rxChars;
+wire [MGT_BYTE_COUNT-1:0] rxCharIsK;
 
 wire mgtRxPPSmarker = 0;
 wire [63:0] mgtRxTimestamp;
-wire [MGT_COUNT-1:0] linkStatus;
-wire                 evrTimestampValid;
-assign sysLinkStatus = { evrTimestampValid, {32-1-MGT_COUNT{1'b0}}, linkStatus};
+wire linkStatus;
+wire evrTimestampValid;
+assign sysLinkStatus = { evrTimestampValid, {30{1'b0}}, linkStatus};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the tiny event receiver
-wire mgtRxClk;
-wire [15:0] rxChars;
-wire        rxCharIsComma;
 wire [TIMESTAMP_WIDTH-1:0] evrTimestamp;
 wire                       evrPPSstrobe;
 tinyEVR #(
@@ -82,7 +88,7 @@ tinyEVR #(
   tinyEVR_i (
     .evrRxClk(mgtRxClk),
     .evrRxWord(rxChars),
-    .evrCharIsK({1'b0, rxCharIsComma}),
+    .evrCharIsK(rxCharIsK),
     .ppsMarker(evrPPSstrobe),
     .timestampValid(evrTimestampValid),
     .timestamp(evrTimestamp),
@@ -148,20 +154,23 @@ mgtWrapper #(
     .sysStatus(sysStatus),
     .refClkP(refClkP),
     .refClkN(refClkN),
+.refClkFOOP(refClkFOOP),
+.refClkFOON(refClkFOON),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),
     .txN(txN),
     .mgtRxClk(mgtRxClk),
     .mgtRxChars(rxChars),
-    .mgtRxIsComma(rxCharIsComma),
-    .mgtLinksUp(linkStatus),
+    .mgtRxIsK(rxCharIsK),
+    .mgtLinkUp(linkStatus),
     .mgtTxClk(mgtTxClk),
-    .mgtTxChars({MGT_COUNT{txChars}}),
-    .mgtTxIsComma({MGT_COUNT{txCharIsComma}}));
+    .mgtTxChars(txChars),
+    .mgtTxIsK(txCharIsK));
 
 ///////////////////////////////////////////////////////////////////////////////
-// Dummy event generator for testing
+// Minimal event generator
+// Heartbeat and PPS events only.
 localparam EVG_PPS_TOOSLOW_RELOAD = ((EVG_CLK_RATE / 100) * 101) - 2;
 localparam EVG_PPS_TOOFAST_RELOAD = ((EVG_CLK_RATE / 100) * 99) - 2;
 localparam EVG_PPS_COUNTER_WIDTH = $clog2(EVG_PPS_TOOSLOW_RELOAD+1) + 1;
@@ -174,7 +183,8 @@ wire ppsTooFast = !ppsTooFastCounter[EVG_PPS_COUNTER_WIDTH-1];
 (*MARK_DEBUG=DEBUG_EVG*) reg ppsValid = 0, secondsValid = 0;
 
 reg sysEVG_PPStoggle = 0;
-assign sysEVGstatus = {sysEVG_PPStoggle, {29{1'b0}}, secondsValid, ppsValid};
+assign sysEVGstatus = {sysEVG_PPStoggle, {28{1'b0}},
+                       evgActive, secondsValid, ppsValid};
 localparam HEARTBEAT_INTERVAL= 124800000;
 localparam HEARTBEAT_RELOAD = HEARTBEAT_INTERVAL - 2;
 localparam HEARTBEAT_COUNTER_WIDTH = $clog2(HEARTBEAT_RELOAD+1)+1;
@@ -188,8 +198,11 @@ reg txSecondsToggle = 0, txSecondsToggle_d = 0;
 reg txPPSmarker = 0, txPPSmarker_d = 0;
 always @(posedge sysClk) begin
     if (sysEVGsetTimeStrobe) begin
-        sysSeconds <= sysGPIO_OUT;
-        sysSecondsToggle <= !sysSecondsToggle;
+        evgActive <= 1;
+        if (sysGPIO_OUT != 0) begin
+            sysSeconds <= sysGPIO_OUT;
+            sysSecondsToggle <= !sysSecondsToggle;
+        end
     end
 end
 always @(posedge mgtTxClk) begin
@@ -236,13 +249,11 @@ always @(posedge mgtTxClk) begin
         end
     end
 end
-wire [1:0] evgTxIsK;
-assign txCharIsComma = evgTxIsK[0];
 tinyEVG #(.DEBUG(DEBUG_EVG))
   tinyEVG (
     .evgTxClk(mgtTxClk),
     .evgTxWord(txChars),
-    .evgTxIsK(evgTxIsK),
+    .evgTxIsK(txCharIsK),
     .eventCode(8'h00),
     .eventStrobe(1'b0),
     .heartbeatRequest(heartbeatCounterDone),

@@ -35,6 +35,8 @@ module NASA_ACQ #(
     input  wire DDR_REF_CLK_N,
     input  wire MGTREFCLK0_116_P,
     input  wire MGTREFCLK0_116_N,
+input  wire MGTREFCLK0_115_P,
+input  wire MGTREFCLK0_115_N,
     output wire VCXO_EN,
 
     output wire BOOT_CS_B,
@@ -96,6 +98,7 @@ module NASA_ACQ #(
     input  wire                           [3:0] AD7768_MODE,
     input  wire                                 AD7768_FILTER,
 
+    // FIXME: This will be removed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
     input  wire PMOD2_0, // PMOD-GPS 3D-Fix (unused)
     input  wire PMOD2_1, // PMOD-GPS RxData (actually an output, but unused)
@@ -151,12 +154,13 @@ localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrPPSmarker;
+wire evgActive;
 evr #(
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
-    .DEBUG("false"),
-    .DEBUG_MGT("false"),
+    .DEBUG("true"),
+    .DEBUG_MGT("true"),
     .DEBUG_EVR("false"),
     .DEBUG_EVG("false"))
   evr (
@@ -169,18 +173,22 @@ evr #(
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evgPPSmarker_a(PMOD2_3),
     .evrPPSmarker(evrPPSmarker),
+    .evgActive(evgActive),
     .sysTimestamp(sysTimestamp),
     .acqClk(clk125),
     .acqTimestamp(acqTimestamp),
     .acqPPSstrobe(acqPPSstrobe),
     .refClkP(MGTREFCLK0_116_P),
     .refClkN(MGTREFCLK0_116_N),
+.refClkFOOP(MGTREFCLK0_115_P),
+.refClkFOON(MGTREFCLK0_115_N),
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
     .txN(QSFP_TX_N));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
+wire ppsMarker_a = evgActive ? PMOD2_3 : evrPPSmarker;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Lock clock to PPS marker
@@ -200,7 +208,7 @@ marbleClockSync #(
     .clk(clk125),
     .enable_a(pllEnable),
     .status(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
-    .ppsMarker_a(evrPPSmarker),
+    .ppsMarker_a(ppsMarker_a),
     .ppsStrobe(),
     .SPI_CLK(WR_DAC_SCLK_T),
     .SPI_SYNCn(WR_DAC1_SYNC_Tn),
@@ -220,7 +228,7 @@ frequencyCounters #(
     .measuredClocks({ clk32,
                       clk125,
                       sysClk }),
-    .acqMarker_a(evrPPSmarker),
+    .acqMarker_a(ppsMarker_a),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
     .channelSelect(frequencyChannelSelect),
     .frequency(measuredFrequency));

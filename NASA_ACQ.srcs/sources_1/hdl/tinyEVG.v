@@ -130,12 +130,12 @@ always @(posedge evgTxClk) begin
         secondsReg <= seconds;
         haveSeconds <= 1;
     end
+    else if (ppsStrobe) begin
+        secondsReg <= secondsReg + 1;
+    end
 
     // Make note of a PPS request
     if (ppsStrobe) begin
-        if (!secondsStrobe) begin
-            secondsReg <= secondsReg + 1;
-        end
         if (!ppsPending) begin
             ppsPending <= 1;
         end
