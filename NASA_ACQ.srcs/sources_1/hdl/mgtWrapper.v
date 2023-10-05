@@ -45,6 +45,7 @@ input  wire                 refClkFOON,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN,
+    output wire                 gtRefClkDiv2,
 
     output wire                                               mgtRxClk,
     (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] mgtRxChars,
@@ -54,7 +55,6 @@ input  wire                 refClkFOON,
     (*MARK_DEBUG=DEBUG*) input  wire     [MGT_DATA_WIDTH-1:0] mgtTxChars,
     (*MARK_DEBUG=DEBUG*) input  wire [(MGT_DATA_WIDTH/8)-1:0] mgtTxIsK);
 
-(*MARK_DEBUG=DEBUG*)reg tog5 = 0 ; always @(posedge mgtTxClk) begin tog5 <= !tog5; end // FIXME
 localparam MGT_STATUS_WIDTH = 4;
 localparam MGT_SEL_WIDTH = MGT_COUNT > 1 ? $clog2(MGT_COUNT) : 1;
 localparam MGT_BYTE_COUNT = MGT_DATA_WIDTH / 8;
@@ -66,12 +66,9 @@ reg [MGT_SEL_WIDTH-1:0] mgtSel;
 wire [MGT_STATUS_WIDTH-1:0] mgtStatus[0:MGT_COUNT-1];
 reg  [MGT_STATUS_WIDTH-1:0] mgtStatusMux;
 // Attachment points for internal logic analyzer
-genvar i;
-generate
-for (i = 0 ; i < MGT_COUNT ; i = i + 1) begin : mgtStat
+genvar i; generate for (i = 0 ; i < MGT_COUNT ; i = i + 1) begin : mgtStat
     (*MARK_DEBUG=DEBUG*) wire [MGT_STATUS_WIDTH-1:0] status = mgtStatus[i];
-end
-endgenerate
+end endgenerate
 
 /*
  * Dynamic reconfiguration port
@@ -159,7 +156,7 @@ BUFG rxoutclk_bufg(.I(rxoutclk_out), .O(mgtRxClk));
 wire bank116MgtRefClk;
 IBUFDS_GTE2 ibufds_gte2 (
     .O    (bank116MgtRefClk),
-    .ODIV2(),
+    .ODIV2(gtRefClkDiv2),
     .CEB  (1'b0),
     .I    (refClkP),
     .IB   (refClkN));

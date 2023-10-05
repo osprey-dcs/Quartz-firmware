@@ -155,6 +155,7 @@ wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrPPSmarker;
 wire evgActive;
+wire gtRefClkDiv2;
 evr #(
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
@@ -185,7 +186,8 @@ evr #(
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
-    .txN(QSFP_TX_N));
+    .txN(QSFP_TX_N),
+    .gtRefClkDiv2(gtRefClkDiv2));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
 wire ppsMarker_a = evgActive ? PMOD2_3 : evrPPSmarker;
@@ -222,10 +224,11 @@ wire measuredUsingInteralAcqMarker;
 reg [1:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(3))
+    .CHANNEL_COUNT(4))
   frequencyCounters (
     .clk(sysClk),
-    .measuredClocks({ clk32,
+    .measuredClocks({ gtRefClkDiv2,
+                      clk32,
                       clk125,
                       sysClk }),
     .acqMarker_a(ppsMarker_a),

@@ -60,7 +60,8 @@ input  wire                 refClkFOON,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
-    output wire [MGT_COUNT-1:0] txN);
+    output wire [MGT_COUNT-1:0] txN,
+    output wire                 gtRefClkDiv2);
 
 localparam MGT_DATA_WIDTH = 16;
 localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
@@ -160,6 +161,7 @@ mgtWrapper #(
     .rxN(rxN),
     .txP(txP),
     .txN(txN),
+    .gtRefClkDiv2(gtRefClkDiv2),
     .mgtRxClk(mgtRxClk),
     .mgtRxChars(rxChars),
     .mgtRxIsK(rxCharIsK),
