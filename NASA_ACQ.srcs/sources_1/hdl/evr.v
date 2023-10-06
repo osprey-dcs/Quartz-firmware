@@ -55,8 +55,6 @@ module evr #(
 
     input  wire                 refClkP,
     input  wire                 refClkN,
-input  wire                 refClkFOOP,
-input  wire                 refClkFOON,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
@@ -155,8 +153,6 @@ mgtWrapper #(
     .sysStatus(sysStatus),
     .refClkP(refClkP),
     .refClkN(refClkN),
-.refClkFOOP(refClkFOOP),
-.refClkFOON(refClkFOON),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),

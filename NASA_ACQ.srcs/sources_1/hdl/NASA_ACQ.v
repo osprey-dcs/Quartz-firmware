@@ -35,8 +35,6 @@ module NASA_ACQ #(
     input  wire DDR_REF_CLK_N,
     input  wire MGTREFCLK0_116_P,
     input  wire MGTREFCLK0_116_N,
-input  wire MGTREFCLK0_115_P,
-input  wire MGTREFCLK0_115_N,
     output wire VCXO_EN,
 
     output wire BOOT_CS_B,
@@ -181,8 +179,6 @@ evr #(
     .acqPPSstrobe(acqPPSstrobe),
     .refClkP(MGTREFCLK0_116_P),
     .refClkN(MGTREFCLK0_116_N),
-.refClkFOOP(MGTREFCLK0_115_P),
-.refClkFOON(MGTREFCLK0_115_N),
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
