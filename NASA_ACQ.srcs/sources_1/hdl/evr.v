@@ -53,13 +53,12 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
     (*MARK_DEBUG=DEBUG*) output reg                        acqPPSstrobe,
 
-    input  wire                 refClkP,
-    input  wire                 refClkN,
+    input  wire                 gtRefClk,
+    input  wire                 rxRefClk,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
-    output wire [MGT_COUNT-1:0] txN,
-    output wire                 gtRefClkDiv2);
+    output wire [MGT_COUNT-1:0] txN);
 
 localparam MGT_DATA_WIDTH = 16;
 localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
@@ -151,13 +150,12 @@ mgtWrapper #(
     .sysCsrStrobe(sysCsrStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysStatus),
-    .refClkP(refClkP),
-    .refClkN(refClkN),
+    .gtRefClk(gtRefClk),
+    .rxRefClk(rxRefClk),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),
     .txN(txN),
-    .gtRefClkDiv2(gtRefClkDiv2),
     .mgtRxClk(mgtRxClk),
     .mgtRxChars(rxChars),
     .mgtRxIsK(rxCharIsK),

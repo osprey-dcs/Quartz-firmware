@@ -35,6 +35,8 @@ module NASA_ACQ #(
     input  wire DDR_REF_CLK_N,
     input  wire MGTREFCLK0_116_P,
     input  wire MGTREFCLK0_116_N,
+    input  wire MGTREFCLK1_116_P,
+    input  wire MGTREFCLK1_116_N,
     output wire VCXO_EN,
 
     output wire BOOT_CS_B,
@@ -116,10 +118,18 @@ assign VCXO_EN = 1'b1;
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
 wire sysClk, clk125, clk32;
-
-
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
 
+wire gtRefClk, gtRefClkDiv2;
+IBUFDS_GTE2 gtRefClkBuf (
+    .O(gtRefClk),
+    .ODIV2(gtRefClkDiv2),
+    .CEB(1'b0),
+    .I(MGTREFCLK0_116_P),
+    .IB(MGTREFCLK0_116_N));
+
+wire rxRefClk, rxRefClkDiv2;
+IBUFDS_GTE2 ibufds116_1_gte2 (.O(rxRefClk), .ODIV2(rxRefClkDiv2), .CEB(1'b0), .I(MGTREFCLK1_116_P), .IB(MGTREFCLK1_116_N));
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
 wire [31:0] GPIO_OUT;
@@ -153,7 +163,6 @@ wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrPPSmarker;
 wire evgActive;
-wire gtRefClkDiv2;
 evr #(
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
@@ -177,13 +186,12 @@ evr #(
     .acqClk(clk125),
     .acqTimestamp(acqTimestamp),
     .acqPPSstrobe(acqPPSstrobe),
-    .refClkP(MGTREFCLK0_116_P),
-    .refClkN(MGTREFCLK0_116_N),
+    .gtRefClk(gtRefClk),
+    .rxRefClk(rxRefClk),
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
-    .txN(QSFP_TX_N),
-    .gtRefClkDiv2(gtRefClkDiv2));
+    .txN(QSFP_TX_N));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
 wire ppsMarker_a = evgActive ? PMOD2_3 : evrPPSmarker;
@@ -217,13 +225,14 @@ assign WR_DAC2_SYNC_Tn = 1;
 // Measure clocks
 wire [29:0] measuredFrequency;
 wire measuredUsingInteralAcqMarker;
-reg [1:0] frequencyChannelSelect = 0;
+reg [2:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(4))
+    .CHANNEL_COUNT(5))
   frequencyCounters (
     .clk(sysClk),
-    .measuredClocks({ gtRefClkDiv2,
+    .measuredClocks({ rxRefClkDiv2,
+                      gtRefClkDiv2,
                       clk32,
                       clk125,
                       sysClk }),

@@ -66,7 +66,7 @@
 `timescale 1ns / 1ps
 `define DLY #1
 //***************************** Entity Declaration ****************************
-module mgtCommon116 #
+module MGT_common #
 (
     // Simulation attributes
     parameter   WRAPPER_SIM_GTRESET_SPEEDUP    =   "TRUE",     // Set to "true" to speed up sim reset
