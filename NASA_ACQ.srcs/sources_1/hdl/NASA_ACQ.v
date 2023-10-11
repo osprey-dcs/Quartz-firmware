@@ -117,8 +117,8 @@ assign VCXO_EN = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk32;
-IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
+wire sysClk, acqClk, clk32;
+IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(acqClk));
 
 wire gtRefClk, gtRefClkDiv2;
 IBUFDS_GTE2 gtRefClkBuf (
@@ -128,8 +128,6 @@ IBUFDS_GTE2 gtRefClkBuf (
     .I(MGTREFCLK0_116_P),
     .IB(MGTREFCLK0_116_N));
 
-wire rxRefClk, rxRefClkDiv2;
-IBUFDS_GTE2 ibufds116_1_gte2 (.O(rxRefClk), .ODIV2(rxRefClkDiv2), .CEB(1'b0), .I(MGTREFCLK1_116_P), .IB(MGTREFCLK1_116_N));
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
 wire [31:0] GPIO_OUT;
@@ -183,11 +181,10 @@ evr #(
     .evrPPSmarker(evrPPSmarker),
     .evgActive(evgActive),
     .sysTimestamp(sysTimestamp),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqTimestamp(acqTimestamp),
     .acqPPSstrobe(acqPPSstrobe),
     .gtRefClk(gtRefClk),
-    .rxRefClk(rxRefClk),
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
@@ -211,7 +208,7 @@ marbleClockSync #(
     .DAC_COUNTS_PER_HZ(CFG_ACKCLK_DAC_COUNTS_PER_HZ),
     .DEBUG("false"))
   marbleClockSync (
-    .clk(clk125),
+    .clk(acqClk),
     .enable_a(pllEnable),
     .status(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
     .ppsMarker_a(ppsMarker_a),
@@ -225,16 +222,15 @@ assign WR_DAC2_SYNC_Tn = 1;
 // Measure clocks
 wire [29:0] measuredFrequency;
 wire measuredUsingInteralAcqMarker;
-reg [2:0] frequencyChannelSelect = 0;
+reg [1:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(5))
+    .CHANNEL_COUNT(4))
   frequencyCounters (
     .clk(sysClk),
-    .measuredClocks({ rxRefClkDiv2,
-                      gtRefClkDiv2,
+    .measuredClocks({ gtRefClkDiv2,
                       clk32,
-                      clk125,
+                      acqClk,
                       sysClk }),
     .acqMarker_a(ppsMarker_a),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
@@ -328,7 +324,7 @@ ad7768 #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_AD7768_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_CSR]),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
     .acqData(ad7768Data),
@@ -346,6 +342,27 @@ assign AD7768_MCLK = clk32;
 assign AD7768_CS_n[0] = FIXME_AD7768_CS_n[0];
 
 ///////////////////////////////////////////////////////////////////////////////
+// AC/DC coupling
+wire coupledDataStrobe;
+wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
+                                                                   coupledData;
+
+inputCoupling #(
+    .CHANNEL_COUNT(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP),
+    .DATA_WIDTH(CFG_AD7768_WIDTH),
+    .DEBUG("true"))
+  inputCoupling_i (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_CSR]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_INPUT_COUPLING_CSR]),
+    .clk(acqClk),
+    .inTDATA(ad7768Data),
+    .inTVALID(ad7768Strobe),
+    .outTDATA(coupledData),
+    .outTVALID(coupledDataStrobe));
+
+///////////////////////////////////////////////////////////////////////////////
 // Downsample
 wire acqStrobe;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
@@ -359,10 +376,10 @@ ospreyDownsampler #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_DOWNSAMPLE_CSR]),
-    .clk(clk125),
+    .clk(acqClk),
     .ppsStrobe(acqPPSstrobe),
-    .inTDATA(ad7768Data),
-    .inTVALID(ad7768Strobe),
+    .inTDATA(coupledData),
+    .inTVALID(coupledDataStrobe),
     .outTDATA(acqData),
     .outTVALID(acqStrobe));
 
@@ -385,7 +402,7 @@ buildPacket #(
     .sysStatus(GPIO_IN[GPIO_IDX_BUILD_PACKET_CSR]),
     .sysActiveBitmap(GPIO_IN[GPIO_IDX_BUILD_PACKET_BITMAP]),
     .sysByteCount(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqStrobe(acqStrobe),
     .acqData(acqData),
     .acqSeconds(acqTimestamp[63:32]),
@@ -400,7 +417,7 @@ wire [7:0] PK_TDATA;
 wire PK_TVALID, PK_TLAST, PK_TREADY;
 fastDataFIFO fastDataFIFO (
   .s_axis_aresetn(1'b1),
-  .s_axis_aclk(clk125),
+  .s_axis_aclk(acqClk),
   .s_axis_tvalid(unbufPK_TVALID),
   .s_axis_tready(unbufPK_TREADY),
   .s_axis_tdata(unbufPK_TDATA),
@@ -413,7 +430,7 @@ fastDataFIFO fastDataFIFO (
 ///////////////////////////////////////////////////////////////////////////////
 // Block design
 bd bd_i (
-    .clk125(clk125),
+    .clk125(acqClk),
     .ext_reset_n(1'b1),
 
     .sysClk(sysClk),

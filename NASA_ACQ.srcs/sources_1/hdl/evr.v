@@ -54,7 +54,6 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output reg                        acqPPSstrobe,
 
     input  wire                 gtRefClk,
-    input  wire                 rxRefClk,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
@@ -151,7 +150,6 @@ mgtWrapper #(
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysStatus),
     .gtRefClk(gtRefClk),
-    .rxRefClk(rxRefClk),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),

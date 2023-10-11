@@ -38,7 +38,6 @@ module mgtWrapper #(
     output wire [31:0] sysStatus,
 
     input  wire                 gtRefClk,
-    input  wire                 rxRefClk,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
