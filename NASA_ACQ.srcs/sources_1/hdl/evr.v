@@ -24,6 +24,10 @@
 
 /*
  * Wrap tiny event receiver and multi-gigabit transceiver
+ * FIXME: All the event generation and forwarding code should be removed
+ *        once a real event generator is in place.  The dummy generator
+ *        and fanout here are good only for distributing time stamps and
+ *        acquisition alignment to just a little better than 100 ns.
  */
 `default_nettype none
 module evr #(
@@ -43,6 +47,7 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysLinkStatus,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] sysTimestamp,
 
+                         output wire                       mgtRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
     (*MARK_DEBUG=DEBUG*) input  wire                       evgPPSmarker_a,
@@ -65,7 +70,6 @@ localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
 wire                      mgtTxClk;
 wire [MGT_DATA_WIDTH-1:0] txChars;
 wire [MGT_BYTE_COUNT-1:0] txCharIsK;
-wire                      mgtRxClk;
 wire [MGT_DATA_WIDTH-1:0] rxChars;
 wire [MGT_BYTE_COUNT-1:0] rxCharIsK;
 
