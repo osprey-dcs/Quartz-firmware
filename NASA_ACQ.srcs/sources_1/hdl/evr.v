@@ -31,13 +31,15 @@
  */
 `default_nettype none
 module evr #(
-    parameter MGT_COUNT       = 1,
-    parameter EVG_CLK_RATE    = 1,
-    parameter TIMESTAMP_WIDTH = 64,
-    parameter DEBUG_MGT       = "false",
-    parameter DEBUG_EVR       = "false",
-    parameter DEBUG_EVG       = "false",
-    parameter DEBUG           = "false"
+    parameter CFG_EVG_CLK_RATE = 1,
+    parameter CFG_MGT_LATENCY  = 1,
+    parameter MGT_COUNT        = 1,
+    parameter EVG_CLK_RATE     = 1,
+    parameter TIMESTAMP_WIDTH  = 64,
+    parameter DEBUG_MGT        = "false",
+    parameter DEBUG_EVR        = "false",
+    parameter DEBUG_EVG        = "false",
+    parameter DEBUG            = "false"
 
     ) (
                          input  wire                       sysClk,
@@ -247,11 +249,13 @@ always @(posedge mgtTxClk) begin
         end
     end
 end
+wire [MGT_DATA_WIDTH-1:0] evgTxChars;
+wire [MGT_BYTE_COUNT-1:0] evgTxCharIsK;
 tinyEVG #(.DEBUG(DEBUG_EVG))
   tinyEVG (
     .evgTxClk(mgtTxClk),
-    .evgTxWord(txChars),
-    .evgTxIsK(txCharIsK),
+    .evgTxWord(evgTxChars),
+    .evgTxIsK(evgTxCharIsK),
     .eventCode(8'h00),
     .eventStrobe(1'b0),
     .heartbeatRequest(heartbeatCounterDone),
@@ -265,5 +269,33 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
     .sysWriteAddress(11'h000),
     .sysWriteData(8'h00),
     .sysBufferBusy());
+
+///////////////////////////////////////////////////////////////////////////////
+// Minimal event fanout
+wire [MGT_DATA_WIDTH-1:0] evfTxChars;
+wire [MGT_BYTE_COUNT-1:0] evfTxCharIsK;
+evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
+      .CFG_MGT_LATENCY(CFG_MGT_LATENCY),
+      .DEBUG("false"))
+  evf_i (
+    .mgtRxClk(mgtRxClk),
+    .mgtRxReady(linkStatus && !evgActive),
+    .mgtRxData(rxChars),
+    .mgtRxCharIsK(rxCharIsK),
+    .mgtTxClk(mgtTxClk),
+    .mgtTxData(evfTxChars),
+    .mgtTxCharIsK(evfTxCharIsK));
+
+///////////////////////////////////////////////////////////////////////////////
+// Select event source
+(*ASYNC_REG="true"*) reg txEvgActive_m;
+reg txEvgActive;
+always @(posedge mgtTxClk) begin
+    txEvgActive_m <= evgActive;
+    txEvgActive   <= txEvgActive_m;
+end
+assign txChars = txEvgActive ? evgTxChars : evfTxChars;
+assign txCharIsK = txEvgActive ? evgTxCharIsK : evfTxCharIsK;
+
 endmodule
 `default_nettype wire

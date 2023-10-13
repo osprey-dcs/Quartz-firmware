@@ -147,17 +147,6 @@ BUFG txoutclk_bufg(.I(txoutclk_out), .O(mgtTxClk));
 BUFG rxoutclk_bufg(.I(rxoutclk_out), .O(mgtRxClk));
 
 /*
- * For MGT testing
- */
-wire tx0outclk_out, tx0outclk;
-BUFG tx0outclk_bufg(.I(tx0outclk_out), .O(tx0outclk));
-reg [3:0] tx0count = 0;
-(*MARK_DEBUG=DEBUG*) wire tx0tog = tx0count[3];
-always @(posedge tx0outclk) begin
-    tx0count <= tx0count + 1;
-end
-
-/*
  * Instantiate the MGT common blocks.
  * Common block code (mgt_common.v) copied from example design.
  * Instantiation based on example design mgt_support.v.
@@ -297,9 +286,9 @@ MGT MGT_i (
     .gt0_gtxtxn_out                 (txN[4]), // output wire gt0_gtxtxn_out
     .gt0_gtxtxp_out                 (txP[4]), // output wire gt0_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt0_txoutclk_out               (tx0outclk_out), // output wire gt0_txoutclk_out
-    .gt0_txoutclkfabric_out         (),              // output wire gt0_txoutclkfabric_out
-    .gt0_txoutclkpcs_out            (),              // output wire gt0_txoutclkpcs_out
+    .gt0_txoutclk_out               (), // output wire gt0_txoutclk_out
+    .gt0_txoutclkfabric_out         (), // output wire gt0_txoutclkfabric_out
+    .gt0_txoutclkpcs_out            (), // output wire gt0_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
     .gt0_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt0_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------

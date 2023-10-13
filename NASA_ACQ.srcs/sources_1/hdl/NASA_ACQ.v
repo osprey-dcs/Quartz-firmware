@@ -162,6 +162,8 @@ wire acqPPSstrobe;
 wire evrPPSmarker;
 wire evgActive;
 evr #(
+    .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
+    .CFG_MGT_LATENCY(CFG_MGT_LATENCY),
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
