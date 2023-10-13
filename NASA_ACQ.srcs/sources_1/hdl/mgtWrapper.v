@@ -57,7 +57,7 @@ localparam MGT_BYTE_COUNT = MGT_DATA_WIDTH / 8;
 
 localparam DRP_ADDR_WIDTH = 9;
 localparam DRP_DATA_WIDTH = 16;
-wire [MGT_SEL_WIDTH-1:0] sysMGTsel = sysGPIO_OUT[30-:MGT_SEL_WIDTH];
+wire [MGT_SEL_WIDTH-1:0] sysMGTsel = sysGPIO_OUT[27+:MGT_SEL_WIDTH];
 reg [MGT_SEL_WIDTH-1:0] mgtSel;
 wire [MGT_STATUS_WIDTH-1:0] mgtStatus[0:MGT_COUNT-1];
 reg  [MGT_STATUS_WIDTH-1:0] mgtStatusMux;
@@ -396,8 +396,8 @@ MGT MGT_i (
     .gt2_rxoutclk_out               (), // output wire gt2_rxoutclk_out
     .gt2_rxoutclkfabric_out         (), // output wire gt2_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
-    .gt2_gtrxreset_in               (1'b0), // input wire gt2_gtrxreset_in
-    .gt2_rxpmareset_in              (1'b0), // input wire gt2_rxpmareset_in
+    .gt2_gtrxreset_in               (rxreset),  // input wire gt2_gtrxreset_in
+    .gt2_rxpmareset_in              (pmareset), // input wire gt2_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
     .gt2_rxcharisk_out              (), // output wire [1:0] gt2_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
@@ -460,8 +460,8 @@ MGT MGT_i (
     .gt3_rxoutclk_out               (), // output wire gt3_rxoutclk_out
     .gt3_rxoutclkfabric_out         (), // output wire gt3_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
-    .gt3_gtrxreset_in               (1'b0), // input wire gt3_gtrxreset_in
-    .gt3_rxpmareset_in              (1'b0), // input wire gt3_rxpmareset_in
+    .gt3_gtrxreset_in               (rxreset),  // input wire gt3_gtrxreset_in
+    .gt3_rxpmareset_in              (pmareset), // input wire gt3_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
     .gt3_rxcharisk_out              (), // output wire [1:0] gt3_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
@@ -564,7 +564,7 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt5_dmonitorout_out            (), // output wire [7:0] gt5_dmonitorout_out
     //------------------- RX Initialization and Reset Ports --------------------
-    .gt5_eyescanreset_in            (1'b0),             // input wire gt5_eyescanreset_in
+    .gt5_eyescanreset_in            (1'b0), // input wire gt5_eyescanreset_in
     .gt5_rxuserrdy_in               (1'b1), // input wire gt5_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt5_eyescandataerror_out       (),     // output wire gt5_eyescandataerror_out
@@ -653,8 +653,8 @@ MGT MGT_i (
     .gt6_rxoutclk_out               (), // output wire gt6_rxoutclk_out
     .gt6_rxoutclkfabric_out         (), // output wire gt6_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
-    .gt6_gtrxreset_in               (1'b0), // input wire gt6_gtrxreset_in
-    .gt6_rxpmareset_in              (1'b0), // input wire gt6_rxpmareset_in
+    .gt6_gtrxreset_in               (rxreset),  // input wire gt6_gtrxreset_in
+    .gt6_rxpmareset_in              (pmareset), // input wire gt6_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
     .gt6_rxcharisk_out              (), // output wire [1:0] gt6_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
@@ -717,8 +717,8 @@ MGT MGT_i (
     .gt7_rxoutclk_out               (), // output wire gt7_rxoutclk_out
     .gt7_rxoutclkfabric_out         (), // output wire gt7_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
-    .gt7_gtrxreset_in               (1'b0), // input wire gt7_gtrxreset_in
-    .gt7_rxpmareset_in              (1'b0), // input wire gt7_rxpmareset_in
+    .gt7_gtrxreset_in               (rxreset),  // input wire gt7_gtrxreset_in
+    .gt7_rxpmareset_in              (pmareset), // input wire gt7_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
     .gt7_rxcharisk_out              (), // output wire [1:0] gt7_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
