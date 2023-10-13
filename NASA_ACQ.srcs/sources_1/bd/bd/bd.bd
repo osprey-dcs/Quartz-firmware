@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xE5689C9EECD72438",
+      "boundary_crc": "0x671B801B30BA2337",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -29,8 +29,7 @@
         "m04_couplers": {},
         "m05_couplers": {},
         "m06_couplers": {},
-        "m07_couplers": {},
-        "m08_couplers": {}
+        "m07_couplers": {}
       },
       "microblaze_0_axi_intc": "",
       "microblaze_0_xlconcat": "",
@@ -43,7 +42,6 @@
       "xadc": "",
       "iic_fpga": "",
       "marbleBootFlash": "",
-      "NMEA_UART": "",
       "ospreyUDP": "",
       "generic_reg": ""
     },
@@ -217,21 +215,6 @@
           },
           "TXC": {
             "physical_name": "RGMII_txc",
-            "direction": "O"
-          }
-        }
-      },
-      "NMEA_UART": {
-        "mode": "Master",
-        "vlnv_bus_definition": "xilinx.com:interface:uart:1.0",
-        "vlnv": "xilinx.com:interface:uart_rtl:1.0",
-        "port_maps": {
-          "RxD": {
-            "physical_name": "NMEA_UART_rxd",
-            "direction": "I"
-          },
-          "TxD": {
-            "physical_name": "NMEA_UART_txd",
             "direction": "O"
           }
         }
@@ -623,7 +606,7 @@
         "xci_name": "bd_microblaze_0_axi_periph_0",
         "parameters": {
           "NUM_MI": {
-            "value": "9"
+            "value": "8"
           }
         },
         "interface_ports": {
@@ -668,11 +651,6 @@
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
           },
           "M07_AXI": {
-            "mode": "Master",
-            "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-            "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
-          },
-          "M08_AXI": {
             "mode": "Master",
             "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
             "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
@@ -835,22 +813,6 @@
           "M07_ARESETN": {
             "type": "rst",
             "direction": "I"
-          },
-          "M08_ACLK": {
-            "type": "clk",
-            "direction": "I",
-            "parameters": {
-              "ASSOCIATED_BUSIF": {
-                "value": "M08_AXI"
-              },
-              "ASSOCIATED_RESET": {
-                "value": "M08_ARESETN"
-              }
-            }
-          },
-          "M08_ARESETN": {
-            "type": "rst",
-            "direction": "I"
           }
         },
         "components": {
@@ -861,7 +823,7 @@
             "inst_hier_path": "microblaze_0_axi_periph/xbar",
             "parameters": {
               "NUM_MI": {
-                "value": "9"
+                "value": "8"
               },
               "NUM_SI": {
                 "value": "1"
@@ -882,8 +844,7 @@
                   "M04_AXI",
                   "M05_AXI",
                   "M06_AXI",
-                  "M07_AXI",
-                  "M08_AXI"
+                  "M07_AXI"
                 ]
               }
             }
@@ -1391,62 +1352,6 @@
                 ]
               }
             }
-          },
-          "m08_couplers": {
-            "interface_ports": {
-              "M_AXI": {
-                "mode": "Master",
-                "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-                "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
-              },
-              "S_AXI": {
-                "mode": "Slave",
-                "vlnv_bus_definition": "xilinx.com:interface:aximm:1.0",
-                "vlnv": "xilinx.com:interface:aximm_rtl:1.0"
-              }
-            },
-            "ports": {
-              "M_ACLK": {
-                "type": "clk",
-                "direction": "I",
-                "parameters": {
-                  "ASSOCIATED_BUSIF": {
-                    "value": "M_AXI"
-                  },
-                  "ASSOCIATED_RESET": {
-                    "value": "M_ARESETN"
-                  }
-                }
-              },
-              "M_ARESETN": {
-                "type": "rst",
-                "direction": "I"
-              },
-              "S_ACLK": {
-                "type": "clk",
-                "direction": "I",
-                "parameters": {
-                  "ASSOCIATED_BUSIF": {
-                    "value": "S_AXI"
-                  },
-                  "ASSOCIATED_RESET": {
-                    "value": "S_ARESETN"
-                  }
-                }
-              },
-              "S_ARESETN": {
-                "type": "rst",
-                "direction": "I"
-              }
-            },
-            "interface_nets": {
-              "m08_couplers_to_m08_couplers": {
-                "interface_ports": [
-                  "S_AXI",
-                  "M_AXI"
-                ]
-              }
-            }
           }
         },
         "interface_nets": {
@@ -1496,12 +1401,6 @@
             "interface_ports": [
               "m07_couplers/M_AXI",
               "M07_AXI"
-            ]
-          },
-          "m08_couplers_to_microblaze_0_axi_periph": {
-            "interface_ports": [
-              "m08_couplers/M_AXI",
-              "M08_AXI"
             ]
           },
           "microblaze_0_axi_periph_to_s00_couplers": {
@@ -1563,12 +1462,6 @@
               "xbar/M07_AXI",
               "m07_couplers/S_AXI"
             ]
-          },
-          "xbar_to_m08_couplers": {
-            "interface_ports": [
-              "xbar/M08_AXI",
-              "m08_couplers/S_AXI"
-            ]
           }
         },
         "nets": {
@@ -1586,7 +1479,6 @@
               "m05_couplers/M_ACLK",
               "m06_couplers/M_ACLK",
               "m07_couplers/M_ACLK",
-              "m08_couplers/M_ACLK",
               "m00_couplers/S_ACLK",
               "m01_couplers/S_ACLK",
               "m02_couplers/S_ACLK",
@@ -1594,8 +1486,7 @@
               "m04_couplers/S_ACLK",
               "m05_couplers/S_ACLK",
               "m06_couplers/S_ACLK",
-              "m07_couplers/S_ACLK",
-              "m08_couplers/S_ACLK"
+              "m07_couplers/S_ACLK"
             ]
           },
           "microblaze_0_axi_periph_ARESETN_net": {
@@ -1612,7 +1503,6 @@
               "m05_couplers/M_ARESETN",
               "m06_couplers/M_ARESETN",
               "m07_couplers/M_ARESETN",
-              "m08_couplers/M_ARESETN",
               "m00_couplers/S_ARESETN",
               "m01_couplers/S_ARESETN",
               "m02_couplers/S_ARESETN",
@@ -1620,8 +1510,7 @@
               "m04_couplers/S_ARESETN",
               "m05_couplers/S_ARESETN",
               "m06_couplers/S_ARESETN",
-              "m07_couplers/S_ARESETN",
-              "m08_couplers/S_ARESETN"
+              "m07_couplers/S_ARESETN"
             ]
           }
         }
@@ -1875,12 +1764,6 @@
         "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
         "inst_hier_path": "marbleBootFlash"
       },
-      "NMEA_UART": {
-        "vlnv": "xilinx.com:ip:axi_uartlite:2.0",
-        "xci_name": "bd_axi_uartlite_0_1",
-        "xci_path": "ip/bd_axi_uartlite_0_1/bd_axi_uartlite_0_1.xci",
-        "inst_hier_path": "NMEA_UART"
-      },
       "ospreyUDP": {
         "vlnv": "user.org:user:ospreyUDP:1.0",
         "xci_name": "bd_ospreyUDP_0_0",
@@ -1905,12 +1788,6 @@
         "interface_ports": [
           "console",
           "console/UART"
-        ]
-      },
-      "axi_uartlite_0_UART1": {
-        "interface_ports": [
-          "NMEA_UART",
-          "NMEA_UART/UART"
         ]
       },
       "fastTx_0_1": {
@@ -1971,12 +1848,6 @@
         "interface_ports": [
           "microblaze_0_axi_periph/M07_AXI",
           "ospreyUDP/S_AXI_LITE"
-        ]
-      },
-      "microblaze_0_axi_periph_M08_AXI": {
-        "interface_ports": [
-          "microblaze_0_axi_periph/M08_AXI",
-          "NMEA_UART/S_AXI"
         ]
       },
       "microblaze_0_debug": {
@@ -2093,8 +1964,6 @@
           "marbleBootFlash/s_axi_aclk",
           "microblaze_0_axi_periph/M06_ACLK",
           "microblaze_0_axi_periph/M07_ACLK",
-          "NMEA_UART/s_axi_aclk",
-          "microblaze_0_axi_periph/M08_ACLK",
           "ospreyUDP/s_axi_lite_aclk",
           "generic_reg/s_axi_aclk"
         ]
@@ -2149,8 +2018,6 @@
           "marbleBootFlash/s_axi_aresetn",
           "microblaze_0_axi_periph/M06_ARESETN",
           "microblaze_0_axi_periph/M07_ARESETN",
-          "NMEA_UART/s_axi_aresetn",
-          "microblaze_0_axi_periph/M08_ARESETN",
           "ospreyUDP/s_axi_lite_aresetn",
           "generic_reg/s_axi_aresetn"
         ]
@@ -2185,11 +2052,6 @@
               "SEG_axi_uartlite_0_Reg": {
                 "address_block": "/console/S_AXI/Reg",
                 "offset": "0x40600000",
-                "range": "64K"
-              },
-              "SEG_axi_uartlite_0_Reg_1": {
-                "address_block": "/NMEA_UART/S_AXI/Reg",
-                "offset": "0x40610000",
                 "range": "64K"
               },
               "SEG_dlmb_bram_if_cntlr_Mem": {

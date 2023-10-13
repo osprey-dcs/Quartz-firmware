@@ -96,7 +96,7 @@ module NASA_ACQ #(
     input  wire                           [3:0] AD7768_MODE,
     input  wire                                 AD7768_FILTER,
 
-    // FIXME: This will be removed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
+    // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
     input  wire PMOD2_0, // PMOD-GPS 3D-Fix (unused)
     input  wire PMOD2_1, // PMOD-GPS RxData (actually an output, but unused)
@@ -105,7 +105,7 @@ module NASA_ACQ #(
     input  wire PMOD2_4,
     input  wire PMOD2_5,
     input  wire PMOD2_6,
-    output wire PMOD2_7  // IRIG-B baseband stream
+    input  wire PMOD2_7
     );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -465,9 +465,6 @@ bd bd_i (
     .GPIO_OUT(GPIO_OUT),
     .GPIO_STROBES(GPIO_STROBES),
     .GPIO_IN(GPIO_IN_FLATTENED),
-
-    .NMEA_UART_rxd(PMOD2_2), // FIXME: Will be replaced by MRF time receiver
-    .NMEA_UART_txd(),        // FIXME: Will be replaced by MRF time receiver
 
     .console_rxd(FPGA_TxD),
     .console_txd(FPGA_RxD)
