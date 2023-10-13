@@ -234,9 +234,9 @@ set_property -dict {PACKAGE_PIN D6} [get_ports MGTREFCLK0_116_P]
 set_property -dict {PACKAGE_PIN D5} [get_ports MGTREFCLK0_116_N]
 create_clock -period 8.000 -name MGT_REFCLK0 [get_ports MGTREFCLK0_116_P]
 # Bank 116, reference clock 1
-set_property -dict {PACKAGE_PIN F6} [get_ports MGTREFCLK1_116_P]
-set_property -dict {PACKAGE_PIN F5} [get_ports MGTREFCLK1_116_N]
-create_clock -period 8.000 -name MGT_REFCLK1 [get_ports MGTREFCLK1_116_P]
+#set_property -dict {PACKAGE_PIN F6} [get_ports MGTREFCLK1_116_P]
+#set_property -dict {PACKAGE_PIN F5} [get_ports MGTREFCLK1_116_N]
+#create_clock -period 8.000 -name MGT_REFCLK1 [get_ports MGTREFCLK1_116_P]
 # QSFP2-0 (Fibers 1/12), Bank 115 MGT 1, X0Y0
 set_property -dict {PACKAGE_PIN R4} [get_ports {QSFP_RX_P[4]}]
 set_property -dict {PACKAGE_PIN R3} [get_ports {QSFP_RX_N[4]}]

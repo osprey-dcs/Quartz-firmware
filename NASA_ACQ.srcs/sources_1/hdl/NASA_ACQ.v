@@ -35,8 +35,6 @@ module NASA_ACQ #(
     input  wire DDR_REF_CLK_N,
     input  wire MGTREFCLK0_116_P,
     input  wire MGTREFCLK0_116_N,
-    input  wire MGTREFCLK1_116_P,
-    input  wire MGTREFCLK1_116_N,
     output wire VCXO_EN,
 
     output wire BOOT_CS_B,
