@@ -80,7 +80,7 @@ module NASA_ACQ #(
     input  wire PMOD1_6,
     input  wire PMOD1_7,
 
-    // EVAL-AD7768 FMC ADC
+    // Osprey Quad AD7768 FMC Digitizer
     output wire                                 AD7768_MCLK_P,
     output wire                                 AD7768_MCLK_N,
     output wire                                 AD7768_RESET_n,
@@ -96,6 +96,11 @@ module NASA_ACQ #(
     input  wire                                 AD7768_SYNC_OUT_n,
     input  wire                           [3:0] AD7768_MODE,
     input  wire                                 AD7768_FILTER,
+    output wire                                 COIL_CONTROL_SPI_CLK,
+    output wire                                 COIL_CONTROL_SPI_CSn,
+    input  wire                                 COIL_CONTROL_SPI_DOUT,
+    output wire                                 COIL_CONTROL_SPI_DIN,
+
 
     // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
@@ -348,7 +353,6 @@ OBUFDS AD7768_MCLK_OBUF(.I(clk32), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 wire coupledDataStrobe;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
                                                                    coupledData;
-
 inputCoupling #(
     .CHANNEL_COUNT(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP),
     .DATA_WIDTH(CFG_AD7768_WIDTH),
@@ -363,6 +367,18 @@ inputCoupling #(
     .inTVALID(ad7768Strobe),
     .outTDATA(coupledData),
     .outTVALID(coupledDataStrobe));
+
+coilDriverSPI #(.CLK_RATE(CFG_SYSCLK_RATE))
+  coilDriveSPI (
+    .clk(sysClk),
+    .GPIO_OUT(GPIO_OUT),
+    .hiStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_HI]),
+    .loStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_LO]),
+    .status(GPIO_IN[GPIO_IDX_INPUT_COUPLING_LO]),
+    .SPI_CLK(COIL_CONTROL_SPI_CLK),
+    .SPI_CSn(COIL_CONTROL_SPI_CSn),
+    .SPI_DOUT(COIL_CONTROL_SPI_DOUT),
+    .SPI_DIN(COIL_CONTROL_SPI_DIN));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Downsample
