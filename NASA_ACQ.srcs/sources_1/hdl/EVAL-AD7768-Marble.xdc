@@ -1,7 +1,7 @@
 # Constraints for EVAL-AD7768 connected to Marble FMC1
 
-# SDP_MCLK -- FMC1 D9 -- FMC1_LA01_N
-set_property -dict {PACKAGE_PIN F18 IOSTANDARD LVCMOS25} [get_ports AD7768_MCLK]
+set_property -dict {PACKAGE_PIN C14 IOSTANDARD LVDS_25} [get_ports AD7768_MCLK_P]
+set_property -dict {PACKAGE_PIN C13 IOSTANDARD LVCDS_25} [get_ports AD7768_MCLK_N]
 
 # DCLK -- FMC1 H4 -- FMC1_CLK0_M2C_P
 set_property -dict {PACKAGE_PIN F17 IOSTANDARD LVCMOS25} [get_ports AD7768_DCLK]

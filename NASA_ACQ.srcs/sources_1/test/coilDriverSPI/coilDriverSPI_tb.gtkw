@@ -1,0 +1,62 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Jan  5 21:48:27 2024
+[*]
+[dumpfile] "coilDriverSPI_tb.fst"
+[dumpfile_mtime] "Fri Jan  5 21:48:01 2024"
+[dumpfile_size] 1910
+[savefile] "coilDriverSPI_tb.gtkw"
+[timestart] 0
+[size] 1792 600
+[pos] 1879 0
+*-11.000000 205 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] coilDriverSPI_tb.
+[sst_width] 253
+[signals_width] 152
+[sst_expanded] 1
+[sst_vpaned_height] 159
+@28
+coilDriverSPI_tb.coilDriveSPI.clk
+coilDriverSPI_tb.coilDriveSPI.hiStrobe
+coilDriverSPI_tb.coilDriveSPI.loStrobe
+@22
+coilDriverSPI_tb.coilDriveSPI.GPIO_OUT[31:0]
+coilDriverSPI_tb.coilDriveSPI.status[31:0]
+coilDriverSPI_tb.coilDriveSPI.shiftReg[63:0]
+coilDriverSPI_tb.coilDriveSPI.bitCounter[6:0]
+@28
+coilDriverSPI_tb.coilDriveSPI.bitCounterDone
+@29
+coilDriverSPI_tb.coilDriveSPI.SPI_CSn
+@28
+coilDriverSPI_tb.coilDriveSPI.SPI_CLK
+coilDriverSPI_tb.coilDriveSPI.SPI_DIN
+coilDriverSPI_tb.busy
+[pattern_trace] 1
+[pattern_trace] 0

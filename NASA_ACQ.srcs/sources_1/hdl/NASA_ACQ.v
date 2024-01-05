@@ -81,15 +81,16 @@ module NASA_ACQ #(
     input  wire PMOD1_7,
 
     // EVAL-AD7768 FMC ADC
-    output wire                                 AD7768_MCLK,
+    output wire                                 AD7768_MCLK_P,
+    output wire                                 AD7768_MCLK_N,
     output wire                                 AD7768_RESET_n,
     output wire                                 AD7768_SCLK,
-    output wire     [FIXME_CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n,
+    output wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n,
     output wire                                 AD7768_SDI,
-    input  wire     [FIXME_CFG_AD7768_CHIP_COUNT-1:0] AD7768_SDO,
-    input  wire     [FIXME_CFG_AD7768_CHIP_COUNT-1:0] AD7768_DCLK,
-    input  wire     [FIXME_CFG_AD7768_CHIP_COUNT-1:0] AD7768_DRDY,
-    input  wire [(FIXME_CFG_AD7768_CHIP_COUNT*8)-1:0] AD7768_DOUT,
+    input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_SDO,
+    input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DCLK,
+    input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DRDY,
+    input  wire [(CFG_AD7768_CHIP_COUNT*8)-1:0] AD7768_DOUT,
     output wire                                 AD7768_START_n,
     input  wire                                 AD7768_SYNC_IN_n,
     input  wire                                 AD7768_SYNC_OUT_n,
@@ -307,7 +308,6 @@ wire ad7768Strobe;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
                                                                     ad7768Data;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*8)-1:0] ad7768Headers;
-wire [CFG_AD7768_CHIP_COUNT-1:0] FIXME_AD7768_CS_n;
 ad7768 #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -332,7 +332,7 @@ ad7768 #(
     .acqData(ad7768Data),
     .acqHeaders(ad7768Headers),
     .adcSCLK(AD7768_SCLK),
-    .adcCSn(FIXME_AD7768_CS_n),
+    .adcCSn(AD7768_CS_n),
     .adcSDI(AD7768_SDI),
     .adcSDO({CFG_AD7768_CHIP_COUNT{AD7768_SDO}}/*FIXME*/),
     .adcDCLK_a(AD7768_DCLK),
@@ -340,8 +340,8 @@ ad7768 #(
     .adcDOUT_a({CFG_AD7768_CHIP_COUNT{AD7768_DOUT}} | fakeDataReg[0+:CFG_AD7768_CHIP_COUNT*8]),
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
-assign AD7768_MCLK = clk32;
-assign AD7768_CS_n[0] = FIXME_AD7768_CS_n[0];
+
+OBUFDS AD7768_MCLK_OBUF(.I(clk32), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
