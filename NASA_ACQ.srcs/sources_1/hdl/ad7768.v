@@ -64,7 +64,7 @@ module ad7768 #(
     (*MARK_DEBUG=DEBUG_PINS*) input  wire
                                [(ADC_CHIP_COUNT*ADC_PER_CHIP)-1:0] adcDOUT_a,
     (*MARK_DEBUG=DEBUG_PINS*) output wire                          adcSTARTn,
-    (*MARK_DEBUG=DEBUG_PINS*) output wire     [ADC_CHIP_COUNT-1:0] adcRESETn);
+    (*MARK_DEBUG=DEBUG_PINS*) output wire                          adcRESETn);
 
 localparam SKEW_LIMIT_NS = 30;
 localparam SKEW_LIMIT_ACQ_TICKS =  (((ACQ_CLK_RATE / 1000) * SKEW_LIMIT_NS) +

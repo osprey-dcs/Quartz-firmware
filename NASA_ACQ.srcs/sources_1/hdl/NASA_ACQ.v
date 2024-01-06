@@ -28,7 +28,6 @@
 `default_nettype none
 module NASA_ACQ #(
     `include "gpio.v"
-    parameter FIXME_CFG_AD7768_CHIP_COUNT = 1, // Just a single hardware instance for now.....
     parameter DEBUG = "false"
     ) (
     input  wire DDR_REF_CLK_P,
@@ -90,17 +89,15 @@ module NASA_ACQ #(
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_SDO,
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DCLK,
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DRDY,
-    input  wire [(CFG_AD7768_CHIP_COUNT*8)-1:0] AD7768_DOUT,
+    input  wire [(CFG_AD7768_CHIP_COUNT *
+                  CFG_AD7768_ADC_PER_CHIP)-1:0] AD7768_DOUT,
     output wire                                 AD7768_START_n,
     input  wire                                 AD7768_SYNC_IN_n,
     input  wire                                 AD7768_SYNC_OUT_n,
-    input  wire                           [3:0] AD7768_MODE,
-    input  wire                                 AD7768_FILTER,
     output wire                                 COIL_CONTROL_SPI_CLK,
     output wire                                 COIL_CONTROL_SPI_CSn,
     input  wire                                 COIL_CONTROL_SPI_DOUT,
     output wire                                 COIL_CONTROL_SPI_DIN,
-
 
     // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
@@ -299,20 +296,11 @@ mmcIO #(.DEBUG("false"))
 
 ///////////////////////////////////////////////////////////////////////////////
 // AD7768 FMC ADC
-// FIXME -- until the real digitizer board arrives the signals from a
-// single AD7768 are fanned out to simulate the full set of channels.
-// Use this dummy register to ensure that the optimizer doesn't see the
-// repeated incoming values as candidates for coallescing.
-reg [(CFG_AD7768_CHIP_COUNT*8)-1:0] fakeDataReg = 0;
-always @(posedge sysClk) begin
-    if (GPIO_STROBES[GPIO_IDX_FAST_DATA_TEST]) begin
-        fakeDataReg <= GPIO_OUT[(CFG_AD7768_CHIP_COUNT*8)-1:0];
-    end
-end
 wire ad7768Strobe;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
-                                                                    ad7768Data;
+                                                                     ad7768Data;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*8)-1:0] ad7768Headers;
+
 ad7768 #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -339,10 +327,10 @@ ad7768 #(
     .adcSCLK(AD7768_SCLK),
     .adcCSn(AD7768_CS_n),
     .adcSDI(AD7768_SDI),
-    .adcSDO({CFG_AD7768_CHIP_COUNT{AD7768_SDO}}/*FIXME*/),
+    .adcSDO(AD7768_SDO),
     .adcDCLK_a(AD7768_DCLK),
-    .adcDRDY_a({CFG_AD7768_CHIP_COUNT{AD7768_DRDY}} | fakeDataReg[0+:CFG_AD7768_CHIP_COUNT]),
-    .adcDOUT_a({CFG_AD7768_CHIP_COUNT{AD7768_DOUT}} | fakeDataReg[0+:CFG_AD7768_CHIP_COUNT*8]),
+    .adcDRDY_a(AD7768_DRDY),
+    .adcDOUT_a(AD7768_DOUT),
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
 
