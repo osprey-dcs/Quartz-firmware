@@ -33,8 +33,8 @@ module coilDriverSPI_tb;
 parameter CLK_RATE = 100000000;
  
 reg         clk = 0;
-reg         loStrobe = 0;
-reg         hiStrobe = 0;
+reg         setStrobeAndStart = 0;
+reg         clrStrobe = 0;
 reg  [31:0] GPIO_OUT = {32{1'bx}};
 wire [31:0] status;
 wire busy = status[0];
@@ -48,8 +48,8 @@ coilDriverSPI #(.CLK_RATE(CLK_RATE))
   coilDriveSPI (
     .clk(clk),
     .GPIO_OUT(GPIO_OUT),
-    .hiStrobe(hiStrobe),
-    .loStrobe(loStrobe),
+    .clrStrobe(clrStrobe),
+    .setStrobeAndStart(setStrobeAndStart),
     .status(status),
     .SPI_CLK(SPI_CLK),
     .SPI_CSn(SPI_CSn),
@@ -85,16 +85,16 @@ task runTest;
     begin
     @(posedge clk) begin
         GPIO_OUT <= hi;
-        hiStrobe <= 1;
+        clrStrobe <= 1;
     end
     @(posedge clk) begin
         GPIO_OUT <= lo;
-        hiStrobe <= 0;
-        loStrobe <= 1;
+        clrStrobe <= 0;
+        setStrobeAndStart <= 1;
     end
     @(posedge clk) begin
         GPIO_OUT <= {32{1'bx}};
-        loStrobe <= 0;
+        setStrobeAndStart <= 0;
     end
     @(posedge clk) ;
     @(posedge clk) ;
