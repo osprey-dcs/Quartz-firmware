@@ -49,7 +49,8 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysLinkStatus,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] sysTimestamp,
 
-                         output wire                       mgtRxClk,
+                         output wire                       evrRxClk,
+                         output wire                       evfRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
     (*MARK_DEBUG=DEBUG*) input  wire                       evgPPSmarker_a,
@@ -69,17 +70,16 @@ module evr #(
 localparam MGT_DATA_WIDTH = 16;
 localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
 
-wire                      mgtTxClk;
 wire [MGT_DATA_WIDTH-1:0] txChars;
 wire [MGT_BYTE_COUNT-1:0] txCharIsK;
-wire [MGT_DATA_WIDTH-1:0] rxChars;
-wire [MGT_BYTE_COUNT-1:0] rxCharIsK;
+wire [MGT_DATA_WIDTH-1:0] evrRxChars, evfRxChars;
+wire [MGT_BYTE_COUNT-1:0] evrRxCharIsK, evfRxCharIsK;
 
-wire mgtRxPPSmarker = 0;
-wire [63:0] mgtRxTimestamp;
-wire linkStatus;
+wire evrRxPPSmarker = 0;
+wire [63:0] evrRxTimestamp;
+wire evrRxLinkUp, evfRxLinkUp;
 wire evrTimestampValid;
-assign sysLinkStatus = { evrTimestampValid, {30{1'b0}}, linkStatus};
+assign sysLinkStatus = { evrTimestampValid, {29{1'b0}}, evfRxLinkUp, evrRxLinkUp};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the tiny event receiver
@@ -89,9 +89,9 @@ tinyEVR #(
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
     .DEBUG(DEBUG_EVR))
   tinyEVR_i (
-    .evrRxClk(mgtRxClk),
-    .evrRxWord(rxChars),
-    .evrCharIsK(rxCharIsK),
+    .evrRxClk(evrRxClk),
+    .evrRxWord(evrRxChars),
+    .evrCharIsK(evrRxCharIsK),
     .ppsMarker(evrPPSstrobe),
     .timestampValid(evrTimestampValid),
     .timestamp(evrTimestamp),
@@ -103,7 +103,7 @@ localparam PPS_STRETCH_COUNTER_WIDTH = 5;
 (*MARK_DEBUG=DEBUG_EVR*) reg [PPS_STRETCH_COUNTER_WIDTH-1:0]
                                                        evrPPSstretchCounter = 0;
 assign evrPPSmarker = evrPPSstretchCounter[PPS_STRETCH_COUNTER_WIDTH-1];
-always @(posedge mgtRxClk) begin
+always @(posedge evrRxClk) begin
     if (evrPPSstrobe) begin
         evrPPSstretchCounter <= {PPS_STRETCH_COUNTER_WIDTH{1'b1}};
     end
@@ -146,6 +146,7 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceiver
+wire mgtTxClk;
 mgtWrapper #(
     .MGT_COUNT(MGT_COUNT),
     .MGT_DATA_WIDTH(16),
@@ -160,10 +161,14 @@ mgtWrapper #(
     .rxN(rxN),
     .txP(txP),
     .txN(txN),
-    .mgtRxClk(mgtRxClk),
-    .mgtRxChars(rxChars),
-    .mgtRxIsK(rxCharIsK),
-    .mgtLinkUp(linkStatus),
+    .evrRxClk(evrRxClk),
+    .evrRxLinkUp(evrRxLinkUp),
+    .evrRxChars(evrRxChars),
+    .evrRxCharIsK(evrRxCharIsK),
+    .evfRxClk(evfRxClk),
+    .evfRxLinkUp(evfRxLinkUp),
+    .evfRxChars(evfRxChars),
+    .evfRxCharIsK(evfRxCharIsK),
     .mgtTxClk(mgtTxClk),
     .mgtTxChars(txChars),
     .mgtTxIsK(txCharIsK));
@@ -278,13 +283,13 @@ evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
       .CFG_MGT_LATENCY(CFG_MGT_LATENCY),
       .DEBUG("false"))
   evf_i (
-    .mgtRxClk(mgtRxClk),
-    .mgtRxReady(linkStatus && !evgActive),
-    .mgtRxData(rxChars),
-    .mgtRxCharIsK(rxCharIsK),
-    .mgtTxClk(mgtTxClk),
-    .mgtTxData(evfTxChars),
-    .mgtTxCharIsK(evfTxCharIsK));
+    .rxClk(evfRxClk),
+    .rxLinkUp(evfRxLinkUp && !evgActive),
+    .rxChars(evfRxChars),
+    .rxCharIsK(evfRxCharIsK),
+    .txClk(mgtTxClk),
+    .txChars(evfTxChars),
+    .txCharIsK(evfTxCharIsK));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Select event source

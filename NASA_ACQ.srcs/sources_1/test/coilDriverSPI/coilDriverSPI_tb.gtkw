@@ -53,7 +53,7 @@ coilDriverSPI_tb.coilDriveSPI.bitCounter[6:0]
 @28
 coilDriverSPI_tb.coilDriveSPI.bitCounterDone
 @29
-coilDriverSPI_tb.coilDriveSPI.SPI_CSn
+coilDriverSPI_tb.coilDriveSPI.SPI_CS_n
 @28
 coilDriverSPI_tb.coilDriveSPI.SPI_CLK
 coilDriverSPI_tb.coilDriveSPI.SPI_DIN

@@ -31,13 +31,14 @@ module coilDriverSPI #(
     ) (
     input  wire        clk,
     input  wire [31:0] GPIO_OUT,
-    input  wire        hiStrobe,
-    input  wire        loStrobe,
+    input  wire        clrStrobe,
+    input  wire        setStrobeAndStart,
     output wire [31:0] status,
     output reg         SPI_CLK = 0,
-    output reg         SPI_CSn = 1,
+    output reg         SPI_CS_n = 1,
     input  wire        SPI_DOUT,
-    output wire        SPI_DIN);
+    output wire        SPI_DIN,
+    output reg         COIL_CONTROL_RESET_n = 0);
 
 localparam SPI_RATE  = 5000000;
 localparam SPI_WIDTH = 64;
@@ -55,18 +56,19 @@ wire bitCounterDone = bitCounter[BIT_COUNTER_WIDTH-1];
 reg [SPI_WIDTH-1:0] shiftReg;
 assign SPI_DIN = shiftReg[SPI_WIDTH-1];
 
-assign status = {31'b0, !SPI_CSn};
+assign status = {31'b0, !SPI_CS_n};
 
 always @(posedge clk) begin
-    if (SPI_CSn) begin
+    if (SPI_CS_n) begin
         tickCounter <= TICK_COUNTER_RELOAD;
         bitCounter <= BIT_COUNTER_LOAD;
-        if (hiStrobe) begin
+        if (clrStrobe) begin
+            COIL_CONTROL_RESET_n <= 1;
             shiftReg[32+:32] <= GPIO_OUT;
         end
-        if (loStrobe) begin
+        if (setStrobeAndStart) begin
             shiftReg[0+:32] <= GPIO_OUT;
-            SPI_CSn <= 0;
+            SPI_CS_n <= 0;
         end
     end
     else begin
@@ -79,7 +81,7 @@ always @(posedge clk) begin
             else begin
                 bitCounter <= bitCounter - 1;
                 if (bitCounterDone) begin
-                    SPI_CSn <= 1;
+                    SPI_CS_n <= 1;
                 end
                 else begin
                     SPI_CLK <= 1;

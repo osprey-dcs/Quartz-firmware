@@ -95,9 +95,10 @@ module NASA_ACQ #(
     input  wire                                 AD7768_SYNC_IN_n,
     input  wire                                 AD7768_SYNC_OUT_n,
     output wire                                 COIL_CONTROL_SPI_CLK,
-    output wire                                 COIL_CONTROL_SPI_CSn,
+    output wire                                 COIL_CONTROL_SPI_CS_n,
     input  wire                                 COIL_CONTROL_SPI_DOUT,
     output wire                                 COIL_CONTROL_SPI_DIN,
+    output wire                                 COIL_CONTROL_RESET_n,
 
     // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
@@ -118,7 +119,7 @@ assign VCXO_EN = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk32, mgtRxClk;
+wire sysClk, clk125, clk32, evrRxClk, evfRxClk;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
 
 wire gtRefClk, gtRefClkDiv2;
@@ -180,7 +181,8 @@ evr #(
     .sysLinkStatus(GPIO_IN[GPIO_IDX_LINK_STATUS]),
     .sysEVGsetTimeStrobe(GPIO_STROBES[GPIO_IDX_EVG_CSR]),
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
-    .mgtRxClk(mgtRxClk),
+    .evrRxClk(evrRxClk),
+    .evfRxClk(evfRxClk),
     .evgPPSmarker_a(PMOD2_3),
     .evrPPSmarker(evrPPSmarker),
     .evgActive(evgActive),
@@ -229,10 +231,11 @@ wire measuredUsingInteralAcqMarker;
 reg [2:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(5))
+    .CHANNEL_COUNT(6))
   frequencyCounters (
     .clk(sysClk),
-    .measuredClocks({ mgtRxClk,
+    .measuredClocks({ evfRxClk,
+                      evrRxClk,
                       gtRefClkDiv2,
                       clk32,
                       clk125,
@@ -360,13 +363,14 @@ coilDriverSPI #(.CLK_RATE(CFG_SYSCLK_RATE))
   coilDriveSPI (
     .clk(sysClk),
     .GPIO_OUT(GPIO_OUT),
-    .hiStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_HI]),
-    .loStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_LO]),
-    .status(GPIO_IN[GPIO_IDX_INPUT_COUPLING_LO]),
+    .clrStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_CLR]),
+    .setStrobeAndStart(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_SET_START]),
+    .status(GPIO_IN[GPIO_IDX_INPUT_COUPLING_SET_START]),
     .SPI_CLK(COIL_CONTROL_SPI_CLK),
-    .SPI_CSn(COIL_CONTROL_SPI_CSn),
+    .SPI_CS_n(COIL_CONTROL_SPI_CS_n),
     .SPI_DOUT(COIL_CONTROL_SPI_DOUT),
-    .SPI_DIN(COIL_CONTROL_SPI_DIN));
+    .SPI_DIN(COIL_CONTROL_SPI_DIN),
+    .COIL_CONTROL_RESET_n(COIL_CONTROL_RESET_n));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Downsample

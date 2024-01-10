@@ -40,7 +40,7 @@ wire [31:0] status;
 wire busy = status[0];
 
 wire SPI_CLK;
-wire SPI_CSn;
+wire SPI_CS_n;
 wire SPI_DIN;
 wire SPI_DOUT;
 
@@ -52,7 +52,7 @@ coilDriverSPI #(.CLK_RATE(CLK_RATE))
     .setStrobeAndStart(setStrobeAndStart),
     .status(status),
     .SPI_CLK(SPI_CLK),
-    .SPI_CSn(SPI_CSn),
+    .SPI_CS_n(SPI_CS_n),
     .SPI_DOUT(SPI_DOUT),
     .SPI_DIN(SPI_DIN));
 
@@ -60,7 +60,7 @@ always begin #5 clk = !clk; end
 
 reg  [63:0] shiftReg;
 always @(posedge SPI_CLK) begin
-    if (!SPI_CSn) begin
+    if (!SPI_CS_n) begin
         shiftReg <= {shiftReg[62:0], SPI_DIN};
     end
 end

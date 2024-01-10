@@ -24,7 +24,7 @@
 
 /*
  * Wrap wizard-generated Multi-Gigabit Transceivers
- * Eight transmitter lanes, one receiver lane.
+ * Eight transmitter lanes, two receiver lanes.
  */
 `default_nettype none
 module mgtWrapper #(
@@ -43,10 +43,14 @@ module mgtWrapper #(
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN,
 
-    output wire                                               mgtRxClk,
-    (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] mgtRxChars,
-    (*MARK_DEBUG=DEBUG*) output wire [(MGT_DATA_WIDTH/8)-1:0] mgtRxIsK,
-    (*MARK_DEBUG=DEBUG*) output wire                          mgtLinkUp,
+    output wire                                               evrRxClk,
+    (*MARK_DEBUG=DEBUG*) output wire                          evrRxLinkUp,
+    (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] evrRxChars,
+    (*MARK_DEBUG=DEBUG*) output wire [(MGT_DATA_WIDTH/8)-1:0] evrRxCharIsK,
+    output wire                                               evfRxClk,
+    (*MARK_DEBUG=DEBUG*) output wire                          evfRxLinkUp,
+    (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] evfRxChars,
+    (*MARK_DEBUG=DEBUG*) output wire [(MGT_DATA_WIDTH/8)-1:0] evfRxCharIsK,
     output wire                                               mgtTxClk,
     (*MARK_DEBUG=DEBUG*) input  wire     [MGT_DATA_WIDTH-1:0] mgtTxChars,
     (*MARK_DEBUG=DEBUG*) input  wire [(MGT_DATA_WIDTH/8)-1:0] mgtTxIsK);
@@ -115,36 +119,39 @@ end
 /*
  * Check link validity
  */
-(*MARK_DEBUG=DEBUG*) wire [MGT_DATA_WIDTH-1:0] rxDataOut;
-(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] rxCharIsKOut;
-(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] rxNotInTableOut;
-(*MARK_DEBUG=DEBUG*) reg [4:0] syncCount = 0;
-wire linkUp = syncCount[4];
-reg [MGT_DATA_WIDTH-1:0] rxChars_d;
-reg [MGT_BYTE_COUNT-1:0] rxIsK;
-
-always @(posedge mgtRxClk) begin
-    rxChars_d <= rxDataOut;
-    rxIsK <= rxCharIsKOut;
-    if ((rxNotInTableOut != 0)
-     || (rxCharIsKOut[MGT_BYTE_COUNT-1:1] != 0)
-     || (rxCharIsKOut[0] && (rxDataOut[7:0] != 8'hBC))) begin
-        syncCount <= 0;
-    end
-    else if (!linkUp && rxCharIsKOut[0]) begin
-        syncCount <= syncCount + 1;
-    end
-end
-assign mgtRxChars = rxChars_d;
-assign mgtRxIsK = rxIsK;
-assign mgtLinkUp = linkUp;
+(*MARK_DEBUG=DEBUG*) wire [MGT_DATA_WIDTH-1:0] evrRxData, evfRxData;
+(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] evrRxDataIsK, evfRxDataIsK;
+(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] evrRxNotInTable, evfRxNotInTable;
+mgtLinkStatus #(
+    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
+    .MGT_BYTE_COUNT(MGT_BYTE_COUNT))
+  evrLinkStatus (
+    .clk(evrRxClk),
+    .mgtData(evrRxData),
+    .mgtDataIsK(evrRxDataIsK),
+    .mgtNotInTable(evrRxNotInTable),
+    .rxChars(evrRxChars),
+    .rxCharIsK(evrRxCharIsK),
+    .rxLinkUp(evrRxLinkUp));
+mgtLinkStatus #(
+    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
+    .MGT_BYTE_COUNT(MGT_BYTE_COUNT))
+  evfLinkStatus (
+    .clk(evfRxClk),
+    .mgtData(evfRxData),
+    .mgtDataIsK(evfRxDataIsK),
+    .mgtNotInTable(evfRxNotInTable),
+    .rxChars(evfRxChars),
+    .rxCharIsK(evfRxCharIsK),
+    .rxLinkUp(evfRxLinkUp));
 
 /*
  * Buffer the receiver and transmitter clocks
  */
-wire txoutclk_out, rxoutclk_out;
-BUFG txoutclk_bufg(.I(txoutclk_out), .O(mgtTxClk));
-BUFG rxoutclk_bufg(.I(rxoutclk_out), .O(mgtRxClk));
+wire txoutclk, rxoutclkEVR, rxoutclkEVF;
+BUFG txoutclk_bufg(.I(txoutclk), .O(mgtTxClk));
+BUFG rxoutclkEVR_bufg(.I(rxoutclkEVR), .O(evrRxClk));
+BUFG rxoutclkEVF_bufg(.I(rxoutclkEVF), .O(evfRxClk));
 
 /*
  * Instantiate the MGT common blocks.
@@ -313,8 +320,8 @@ MGT MGT_i (
     .gt1_eyescandataerror_out       (),     // output wire gt1_eyescandataerror_out
     .gt1_eyescantrigger_in          (1'b0), // input wire gt1_eyescantrigger_in
     //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt1_rxusrclk_in                (mgtRxClk), // input wire gt1_rxusrclk_in
-    .gt1_rxusrclk2_in               (mgtRxClk), // input wire gt1_rxusrclk2_in
+    .gt1_rxusrclk_in                (1'b0), // input wire gt1_rxusrclk_in
+    .gt1_rxusrclk2_in               (1'b0), // input wire gt1_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
     .gt1_rxdata_out                 (), // output wire [15:0] gt1_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
@@ -570,13 +577,13 @@ MGT MGT_i (
     .gt5_eyescandataerror_out       (),     // output wire gt5_eyescandataerror_out
     .gt5_eyescantrigger_in          (1'b0), // input wire gt5_eyescantrigger_in
     //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt5_rxusrclk_in                (mgtRxClk), // input wire gt5_rxusrclk_in
-    .gt5_rxusrclk2_in               (mgtRxClk), // input wire gt5_rxusrclk2_in
+    .gt5_rxusrclk_in                (evrRxClk), // input wire gt5_rxusrclk_in
+    .gt5_rxusrclk2_in               (evrRxClk), // input wire gt5_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt5_rxdata_out                 (rxDataOut), // output wire [15:0] gt5_rxdata_out
+    .gt5_rxdata_out                 (evrRxData), // output wire [15:0] gt5_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt5_rxdisperr_out              (), // output wire [1:0] gt5_rxdisperr_out
-    .gt5_rxnotintable_out           (rxNotInTableOut), // output wire [1:0] gt5_rxnotintable_out
+    .gt5_rxnotintable_out           (evrRxNotInTable), // output wire [1:0] gt5_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt5_gtxrxp_in                  (rxP[0]), // input wire gt5_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -586,13 +593,13 @@ MGT MGT_i (
     .gt5_rxmonitorout_out           (),      // output wire [6:0] gt5_rxmonitorout_out
     .gt5_rxmonitorsel_in            (2'b01), // input wire [1:0] gt5_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt5_rxoutclk_out               (rxoutclk_out), // output wire gt5_rxoutclk_out
+    .gt5_rxoutclk_out               (rxoutclkEVR), // output wire gt5_rxoutclk_out
     .gt5_rxoutclkfabric_out         (),             // output wire gt5_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt5_gtrxreset_in               (rxreset),  // input wire gt5_gtrxreset_in
     .gt5_rxpmareset_in              (pmareset), // input wire gt5_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt5_rxcharisk_out              (rxCharIsKOut), // output wire [1:0] gt5_rxcharisk_out
+    .gt5_rxcharisk_out              (evrRxDataIsK), // output wire [1:0] gt5_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt5_rxresetdone_out            (mgtStatus[0][2]), // output wire gt5_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
@@ -607,7 +614,7 @@ MGT MGT_i (
     .gt5_gtxtxn_out                 (txN[0]), // output wire gt5_gtxtxn_out
     .gt5_gtxtxp_out                 (txP[0]), // output wire gt5_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt5_txoutclk_out               (txoutclk_out), // output wire gt5_txoutclk_out
+    .gt5_txoutclk_out               (txoutclk), // output wire gt5_txoutclk_out
     .gt5_txoutclkfabric_out         (),             // output wire gt5_txoutclkfabric_out
     .gt5_txoutclkpcs_out            (),             // output wire gt5_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
@@ -634,13 +641,13 @@ MGT MGT_i (
     .gt6_eyescandataerror_out       (),     // output wire gt6_eyescandataerror_out
     .gt6_eyescantrigger_in          (1'b0), // input wire gt6_eyescantrigger_in
     //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt6_rxusrclk_in                (1'b0), // input wire gt6_rxusrclk_in
-    .gt6_rxusrclk2_in               (1'b0), // input wire gt6_rxusrclk2_in
+    .gt6_rxusrclk_in                (evfRxClk), // input wire gt6_rxusrclk_in
+    .gt6_rxusrclk2_in               (evfRxClk), // input wire gt6_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt6_rxdata_out                 (), // output wire [15:0] gt6_rxdata_out
+    .gt6_rxdata_out                 (evfRxData), // output wire [15:0] gt6_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt6_rxdisperr_out              (), // output wire [1:0] gt6_rxdisperr_out
-    .gt6_rxnotintable_out           (), // output wire [1:0] gt6_rxnotintable_out
+    .gt6_rxnotintable_out           (evfRxNotInTable), // output wire [1:0] gt6_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt6_gtxrxp_in                  (rxP[1]), // input wire gt6_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -650,13 +657,13 @@ MGT MGT_i (
     .gt6_rxmonitorout_out           (),      // output wire [6:0] gt6_rxmonitorout_out
     .gt6_rxmonitorsel_in            (2'b01), // input wire [1:0] gt6_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt6_rxoutclk_out               (), // output wire gt6_rxoutclk_out
+    .gt6_rxoutclk_out               (rxoutclkEVF), // output wire gt6_rxoutclk_out
     .gt6_rxoutclkfabric_out         (), // output wire gt6_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt6_gtrxreset_in               (rxreset),  // input wire gt6_gtrxreset_in
     .gt6_rxpmareset_in              (pmareset), // input wire gt6_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt6_rxcharisk_out              (), // output wire [1:0] gt6_rxcharisk_out
+    .gt6_rxcharisk_out              (evfRxDataIsK), // output wire [1:0] gt6_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt6_rxresetdone_out            (mgtStatus[1][2]), // output wire gt6_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
@@ -756,5 +763,37 @@ MGT MGT_i (
     .gt1_qplloutrefclk_in(gt1_qplloutrefclk_in)    // input wire gt1_qplloutrefclk_in
 );
 
+endmodule
+
+/*
+ * Check link validity
+ */
+module mgtLinkStatus #(
+    parameter MGT_DATA_WIDTH = -1,
+    parameter MGT_BYTE_COUNT = -1
+    ) (
+    input  wire                       clk,
+    input  wire  [MGT_DATA_WIDTH-1:0] mgtData,
+    input  wire  [MGT_BYTE_COUNT-1:0] mgtDataIsK,
+    input  wire  [MGT_BYTE_COUNT-1:0] mgtNotInTable,
+    output reg   [MGT_DATA_WIDTH-1:0] rxChars,
+    output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
+    output wire                       rxLinkUp);
+
+reg [4:0] syncCount;
+assign rxLinkUp = syncCount[4];
+
+always @(posedge clk) begin
+    rxChars <= mgtData;
+    rxCharIsK <= mgtDataIsK;
+    if ((mgtNotInTable != 0)
+     || (mgtDataIsK[MGT_BYTE_COUNT-1:1] != 0)
+     || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
+        syncCount <= 0;
+    end
+    else if (!rxLinkUp && mgtDataIsK[0] && (mgtData[7:0] == 8'hBC)) begin
+        syncCount <= syncCount + 1;
+    end
+end
 endmodule
 `default_nettype wire
