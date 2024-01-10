@@ -23,73 +23,75 @@
  */
 
 /*
- * SPI link to MAX4896 relay drivers.
+ * SPI link to AMC7823 analog monitoring and control circuit
+ * Shift on rising SCLK edge, sample on falling edge.
  */
 `default_nettype none
-module coilDriverSPI #(
+module amc7823SPI #(
     parameter CLK_RATE = 100000000
     ) (
     input  wire        clk,
     input  wire [31:0] GPIO_OUT,
-    input  wire        clrStrobe,
+    input  wire        csrStrobe,
     input  wire        setStrobeAndStart,
     output wire [31:0] status,
     output reg         SPI_CLK = 0,
     output reg         SPI_CS_n = 1,
     input  wire        SPI_DOUT,
-    output wire        SPI_DIN,
+    output reg         SPI_DIN = 0,
     output reg         COIL_CONTROL_RESET_n = 0);
 
-localparam SPI_RATE  = 5000000;
-localparam SPI_WIDTH = 64;
+localparam SPI_RATE  = 10000000;
+localparam SPI_WIDTH = 32;
 
 localparam TICK_COUNTER_RELOAD = ((CLK_RATE+(SPI_RATE*2)-1) / (SPI_RATE*2)) - 2;
 localparam TICK_COUNTER_WIDTH = $clog2(TICK_COUNTER_RELOAD+1) + 1;
 reg [TICK_COUNTER_WIDTH-1:0] tickCounter;
 wire tick = tickCounter[TICK_COUNTER_WIDTH-1];
 
-localparam BIT_COUNTER_LOAD = SPI_WIDTH - 1;
+localparam BIT_COUNTER_LOAD = SPI_WIDTH - 2;
 localparam BIT_COUNTER_WIDTH = $clog2(BIT_COUNTER_LOAD+1) + 1;
 reg [BIT_COUNTER_WIDTH-1:0] bitCounter;
 wire bitCounterDone = bitCounter[BIT_COUNTER_WIDTH-1];
+reg busy = 0;
 
 reg [SPI_WIDTH-1:0] shiftReg;
-assign SPI_DIN = shiftReg[SPI_WIDTH-1];
 
-assign status = {31'b0, !SPI_CS_n};
+assign status = {busy, shiftReg[30:0]};
 
 always @(posedge clk) begin
-    if (SPI_CS_n) begin
-        tickCounter <= TICK_COUNTER_RELOAD;
-        bitCounter <= BIT_COUNTER_LOAD;
-        if (clrStrobe) begin
-            COIL_CONTROL_RESET_n <= 1;
-            shiftReg[32+:32] <= GPIO_OUT;
-        end
-        if (setStrobeAndStart) begin
-            shiftReg[0+:32] <= GPIO_OUT;
-            SPI_CS_n <= 0;
-        end
-    end
-    else begin
+    if (busy) begin
         if (tick) begin
             tickCounter <= TICK_COUNTER_RELOAD;
             if (SPI_CLK) begin
                 SPI_CLK <= 0;
-                shiftReg <= {shiftReg[SPI_WIDTH-2:0], SPI_DIN};
-            end
-            else begin
+                shiftReg[0] <= SPI_DOUT;
                 bitCounter <= bitCounter - 1;
                 if (bitCounterDone) begin
-                    SPI_CS_n <= 1;
+                    busy <= 0;
                 end
-                else begin
-                    SPI_CLK <= 1;
-                end
+            end
+            else begin
+                SPI_DIN <= shiftReg[SPI_WIDTH-1];
+                shiftReg <= {shiftReg[SPI_WIDTH-2:0], 1'bx};
+                SPI_CLK <= 1;
             end
         end
         else begin
             tickCounter <= tickCounter - 1;
+        end
+    end
+    else begin
+        tickCounter <= TICK_COUNTER_RELOAD;
+        bitCounter <= BIT_COUNTER_LOAD;
+        if (csrStrobe) begin
+            if (GPIO_OUT[30]) begin
+                SPI_CS_n <= GPIO_OUT[29];
+            end
+            else begin
+                shiftReg <= GPIO_OUT;
+                busy <= 1;
+            end
         end
     end
 end

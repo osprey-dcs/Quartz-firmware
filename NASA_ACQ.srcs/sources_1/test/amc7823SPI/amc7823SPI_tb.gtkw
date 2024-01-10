@@ -1,0 +1,60 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Wed Jan 10 19:53:45 2024
+[*]
+[dumpfile] "amc7823SPI_tb.fst"
+[dumpfile_mtime] "Wed Jan 10 19:51:22 2024"
+[dumpfile_size] 2422
+[savefile] "amc7823SPI_tb.gtkw"
+[timestart] 0
+[size] 2176 600
+[pos] 1879 0
+*-9.000000 205 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] amc7823SPI_tb.
+[sst_width] 253
+[signals_width] 152
+[sst_expanded] 1
+[sst_vpaned_height] 159
+@28
+amc7823SPI_tb.busy
+amc7823SPI_tb.clk
+@22
+amc7823SPI_tb.GPIO_OUT[31:0]
+@28
+amc7823SPI_tb.csrStrobe
+@22
+amc7823SPI_tb.status[31:0]
+@28
+amc7823SPI_tb.busy
+amc7823SPI_tb.SPI_CLK
+amc7823SPI_tb.SPI_CS_n
+amc7823SPI_tb.SPI_DIN
+amc7823SPI_tb.SPI_DOUT
+[pattern_trace] 1
+[pattern_trace] 0
