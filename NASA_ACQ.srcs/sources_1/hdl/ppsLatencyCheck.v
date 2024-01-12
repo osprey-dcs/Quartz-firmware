@@ -72,7 +72,7 @@ always @(posedge clk) begin
         end
     end
     else begin
-        latencyCounter <= 0;
+        latencyCounter <= 1;
         if (hwPPS && !hwPPS_d) begin
             active <= 1;
         end
