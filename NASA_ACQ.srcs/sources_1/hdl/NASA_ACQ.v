@@ -100,6 +100,11 @@ module NASA_ACQ #(
     output wire                                 COIL_CONTROL_SPI_DIN,
     output wire                                 COIL_CONTROL_RESET_n,
 
+    output wire                                  AMC7823_SPI_CLK,
+    output wire                                  AMC7823_SPI_CS_n,
+    input  wire                                  AMC7823_SPI_DOUT,
+    output wire                                  AMC7823_SPI_DIN,
+
     // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
     // Time receiver
     input  wire PMOD2_0, // PMOD-GPS 3D-Fix (unused)
@@ -165,7 +170,6 @@ wire evrPPSmarker;
 wire evgActive;
 evr #(
     .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
-    .CFG_MGT_LATENCY(CFG_MGT_LATENCY),
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
@@ -296,6 +300,20 @@ mmcIO #(.DEBUG("false"))
     .MMC_CSB(FPGA_CSB),
     .MMC_MOSI(FPGA_MOSI),
     .MMC_MISO(FPGA_MISO));
+
+///////////////////////////////////////////////////////////////////////////////
+// AMC7832 FMC Monitoring
+amc7823SPI #(.CLK_RATE(CFG_SYSCLK_RATE))
+  amc7823SPI (
+    .clk(sysClk),
+    .GPIO_OUT(GPIO_OUT),
+    .csrStrobe(GPIO_STROBES[GPIO_IDX_DIGITIZER_AMC7823]),
+    .status(GPIO_IN[GPIO_IDX_DIGITIZER_AMC7823]),
+    .SPI_CLK(AMC7823_SPI_CLK),
+    .SPI_CS_n(AMC7823_SPI_CS_n),
+    .SPI_DOUT(AMC7823_SPI_DOUT),
+    .SPI_DIN(AMC7823_SPI_DIN));
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // AD7768 FMC ADC

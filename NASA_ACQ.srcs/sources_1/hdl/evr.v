@@ -32,7 +32,6 @@
 `default_nettype none
 module evr #(
     parameter CFG_EVG_CLK_RATE = 1,
-    parameter CFG_MGT_LATENCY  = 1,
     parameter MGT_COUNT        = 1,
     parameter EVG_CLK_RATE     = 1,
     parameter TIMESTAMP_WIDTH  = 64,
@@ -280,7 +279,6 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
 wire [MGT_DATA_WIDTH-1:0] evfTxChars;
 wire [MGT_BYTE_COUNT-1:0] evfTxCharIsK;
 evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
-      .CFG_MGT_LATENCY(CFG_MGT_LATENCY),
       .DEBUG("false"))
   evf_i (
     .rxClk(evfRxClk),
