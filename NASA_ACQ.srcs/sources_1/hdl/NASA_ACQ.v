@@ -135,6 +135,7 @@ IBUFDS_GTE2 gtRefClkBuf (
     .I(MGTREFCLK0_116_P),
     .IB(MGTREFCLK0_116_N));
 
+wire hwPPSmarker = PMOD2_3; /* FIXME: WILL BE REPLACED WITH DIGITIZER PPS INPUT */
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
 wire [31:0] GPIO_OUT;
@@ -187,7 +188,7 @@ evr #(
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evrRxClk(evrRxClk),
     .evfRxClk(evfRxClk),
-    .evgPPSmarker_a(PMOD2_3),
+    .evgPPSmarker_a(hwPPSmarker),
     .evrPPSmarker(evrPPSmarker),
     .evgActive(evgActive),
     .sysTimestamp(sysTimestamp),
@@ -201,7 +202,16 @@ evr #(
     .txN(QSFP_TX_N));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
-wire ppsMarker_a = evgActive ? PMOD2_3 : evrPPSmarker;
+wire ppsMarker_a = evgActive ? hwPPSmarker : evrPPSmarker;
+
+///////////////////////////////////////////////////////////////////////////////
+// Measure interval between hardware and event receiver PPS markers
+ppsLatencyCheck #(.CLK_RATE(CFG_SYSCLK_RATE))
+  ppsLatencyCheck (
+    .clk(sysClk),
+    .latency(GPIO_IN[GPIO_IDX_PPS_LATENCY]),
+    .hwPPS_a(hwPPSmarker),
+    .evrPPSmarker_a(evrPPSmarker));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Lock clock to PPS marker
