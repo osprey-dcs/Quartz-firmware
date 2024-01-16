@@ -79,6 +79,15 @@ module NASA_ACQ #(
     input  wire PMOD1_6,
     input  wire PMOD1_7,
 
+    input  wire PMOD2_0,
+    input  wire PMOD2_1,
+    input  wire PMOD2_2,
+    input  wire PMOD2_3,
+    input  wire PMOD2_4,
+    input  wire PMOD2_5,
+    input  wire PMOD2_6,
+    input  wire PMOD2_7,
+
     // Osprey Quad AD7768 FMC Digitizer
     output wire                                 AD7768_MCLK_P,
     output wire                                 AD7768_MCLK_N,
@@ -94,6 +103,7 @@ module NASA_ACQ #(
     output wire                                 AD7768_START_n,
     input  wire                                 AD7768_SYNC_IN_n,
     input  wire                                 AD7768_SYNC_OUT_n,
+
     output wire                                 COIL_CONTROL_SPI_CLK,
     output wire                                 COIL_CONTROL_SPI_CS_n,
     input  wire                                 COIL_CONTROL_SPI_DOUT,
@@ -105,16 +115,7 @@ module NASA_ACQ #(
     input  wire                                  AMC7823_SPI_DOUT,
     output wire                                  AMC7823_SPI_DIN,
 
-    // FIXME: This will be changed when we have a real time receiver giving us the PPS marker -- BUT how will the PPS be connected?
-    // Time receiver
-    input  wire PMOD2_0, // PMOD-GPS 3D-Fix (unused)
-    input  wire PMOD2_1, // PMOD-GPS RxData (actually an output, but unused)
-    input  wire PMOD2_2, // PMOD-GPS TxData
-    input  wire PMOD2_3, // PMOD-GPS PPS
-    input  wire PMOD2_4,
-    input  wire PMOD2_5,
-    input  wire PMOD2_6,
-    input  wire PMOD2_7
+    input  wire                                 HARDWARE_PPS
     );
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -135,7 +136,6 @@ IBUFDS_GTE2 gtRefClkBuf (
     .I(MGTREFCLK0_116_P),
     .IB(MGTREFCLK0_116_N));
 
-wire hwPPSmarker = PMOD2_3; /* FIXME: WILL BE REPLACED WITH DIGITIZER PPS INPUT */
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
 wire [31:0] GPIO_OUT;
@@ -168,7 +168,7 @@ localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrPPSmarker;
-wire evgActive;
+wire isEVG;
 evr #(
     .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .MGT_COUNT(CFG_MGT_COUNT),
@@ -188,9 +188,9 @@ evr #(
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evrRxClk(evrRxClk),
     .evfRxClk(evfRxClk),
-    .evgPPSmarker_a(hwPPSmarker),
+    .hwPPSmarker_a(HARDWARE_PPS),
     .evrPPSmarker(evrPPSmarker),
-    .evgActive(evgActive),
+    .isEVG(isEVG),
     .sysTimestamp(sysTimestamp),
     .acqClk(clk125),
     .acqTimestamp(acqTimestamp),
@@ -202,7 +202,6 @@ evr #(
     .txN(QSFP_TX_N));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
-wire ppsMarker_a = evgActive ? hwPPSmarker : evrPPSmarker;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Measure interval between hardware and event receiver PPS markers
@@ -210,7 +209,7 @@ ppsLatencyCheck #(.CLK_RATE(CFG_SYSCLK_RATE))
   ppsLatencyCheck (
     .clk(sysClk),
     .latency(GPIO_IN[GPIO_IDX_PPS_LATENCY]),
-    .hwPPS_a(hwPPSmarker),
+    .hwPPS_a(HARDWARE_PPS),
     .evrPPSmarker_a(evrPPSmarker));
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -231,7 +230,7 @@ marbleClockSync #(
     .clk(clk125),
     .enable_a(pllEnable),
     .status(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
-    .ppsMarker_a(ppsMarker_a),
+    .ppsMarker_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
     .ppsStrobe(),
     .SPI_CLK(WR_DAC_SCLK_T),
     .SPI_SYNCn(WR_DAC1_SYNC_Tn),
@@ -254,7 +253,7 @@ frequencyCounters #(
                       clk32,
                       clk125,
                       sysClk }),
-    .acqMarker_a(ppsMarker_a),
+    .acqMarker_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
     .channelSelect(frequencyChannelSelect),
     .frequency(measuredFrequency));

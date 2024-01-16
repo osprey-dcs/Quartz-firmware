@@ -52,9 +52,10 @@ module evr #(
                          output wire                       evfRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
-    (*MARK_DEBUG=DEBUG*) input  wire                       evgPPSmarker_a,
+
+    (*MARK_DEBUG=DEBUG*) input  wire                       hwPPSmarker_a,
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
-                         output reg                        evgActive = 0,
+                         output reg                        isEVG = 0,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
@@ -188,7 +189,7 @@ wire ppsTooFast = !ppsTooFastCounter[EVG_PPS_COUNTER_WIDTH-1];
 
 reg sysEVG_PPStoggle = 0;
 assign sysEVGstatus = {sysEVG_PPStoggle, {28{1'b0}},
-                       evgActive, secondsValid, ppsValid};
+                       isEVG, secondsValid, ppsValid};
 localparam HEARTBEAT_INTERVAL= 124800000;
 localparam HEARTBEAT_RELOAD = HEARTBEAT_INTERVAL - 2;
 localparam HEARTBEAT_COUNTER_WIDTH = $clog2(HEARTBEAT_RELOAD+1)+1;
@@ -196,13 +197,13 @@ reg [HEARTBEAT_COUNTER_WIDTH-1:0] heartbeatCounter = HEARTBEAT_RELOAD;
 wire heartbeatCounterDone = heartbeatCounter[HEARTBEAT_COUNTER_WIDTH-1];
 reg sysSecondsToggle = 0;
 reg [31:0] sysSeconds;
-(*ASYNC_REG="true"*) reg txSecondsToggle_m = 0;
-reg txSecondsToggle = 0, txSecondsToggle_d = 0;
-(*ASYNC_REG="true"*) reg txPPSmarker_m = 0;
-reg txPPSmarker = 0, txPPSmarker_d = 0;
+(*ASYNC_REG="true"*) reg evgSecondsToggle_m = 0;
+reg evgSecondsToggle = 0, evgSecondsToggle_d = 0;
+(*ASYNC_REG="true"*) reg evgPPSmarker_m = 0;
+reg evgPPSmarker = 0, evgPPSmarker_d = 0;
 always @(posedge sysClk) begin
     if (sysEVGsetTimeStrobe) begin
-        evgActive <= 1;
+        isEVG <= 1;
         if (sysGPIO_OUT != 0) begin
             sysSeconds <= sysGPIO_OUT;
             sysSecondsToggle <= !sysSecondsToggle;
@@ -216,21 +217,21 @@ always @(posedge mgtTxClk) begin
     else begin
         heartbeatCounter <= heartbeatCounter - 1;
     end
-    txSecondsToggle_m <= sysSecondsToggle;
-    txSecondsToggle   <= txSecondsToggle_m;
-    txSecondsToggle_d <= txSecondsToggle;
+    evgSecondsToggle_m <= sysSecondsToggle;
+    evgSecondsToggle   <= evgSecondsToggle_m;
+    evgSecondsToggle_d <= evgSecondsToggle;
     if (ppsValid) begin
-        if (txSecondsToggle != txSecondsToggle_d) begin
+        if (evgSecondsToggle != evgSecondsToggle_d) begin
             secondsValid <= 1;
         end
     end
     else begin
         secondsValid <= 0;
     end
-    txPPSmarker_m <= evgPPSmarker_a;
-    txPPSmarker   <= txPPSmarker_m;
-    txPPSmarker_d <= txPPSmarker;
-    if (txPPSmarker && !txPPSmarker_d) begin
+    evgPPSmarker_m <= hwPPSmarker_a;
+    evgPPSmarker   <= evgPPSmarker_m;
+    evgPPSmarker_d <= evgPPSmarker;
+    if (evgPPSmarker && !evgPPSmarker_d) begin
         sysEVG_PPStoggle <= !sysEVG_PPStoggle;
         if (!ppsTooFast && !ppsTooSlow) begin
             ppsValid <= 1;
@@ -263,8 +264,8 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
     .eventCode(8'h00),
     .eventStrobe(1'b0),
     .heartbeatRequest(heartbeatCounterDone),
-    .ppsStrobe(txPPSmarker && !txPPSmarker_d),
-    .secondsStrobe(txSecondsToggle != txSecondsToggle_d),
+    .ppsStrobe(evgPPSmarker && !evgPPSmarker_d),
+    .secondsStrobe(evgSecondsToggle != evgSecondsToggle_d),
     .seconds(sysSeconds),
     .distributedBus(8'h00),
     .sysClk(sysClk),
@@ -282,7 +283,7 @@ evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
       .DEBUG("false"))
   evf_i (
     .rxClk(evfRxClk),
-    .rxLinkUp(evfRxLinkUp && !evgActive),
+    .rxLinkUp(evfRxLinkUp && !isEVG),
     .rxChars(evfRxChars),
     .rxCharIsK(evfRxCharIsK),
     .txClk(mgtTxClk),
@@ -291,14 +292,14 @@ evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
 
 ///////////////////////////////////////////////////////////////////////////////
 // Select event source
-(*ASYNC_REG="true"*) reg txEvgActive_m;
-reg txEvgActive;
+(*ASYNC_REG="true"*) reg txIsEVG_m;
+reg txIsEVG;
 always @(posedge mgtTxClk) begin
-    txEvgActive_m <= evgActive;
-    txEvgActive   <= txEvgActive_m;
+    txIsEVG_m <= isEVG;
+    txIsEVG   <= txIsEVG_m;
 end
-assign txChars = txEvgActive ? evgTxChars : evfTxChars;
-assign txCharIsK = txEvgActive ? evgTxCharIsK : evfTxCharIsK;
+assign txChars = txIsEVG ? evgTxChars : evfTxChars;
+assign txCharIsK = txIsEVG ? evgTxCharIsK : evfTxCharIsK;
 
 endmodule
 `default_nettype wire

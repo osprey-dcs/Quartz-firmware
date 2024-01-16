@@ -150,7 +150,7 @@ set_property -dict {PACKAGE_PIN AA23 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOU
 set_property -dict {PACKAGE_PIN AB24 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT[25]}]
 
 # FMC2 LA02 -- FMC2 H7/H8
-#set_property -dict {PACKAGE_PIN AE22 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_P[2]}]
+set_property -dict {PACKAGE_PIN AE22 IOSTANDARD LVCMOS25} [get_ports {HARDWARE_PPS}]
 #set_property -dict {PACKAGE_PIN AF22 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_N[2]}]
 
 # FMC2 LA03 -- FMC2 G9/G10
