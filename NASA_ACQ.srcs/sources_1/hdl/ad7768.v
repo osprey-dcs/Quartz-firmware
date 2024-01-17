@@ -44,6 +44,7 @@ module ad7768 #(
     input  wire        sysCsrStrobe,
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
+    output wire [31:0] sysAuxStatus,
 
 
     input  wire                                              acqClk,
@@ -320,6 +321,10 @@ always @(posedge acqClk) begin
     endcase
     chipsAreAligned <= (skew <= SKEW_LIMIT_ACQ_TICKS);
 end
+/*
+ * Development use only -- don't worry about clock-crossing.
+ */
+assign sysAuxStatus = { {32-SKEW_COUNT_WIDTH{1'b0}}, skew };
 
 // See where ADC DRDY arrives relative to PPS strobe.
 localparam PPS_CHECK_TICKS = (ACQ_CLK_RATE + DCLK_RATE) /  DCLK_RATE;

@@ -349,6 +349,7 @@ ad7768 #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_AD7768_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_CSR]),
+    .sysAuxStatus(GPIO_IN[GPIO_IDX_AD7768_AUX_STATUS]),
     .acqClk(clk125),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
