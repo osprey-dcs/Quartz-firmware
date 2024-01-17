@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Wed Jan 17 19:10:20 2024
+[*] Wed Jan 17 23:17:25 2024
 [*]
 [dumpfile] "ad7768_tb.fst"
-[dumpfile_mtime] "Wed Jan 17 19:09:20 2024"
-[dumpfile_size] 73386
+[dumpfile_mtime] "Wed Jan 17 23:14:36 2024"
+[dumpfile_size] 81925
 [savefile] "ad7768_tb.gtkw"
 [timestart] 0
 [size] 1792 600
 [pos] 1862 0
-*-18.000000 3980000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-19.000000 3980000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -44,15 +44,23 @@
 @28
 ad7768_tb.sysClk
 ad7768_tb.acqClk
+ad7768_tb.adcRESETn
+@29
+ad7768_tb.adcSCLK
+@23
+ad7768_tb.adcCSn[3:0]
+@29
+ad7768_tb.adcSDI
+@23
+ad7768_tb.adcSDO[3:0]
 @420
 ad7768_tb.shiftCount
 @22
 ad7768_tb.adcDCLK[3:0]
 ad7768_tb.adcDRDY[3:0]
 ad7768_tb.adcDOUT[31:0]
-@29
-ad7768_tb.ad7768_i.acqActive
 @28
+ad7768_tb.ad7768_i.acqActive
 ad7768_tb.ad7768_i.sampleFlag
 ad7768_tb.ad7768_i.acqStrobe
 ad7768_tb.ad7768_i.adcBitCountDone

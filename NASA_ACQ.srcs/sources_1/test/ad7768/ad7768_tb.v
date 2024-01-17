@@ -51,13 +51,13 @@ wire         [(ADC_CHIP_COUNT*ADC_PER_CHIP*8)-1:0] acqHeaders;
 wire                      adcSCLK;
 wire [ADC_CHIP_COUNT-1:0] adcCSn;
 wire                      adcSDI;
-reg  [ADC_CHIP_COUNT-1:0] adcSDO = 0;
+reg  [ADC_CHIP_COUNT-1:0] adcSDO = {ADC_CHIP_COUNT{1'bx}};
 
 reg                [ADC_CHIP_COUNT-1:0] adcDCLK = 0;
 reg                [ADC_CHIP_COUNT-1:0] adcDRDY = 0;
 reg [(ADC_CHIP_COUNT*ADC_PER_CHIP)-1:0] adcDOUT = 0;
-wire                                    adcSTARTn = 0;
-wire                                    adcRESETn = 0;
+wire                                    adcSTARTn;
+wire                                    adcRESETn;
 
 // Instantiate device under test
 ad7768 #(
@@ -142,11 +142,89 @@ initial begin
     end
 end
 
+// Handle SPI
+integer spiBitCount = -1;
+reg [15:0] spiReg = {16{1'bx}};
+reg spiBit;
+wire [ADC_CHIP_COUNT-1:0] expectCSn = ~2;
+always @(adcCSn) begin
+    if ((spiBitCount != -1) || (adcSCLK != 0)) begin
+        $display("ADC CSn %X, bit count %d, SPI CLOCK %d at %d -- FAIL",
+                                           adcCSn, spiBitCount, adcSCLK, $time);
+        good = 0;
+    end
+    else if (adcCSn != {ADC_CHIP_COUNT{1'b1}}) begin
+        spiBitCount = 15;
+        spiReg = 16'h0012;
+    end
+    else if (adcCSn == {ADC_CHIP_COUNT{1'b1}}) begin
+        spiBitCount = -1;
+        spiReg = {16{1'bx}};
+    end
+end
+always @(posedge adcSCLK) begin
+    if (adcCSn != {ADC_CHIP_COUNT{1'b1}}) begin
+        spiBit = adcSDI;
+    end
+end
+always @(negedge adcSCLK) begin
+    if (adcCSn != {ADC_CHIP_COUNT{1'b1}}) begin
+        spiReg = {spiReg[14:0], spiBit};
+        if (spiBitCount == 0) begin
+            $write("SPI %X to %X -- ", spiReg, ~adcCSn);
+            if ((spiReg == 16'h6543) && (adcCSn == expectCSn)) begin
+                $display("PASS");
+            end
+            else begin
+                $display("FAIL");
+                good = 0;
+            end
+        end
+        spiBitCount = spiBitCount - 1;
+    end
+end
+integer sp;
+always @(spiReg or adcCSn) begin
+    for (sp = 0 ; sp < ADC_CHIP_COUNT ; sp = sp + 1) begin
+        adcSDO[sp] = adcCSn[sp] ? 1'bx : spiReg[15];
+    end
+end
+
 reg good = 1;
 initial
 begin
     $dumpfile("ad7768_tb.fst");
     $dumpvars(0, ad7768_tb);
+
+    // Check ADC Reset
+    #100 ;
+    writeCsr((1 << 30) | 3);
+    #100 ;
+    if (adcRESETn != 0) begin
+        $display("Applied reset, but adcRESETn not low -- FAIL");
+        good = 0;
+    end
+    #100 ;
+    writeCsr((1 << 30) | 2);
+    #100 ;
+    if (adcRESETn != 1) begin
+        $display("Removed reset, but adcRESETn not high -- FAIL");
+        good = 0;
+    end
+
+    // Check ADC SPI
+    writeCsr((2 << 30) | (2 << 16) | 16'h6543);
+    if (!sysStatus[31]) begin
+        $display("SPI didn't start -- FAIL");
+        good = 0;
+    end
+    while (sysStatus[31]) begin
+        #10;
+    end
+    if (sysStatus[0+:16] != 16'h0012) begin
+        $display("SPI READBACK:%X -- FAIL", sysStatus[0+:16]);
+        good = 0;
+    end
 
     #30000 ;
     if (!sysStatus[29]) begin
@@ -177,5 +255,20 @@ always @(posedge acqClk) begin
         end
     end
 end
+
+task writeCsr;
+    input [31:0] w;
+    begin
+    @(posedge sysClk) begin
+        sysGPIO_OUT <= w;
+        sysCsrStrobe <= 1;
+    end
+    @(posedge sysClk) begin
+        sysGPIO_OUT <= {32{1'bx}};
+        sysCsrStrobe <= 0;
+    end
+    @(posedge sysClk) ;
+    end
+endtask
 
 endmodule
