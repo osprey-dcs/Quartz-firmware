@@ -1,13 +1,11 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Wed Jan 10 19:53:45 2024
+[*] Wed Jan 10 22:58:14 2024
 [*]
 [dumpfile] "amc7823SPI_tb.fst"
-[dumpfile_mtime] "Wed Jan 10 19:51:22 2024"
-[dumpfile_size] 2422
 [savefile] "amc7823SPI_tb.gtkw"
 [timestart] 0
-[size] 2176 600
+[size] 1792 600
 [pos] 1879 0
 *-9.000000 205 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA

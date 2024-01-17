@@ -1,0 +1,66 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Wed Jan 17 18:42:03 2024
+[*]
+[dumpfile] "ad7768_tb.fst"
+[dumpfile_mtime] "Wed Jan 17 18:40:14 2024"
+[dumpfile_size] 73300
+[savefile] "ad7768_tb.gtkw"
+[timestart] 2940000
+[size] 2016 600
+[pos] 1862 0
+*-18.000000 3980000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] ad7768_tb.
+[sst_width] 253
+[signals_width] 161
+[sst_expanded] 1
+[sst_vpaned_height] 159
+@28
+ad7768_tb.sysClk
+ad7768_tb.acqClk
+@420
+ad7768_tb.shiftCount
+@22
+ad7768_tb.adcDCLK[3:0]
+ad7768_tb.adcDRDY[3:0]
+ad7768_tb.adcDOUT[31:0]
+@29
+ad7768_tb.ad7768_i.acqActive
+@28
+ad7768_tb.ad7768_i.sampleFlag
+ad7768_tb.ad7768_i.acqStrobe
+ad7768_tb.ad7768_i.adcBitCountDone
+@22
+ad7768_tb.ad7768_i.adcBitCount[5:0]
+ad7768_tb.ad7768_i.skewCount[9:0]
+ad7768_tb.ad7768_i.skew[9:0]
+@28
+ad7768_tb.ad7768_i.skewState[1:0]
+[pattern_trace] 1
+[pattern_trace] 0

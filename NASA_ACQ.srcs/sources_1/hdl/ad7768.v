@@ -87,7 +87,6 @@ localparam CSR_W_OP_CHIP_PINS    = 2'h1,
            CSR_W_OP_SPI_TRANSFER = 2'h2;
 
 always @(posedge sysClk) begin
-    // Bit-bang SPI
     if (sysCsrStrobe) begin
         case (sysOpcode) 
         CSR_W_OP_CHIP_PINS: begin
@@ -215,7 +214,7 @@ always @(posedge acqClk) begin
             if (adcBitCountDone) begin
                 acqStrobe <= 1;
             end
-            if (adcDRDY_a) begin
+            if (adcDRDY_a == 0) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
             end
             else if (!adcBitCountDone) begin
@@ -233,7 +232,7 @@ always @(posedge acqClk) begin
     else begin
         acqStrobe <= 0;
         if (sampleFlag) begin
-            if (adcDRDY_a) begin
+            if (adcDRDY_a == 0) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
                 acqActive <= 1;
             end
@@ -337,7 +336,7 @@ always @(posedge acqClk) begin
     else if (ppsCheckInProgress) begin
         if (adcDRDY || ppsCheckOverflow) begin
             ppsCheckInProgress <= 0;
-            ppsAlignment= ppsCheck;
+            ppsAlignment <= ppsCheck;
         end
         else begin
             ppsCheck <= ppsCheck + 1;
