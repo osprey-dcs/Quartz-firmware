@@ -149,6 +149,10 @@ begin
     $dumpvars(0, ad7768_tb);
 
     #30000 ;
+    if (!sysStatus[29]) begin
+        $display("Chips not aligned.");
+        good = 0;
+    end
     $display("%s", good ? "PASS" : "FAIL");
     $finish;
 end
