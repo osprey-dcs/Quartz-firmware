@@ -215,7 +215,7 @@ always @(posedge acqClk) begin
             if (adcBitCountDone) begin
                 acqStrobe <= 1;
             end
-            if (adcDRDY_a == 0) begin
+            if (adcDRDY_a) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
             end
             else if (!adcBitCountDone) begin
@@ -233,7 +233,7 @@ always @(posedge acqClk) begin
     else begin
         acqStrobe <= 0;
         if (sampleFlag) begin
-            if (adcDRDY_a == 0) begin
+            if (adcDRDY_a) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
                 acqActive <= 1;
             end

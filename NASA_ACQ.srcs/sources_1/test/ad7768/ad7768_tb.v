@@ -118,7 +118,7 @@ integer adcVal = 0;
 integer shiftCount = SHIFTREG_WIDTH - 1;
 always @(posedge adcDCLK) begin
     #2 begin
-        adcDRDY[0] = shiftCount == 0 ? 1'b0 : 1'b1;
+        adcDRDY[0] = shiftCount == 0 ? 1'b1 : 1'b0;
         for (i = 0 ; i < CHANNEL_COUNT ; i = i + 1) begin
             adcDOUT[i] = shifters[i][SHIFTREG_WIDTH-1];
             shifters[i] = shifters[i] << 1;
