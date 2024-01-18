@@ -41,6 +41,7 @@ reg         sysClk = 0;
 reg         sysCsrStrobe = 0;
 reg  [31:0] sysGPIO_OUT = {32{1'bx}};
 wire [31:0] sysStatus;
+wire [31:0] sysAuxStatus;
 
 reg                                                acqClk = 0;
 reg                                                acqPPSstrobe = 0;
@@ -72,6 +73,7 @@ ad7768 #(
     .sysCsrStrobe(sysCsrStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysStatus),
+    .sysAuxStatus(sysAuxStatus),
     .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(acqStrobe),
@@ -106,6 +108,19 @@ integer r;
 always @(adcDRDY[0]) begin
     for (r = 1 ; r < ADC_CHIP_COUNT ; r = r + 1) begin
         #7 adcDRDY[r] = adcDRDY[0];
+    end
+end
+
+// Generate a fake PPS marker for DRDY[0] to time against
+integer ppsDelay = 2;
+always @(posedge adcDRDY[0]) begin
+    if (ppsDelay != 0) begin
+        ppsDelay = ppsDelay - 1;
+        if (ppsDelay == 0) begin
+            #3000;
+            @(posedge acqClk) acqPPSstrobe <= 1;
+            @(posedge acqClk) acqPPSstrobe <= 0;
+        end
     end
 end
 
@@ -231,6 +246,8 @@ begin
         $display("Chips not aligned.");
         good = 0;
     end
+    $display("PPS to DRDY:%d  DRDY Skew:%d", sysAuxStatus[16+:16],
+                                             sysAuxStatus[0+:16]);
     $display("%s", good ? "PASS" : "FAIL");
     $finish;
 end
