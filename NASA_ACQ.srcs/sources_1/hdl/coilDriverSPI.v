@@ -38,7 +38,8 @@ module coilDriverSPI #(
     output reg         SPI_CS_n = 1,
     input  wire        SPI_DOUT,
     output wire        SPI_DIN,
-    output reg         COIL_CONTROL_RESET_n = 0);
+    output reg         COIL_CONTROL_RESET_n = 0,
+    input  wire        COIL_CONTROL_FLAGS_n);
 
 localparam SPI_RATE  = 5000000;
 localparam SPI_WIDTH = 64;
@@ -56,7 +57,7 @@ wire bitCounterDone = bitCounter[BIT_COUNTER_WIDTH-1];
 reg [SPI_WIDTH-1:0] shiftReg;
 assign SPI_DIN = shiftReg[SPI_WIDTH-1];
 
-assign status = {31'b0, !SPI_CS_n};
+assign status = {30'b0, !COIL_CONTROL_FLAGS_n, !SPI_CS_n};
 
 always @(posedge clk) begin
     if (SPI_CS_n) begin

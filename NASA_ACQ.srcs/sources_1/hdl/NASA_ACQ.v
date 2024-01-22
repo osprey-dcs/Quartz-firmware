@@ -109,6 +109,7 @@ module NASA_ACQ #(
     input  wire                                 COIL_CONTROL_SPI_DOUT,
     output wire                                 COIL_CONTROL_SPI_DIN,
     output wire                                 COIL_CONTROL_RESET_n,
+    input  wire                                 COIL_CONTROL_FLAGS_n,
 
     output wire                                  AMC7823_SPI_CLK,
     output wire                                  AMC7823_SPI_CS_n,
@@ -398,7 +399,8 @@ coilDriverSPI #(.CLK_RATE(CFG_SYSCLK_RATE))
     .SPI_CS_n(COIL_CONTROL_SPI_CS_n),
     .SPI_DOUT(COIL_CONTROL_SPI_DOUT),
     .SPI_DIN(COIL_CONTROL_SPI_DIN),
-    .COIL_CONTROL_RESET_n(COIL_CONTROL_RESET_n));
+    .COIL_CONTROL_RESET_n(COIL_CONTROL_RESET_n),
+    .COIL_CONTROL_FLAGS_n(COIL_CONTROL_FLAGS_n));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Downsample
