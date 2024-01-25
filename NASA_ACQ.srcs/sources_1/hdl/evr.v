@@ -24,10 +24,8 @@
 
 /*
  * Wrap tiny event receiver and multi-gigabit transceiver
- * FIXME: All the event generation and forwarding code should be removed
- *        once a real event generator is in place.  The dummy generator
- *        and fanout here are good only for distributing time stamps and
- *        acquisition alignment to just a little better than 100 ns.
+ * FIXME: The event forwarding is good only for distributing time stamps
+ *        and acquisition alignment to just a little better than 100 ns.
  */
 `default_nettype none
 module evr #(

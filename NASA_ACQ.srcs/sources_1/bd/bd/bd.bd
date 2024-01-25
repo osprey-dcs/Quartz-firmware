@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x671B801B30BA2337",
+      "boundary_crc": "0x633B3563515932FC",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -347,6 +347,11 @@
       },
       "phy_reset_n": {
         "direction": "O"
+      },
+      "i2c_fpga_gpo": {
+        "direction": "O",
+        "left": "0",
+        "right": "0"
       }
     },
     "components": {
@@ -1930,6 +1935,12 @@
         "ports": [
           "clk_wiz_1/locked",
           "rst_clk_wiz_1_100M/dcm_locked"
+        ]
+      },
+      "iic_fpga_gpo": {
+        "ports": [
+          "iic_fpga/gpo",
+          "i2c_fpga_gpo"
         ]
       },
       "mdm_1_debug_sys_rst": {

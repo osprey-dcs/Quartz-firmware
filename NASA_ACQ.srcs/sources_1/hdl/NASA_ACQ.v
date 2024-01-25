@@ -116,13 +116,13 @@ module NASA_ACQ #(
     input  wire                                  AMC7823_SPI_DOUT,
     output wire                                  AMC7823_SPI_DIN,
 
+    input  wire                                 MCLKfanoutValid,
     input  wire                                 HARDWARE_PPS
     );
 
 ///////////////////////////////////////////////////////////////////////////////
 // Static outputs
 assign VCXO_EN = 1'b1;
-//assign I2C_FPGA_SW_RSTn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
@@ -487,6 +487,7 @@ bd bd_i (
     .i2c_fpga_sda_i(i2c_fpga_sda_i),
     .i2c_fpga_sda_o(i2c_fpga_sda_o),
     .i2c_fpga_sda_t(i2c_fpga_sda_t),
+    .i2c_fpga_gpo(I2C_FPGA_SW_RSTn),
 
     .RGMII_rxc(RGMII_RX_CLK),
     .RGMII_rd(RGMII_RXD),
