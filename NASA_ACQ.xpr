@@ -70,13 +70,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="46"/>
-    <Option Name="WTModelSimExportSim" Val="46"/>
-    <Option Name="WTQuestaExportSim" Val="46"/>
+    <Option Name="WTXSimExportSim" Val="47"/>
+    <Option Name="WTModelSimExportSim" Val="47"/>
+    <Option Name="WTQuestaExportSim" Val="47"/>
     <Option Name="WTIesExportSim" Val="0"/>
-    <Option Name="WTVcsExportSim" Val="46"/>
-    <Option Name="WTRivieraExportSim" Val="46"/>
-    <Option Name="WTActivehdlExportSim" Val="46"/>
+    <Option Name="WTVcsExportSim" Val="47"/>
+    <Option Name="WTRivieraExportSim" Val="47"/>
+    <Option Name="WTActivehdlExportSim" Val="47"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -100,11 +100,17 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_mdm_1_0/bd_mdm_1_0.xci">
-          <Proxy FileSetName="bd_mdm_1_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
+          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_clk_wiz_1_0/bd_clk_wiz_1_0.xci">
-          <Proxy FileSetName="bd_clk_wiz_1_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_bram_if_cntlr_0/bd_ilmb_bram_if_cntlr_0.xci">
+          <Proxy FileSetName="bd_ilmb_bram_if_cntlr_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_axi_intc_0/bd_microblaze_0_axi_intc_0.xci">
+          <Proxy FileSetName="bd_microblaze_0_axi_intc_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_lmb_bram_0/bd_lmb_bram_0.xci">
+          <Proxy FileSetName="bd_lmb_bram_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_rst_clk_wiz_1_100M_0/bd_rst_clk_wiz_1_100M_0.xci">
           <Proxy FileSetName="bd_rst_clk_wiz_1_100M_0"/>
@@ -112,14 +118,29 @@
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_uartlite_0_0/bd_axi_uartlite_0_0.xci">
           <Proxy FileSetName="bd_axi_uartlite_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
-          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_clk_wiz_1_0/bd_clk_wiz_1_0.xci">
+          <Proxy FileSetName="bd_clk_wiz_1_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_xadc_wiz_0_0/bd_xadc_wiz_0_0.xci">
-          <Proxy FileSetName="bd_xadc_wiz_0_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_mdm_1_0/bd_mdm_1_0.xci">
+          <Proxy FileSetName="bd_mdm_1_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_bram_if_cntlr_0/bd_dlmb_bram_if_cntlr_0.xci">
+          <Proxy FileSetName="bd_dlmb_bram_if_cntlr_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_v10_0/bd_dlmb_v10_0.xci">
+          <Proxy FileSetName="bd_dlmb_v10_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_v10_0/bd_ilmb_v10_0.xci">
+          <Proxy FileSetName="bd_ilmb_v10_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_0/bd_microblaze_0_0.xci">
+          <Proxy FileSetName="bd_microblaze_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_iic_0_0/bd_axi_iic_0_0.xci">
           <Proxy FileSetName="bd_axi_iic_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_xadc_wiz_0_0/bd_xadc_wiz_0_0.xci">
+          <Proxy FileSetName="bd_xadc_wiz_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci">
           <Proxy FileSetName="bd_marbleBootFlash_0_0"/>
@@ -130,29 +151,15 @@
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci">
           <Proxy FileSetName="bd_axi_lite_generic_reg_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_0/bd_microblaze_0_0.xci">
-          <Proxy FileSetName="bd_microblaze_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_v10_0/bd_dlmb_v10_0.xci">
-          <Proxy FileSetName="bd_dlmb_v10_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_v10_0/bd_ilmb_v10_0.xci">
-          <Proxy FileSetName="bd_ilmb_v10_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_bram_if_cntlr_0/bd_dlmb_bram_if_cntlr_0.xci">
-          <Proxy FileSetName="bd_dlmb_bram_if_cntlr_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_bram_if_cntlr_0/bd_ilmb_bram_if_cntlr_0.xci">
-          <Proxy FileSetName="bd_ilmb_bram_if_cntlr_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_lmb_bram_0/bd_lmb_bram_0.xci">
-          <Proxy FileSetName="bd_lmb_bram_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_axi_intc_0/bd_microblaze_0_axi_intc_0.xci">
-          <Proxy FileSetName="bd_microblaze_0_axi_intc_0"/>
-        </CompFileExtendedInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/ad7768.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/amc7823SPI.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -237,6 +244,13 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../ip_repo/ospreyDownsampler/head/ospreyDownsampler.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/ppsLatencyCheck.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -701,7 +715,7 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" SynthRun="synth_1" IncludeInArchive="true" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/impl_1" LaunchOptions="-jobs 2 " AutoRQSDir="$PSRCDIR/utils_1/imports/impl_1">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="constrs_1" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/impl_1" LaunchOptions="-jobs 2 " AutoRQSDir="$PSRCDIR/utils_1/imports/impl_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
         <Step Id="init_design"/>
@@ -714,6 +728,7 @@
         <Step Id="post_route_phys_opt_design"/>
         <Step Id="write_bitstream"/>
       </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
       <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2023"/>
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
