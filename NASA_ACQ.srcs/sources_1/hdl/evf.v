@@ -129,9 +129,10 @@ FIFO_DUALCLOCK_MACRO  #(
       .WRCOUNT(),        // Output write count, width determined by FIFO depth
       .WRERR(),          // 1-bit output write error
       .DI(fifoIN),       // Input data, width defined by DATA_WIDTH parameter
-      .RDCLK(txClk),  // 1-bit input read clock
+      .RDCLK(txClk),     // 1-bit input read clock
+      .RDEN(1'b1),       // 1-bit input read enable
       .RST(!rxLinkUp),   // 1-bit input reset
-      .WRCLK(rxClk),  // 1-bit input write clock
+      .WRCLK(rxClk),     // 1-bit input write clock
       .WREN(fifoWREN)    // 1-bit input write enable
    );
 endmodule
