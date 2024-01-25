@@ -63,6 +63,11 @@ always @(posedge clk) begin
     if (SPI_CS_n) begin
         tickCounter <= TICK_COUNTER_RELOAD;
         bitCounter <= BIT_COUNTER_LOAD;
+        /*
+         * Write to SPI transmit shift register.
+         * Note that shift register and GPIO_OUT bits are numbered
+         * starting at 0 and that analog channel numbers begin at 1.
+         */
         if (clrStrobe) begin
             COIL_CONTROL_RESET_n <= 1;
             shiftReg[0]  <= GPIO_OUT[4];   // Reset 5 -- Final bit shfted out
@@ -96,7 +101,7 @@ always @(posedge clk) begin
             shiftReg[56] <= GPIO_OUT[30];  // Reset 31
             shiftReg[58] <= GPIO_OUT[26];  // Reset 27
             shiftReg[60] <= GPIO_OUT[31];  // Reset 32
-            shiftReg[62] <= GPIO_OUT[27];  // Reset 28
+            shiftReg[62] <= GPIO_OUT[27];  // Reset 28 -- Second bit shifted out
         end
         if (setStrobeAndStart) begin
             shiftReg[1]  <= GPIO_OUT[4];   // Set 5
