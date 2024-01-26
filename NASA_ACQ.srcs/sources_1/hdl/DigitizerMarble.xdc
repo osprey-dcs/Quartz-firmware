@@ -2,7 +2,7 @@
 
 # FMC1 LA00 -- FMC1 G6/G7
 set_property -dict {PACKAGE_PIN H17 IOSTANDARD LVCMOS25} [get_ports {AD7768_DRDY[1]}]
-set_property -dict {PACKAGE_PIN H18 IOSTANDARD LVCMOS25} [get_ports {AD7768_SDO[1]}]
+set_property -dict {PACKAGE_PIN H18 IOSTANDARD LVCMOS25 PULLUP TRUE} [get_ports {AD7768_SDO[1]}]
 
 # FMC1 LA01 -- FMC1 D8/D9
 #set_property -dict {PACKAGE_PIN G17 IOSTANDARD LVCMOS25} [get_ports {FMC1_LA_P[1]}]
@@ -10,7 +10,7 @@ set_property -dict {PACKAGE_PIN H18 IOSTANDARD LVCMOS25} [get_ports {AD7768_SDO[
 
 # FMC1 LA02 -- FMC1 H7/H8
 set_property -dict {PACKAGE_PIN K20 IOSTANDARD LVCMOS25} [get_ports {AD7768_DRDY[0]}]
-set_property -dict {PACKAGE_PIN J20 IOSTANDARD LVCMOS25} [get_ports {AD7768_SDO[0]}]
+set_property -dict {PACKAGE_PIN J20 IOSTANDARD LVCMOS25 PULLUP TRUE} [get_ports {AD7768_SDO[0]}]
 
 # FMC1 LA03 -- FMC1 G9/G10
 #set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVCMOS25} [get_ports {FMC1_LA_P[3]}]
@@ -217,11 +217,11 @@ set_property -dict {PACKAGE_PIN V22 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT
 
 # FMC2 LA19 -- FMC2 H22/H23
 set_property -dict {PACKAGE_PIN K23 IOSTANDARD LVCMOS25} [get_ports {AD7768_DRDY[2]}]
-set_property -dict {PACKAGE_PIN J23 IOSTANDARD LVCMOS25} [get_ports {AD7768_SDO[2]}]
+set_property -dict {PACKAGE_PIN J23 IOSTANDARD LVCMOS25 PULLUP TRUE} [get_ports {AD7768_SDO[2]}]
 
 # FMC2 LA20 -- FMC2 G21/G22
 set_property -dict {PACKAGE_PIN L22 IOSTANDARD LVCMOS25} [get_ports {AD7768_DRDY[3]}]
-set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS25} [get_ports {AD7768_SDO[3]}]
+set_property -dict {PACKAGE_PIN K22 IOSTANDARD LVCMOS25 PULLUP TRUE} [get_ports {AD7768_SDO[3]}]
 
 # FMC2 LA21 -- FMC2 H25/H26
 set_property -dict {PACKAGE_PIN J21 IOSTANDARD LVCMOS25} [get_ports {AD7768_DCLK[2]}]
