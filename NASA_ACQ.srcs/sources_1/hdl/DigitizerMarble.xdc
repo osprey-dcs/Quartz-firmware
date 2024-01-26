@@ -141,7 +141,7 @@ set_property -dict {PACKAGE_PIN A10 IOSTANDARD LVCMOS25} [get_ports {AD7768_CS_n
 
 # FMC2 LA00 -- FMC2 G6/G7
 set_property -dict {PACKAGE_PIN Y22  IOSTANDARD LVCMOS25} [get_ports {HARDWARE_PPS}]
-set_property -dict {PACKAGE_PIN AA22 IOSTANDARD LVCMOS25} [get_ports {MCLKfanoutValid}]
+set_property -dict {PACKAGE_PIN AA22 IOSTANDARD LVCMOS25 PULLUP TRUE} [get_ports {MCLKfanoutValid}]
 
 # FMC2 LA01 -- FMC2 D8/D9
 set_property -dict {PACKAGE_PIN AA23 IOSTANDARD LVCMOS25} [get_ports {COIL_CONTROL_FLAGS_n}]
