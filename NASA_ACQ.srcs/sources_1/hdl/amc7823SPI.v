@@ -33,13 +33,11 @@ module amc7823SPI #(
     input  wire        clk,
     input  wire [31:0] GPIO_OUT,
     input  wire        csrStrobe,
-    input  wire        setStrobeAndStart,
     output wire [31:0] status,
     output reg         SPI_CLK = 0,
     output reg         SPI_CS_n = 1,
     input  wire        SPI_DOUT,
-    output reg         SPI_DIN = 0,
-    output reg         COIL_CONTROL_RESET_n = 0);
+    output reg         SPI_DIN = 0);
 
 localparam SPI_RATE  = 10000000;
 localparam SPI_WIDTH = 32;
