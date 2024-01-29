@@ -50,7 +50,7 @@ always begin
     #10000 ;
     while(1) begin
          #10000 HARDWARE_PPS = 0;
-        #990000 HARDWARE_PPS = 1;
+        #990000 if (!PMOD_ACTIVE) HARDWARE_PPS = 1;
     end
 end
 reg PMOD_ACTIVE = 0;
