@@ -100,17 +100,14 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
-          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_bram_if_cntlr_0/bd_ilmb_bram_if_cntlr_0.xci">
-          <Proxy FileSetName="bd_ilmb_bram_if_cntlr_0"/>
-        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_axi_intc_0/bd_microblaze_0_axi_intc_0.xci">
           <Proxy FileSetName="bd_microblaze_0_axi_intc_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_lmb_bram_0/bd_lmb_bram_0.xci">
-          <Proxy FileSetName="bd_lmb_bram_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_mdm_1_0/bd_mdm_1_0.xci">
+          <Proxy FileSetName="bd_mdm_1_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_clk_wiz_1_0/bd_clk_wiz_1_0.xci">
+          <Proxy FileSetName="bd_clk_wiz_1_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_rst_clk_wiz_1_100M_0/bd_rst_clk_wiz_1_100M_0.xci">
           <Proxy FileSetName="bd_rst_clk_wiz_1_100M_0"/>
@@ -118,29 +115,14 @@
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_uartlite_0_0/bd_axi_uartlite_0_0.xci">
           <Proxy FileSetName="bd_axi_uartlite_0_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_clk_wiz_1_0/bd_clk_wiz_1_0.xci">
-          <Proxy FileSetName="bd_clk_wiz_1_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_mdm_1_0/bd_mdm_1_0.xci">
-          <Proxy FileSetName="bd_mdm_1_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_bram_if_cntlr_0/bd_dlmb_bram_if_cntlr_0.xci">
-          <Proxy FileSetName="bd_dlmb_bram_if_cntlr_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_v10_0/bd_dlmb_v10_0.xci">
-          <Proxy FileSetName="bd_dlmb_v10_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_v10_0/bd_ilmb_v10_0.xci">
-          <Proxy FileSetName="bd_ilmb_v10_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_0/bd_microblaze_0_0.xci">
-          <Proxy FileSetName="bd_microblaze_0_0"/>
-        </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_iic_0_0/bd_axi_iic_0_0.xci">
-          <Proxy FileSetName="bd_axi_iic_0_0"/>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_hwicap_0_0/bd_axi_hwicap_0_0.xci">
+          <Proxy FileSetName="bd_axi_hwicap_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_xadc_wiz_0_0/bd_xadc_wiz_0_0.xci">
           <Proxy FileSetName="bd_xadc_wiz_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_iic_0_0/bd_axi_iic_0_0.xci">
+          <Proxy FileSetName="bd_axi_iic_0_0"/>
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci">
           <Proxy FileSetName="bd_marbleBootFlash_0_0"/>
@@ -150,6 +132,24 @@
         </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci">
           <Proxy FileSetName="bd_axi_lite_generic_reg_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_0/bd_microblaze_0_0.xci">
+          <Proxy FileSetName="bd_microblaze_0_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_v10_0/bd_dlmb_v10_0.xci">
+          <Proxy FileSetName="bd_dlmb_v10_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_v10_0/bd_ilmb_v10_0.xci">
+          <Proxy FileSetName="bd_ilmb_v10_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_dlmb_bram_if_cntlr_0/bd_dlmb_bram_if_cntlr_0.xci">
+          <Proxy FileSetName="bd_dlmb_bram_if_cntlr_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_ilmb_bram_if_cntlr_0/bd_ilmb_bram_if_cntlr_0.xci">
+          <Proxy FileSetName="bd_ilmb_bram_if_cntlr_0"/>
+        </CompFileExtendedInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_lmb_bram_0/bd_lmb_bram_0.xci">
+          <Proxy FileSetName="bd_lmb_bram_0"/>
         </CompFileExtendedInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/ad7768.v">
@@ -195,6 +195,13 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/frequencyCounters.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/hwPPSselect.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
