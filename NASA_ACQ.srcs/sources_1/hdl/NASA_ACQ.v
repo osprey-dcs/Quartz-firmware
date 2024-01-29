@@ -182,7 +182,6 @@ sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
 localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
-wire evrPPSmarker;
 wire isEVG;
 evr #(
     .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
