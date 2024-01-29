@@ -82,7 +82,7 @@ module NASA_ACQ #(
     input  wire PMOD2_0,
     input  wire PMOD2_1,
     input  wire PMOD2_2,
-    input  wire PMOD2_3,
+    input  wire PMOD2_3,  // PMOD-GPS PPS for testing
     input  wire PMOD2_4,
     input  wire PMOD2_5,
     input  wire PMOD2_6,
@@ -154,6 +154,20 @@ endgenerate
 assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 
 ///////////////////////////////////////////////////////////////////////////////
+// Use appropriate PPS signal
+wire evrPPSmarker;
+wire hwPPS_a;
+
+hwPPSselect #(.CLK_RATE(CFG_SYSCLK_RATE))
+  hwPPSselect (
+    .clk(sysClk),
+    .pmodPPS_a(PMOD2_3),
+    .quartzPPS_a(HARDWARE_PPS),
+    .hwPPS_a(hwPPS_a));
+
+wire ppsMarker_a = isEVG ? hwPPS_a : evrPPSmarker;
+
+///////////////////////////////////////////////////////////////////////////////
 // Keep track of elapsed time
 wire microsecondStrobe;
 sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
@@ -189,7 +203,7 @@ evr #(
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evrRxClk(evrRxClk),
     .evfRxClk(evfRxClk),
-    .hwPPSmarker_a(HARDWARE_PPS),
+    .hwPPSmarker_a(hwPPS_a),
     .evrPPSmarker(evrPPSmarker),
     .isEVG(isEVG),
     .sysTimestamp(sysTimestamp),
@@ -206,11 +220,12 @@ assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Measure interval between hardware and event receiver PPS markers
+// Useful only for event generator node.
 ppsLatencyCheck #(.CLK_RATE(CFG_SYSCLK_RATE))
   ppsLatencyCheck (
     .clk(sysClk),
     .latency(GPIO_IN[GPIO_IDX_PPS_LATENCY]),
-    .hwPPS_a(HARDWARE_PPS),
+    .hwPPS_a(hwPPS_a),
     .evrPPSmarker_a(evrPPSmarker));
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -231,7 +246,7 @@ marbleClockSync #(
     .clk(clk125),
     .enable_a(pllEnable),
     .status(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
-    .ppsMarker_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
+    .ppsMarker_a(ppsMarker_a),
     .ppsStrobe(),
     .SPI_CLK(WR_DAC_SCLK_T),
     .SPI_SYNCn(WR_DAC1_SYNC_Tn),
@@ -254,7 +269,7 @@ frequencyCounters #(
                       clk32,
                       clk125,
                       sysClk }),
-    .acqMarker_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
+    .acqMarker_a(ppsMarker_a),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
     .channelSelect(frequencyChannelSelect),
     .frequency(measuredFrequency));
