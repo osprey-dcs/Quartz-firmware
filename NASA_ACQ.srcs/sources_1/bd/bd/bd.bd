@@ -41,9 +41,9 @@
       "hwicap": "",
       "xadc": "",
       "iic_fpga": "",
-      "marbleBootFlash": "",
       "ospreyUDP": "",
-      "generic_reg": ""
+      "generic_reg": "",
+      "marbleBootFlash": ""
     },
     "interface_ports": {
       "console": {
@@ -1763,12 +1763,6 @@
           }
         }
       },
-      "marbleBootFlash": {
-        "vlnv": "user.org:user:marbleBootFlash:1.0",
-        "xci_name": "bd_marbleBootFlash_0_0",
-        "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
-        "inst_hier_path": "marbleBootFlash"
-      },
       "ospreyUDP": {
         "vlnv": "user.org:user:ospreyUDP:1.0",
         "xci_name": "bd_ospreyUDP_0_0",
@@ -1780,6 +1774,12 @@
         "xci_name": "bd_axi_lite_generic_reg_0_0",
         "xci_path": "ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci",
         "inst_hier_path": "generic_reg"
+      },
+      "marbleBootFlash": {
+        "vlnv": "user.org:user:marbleBootFlash:1.0",
+        "xci_name": "bd_marbleBootFlash_0_0",
+        "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
+        "inst_hier_path": "marbleBootFlash"
       }
     },
     "interface_nets": {
@@ -1972,11 +1972,11 @@
           "hwicap/icap_clk",
           "iic_fpga/s_axi_aclk",
           "microblaze_0_axi_periph/M05_ACLK",
-          "marbleBootFlash/s_axi_aclk",
           "microblaze_0_axi_periph/M06_ACLK",
           "microblaze_0_axi_periph/M07_ACLK",
           "ospreyUDP/s_axi_lite_aclk",
-          "generic_reg/s_axi_aclk"
+          "generic_reg/s_axi_aclk",
+          "marbleBootFlash/s_axi_aclk"
         ]
       },
       "microblaze_0_intr": {
@@ -2026,11 +2026,11 @@
           "microblaze_0_axi_periph/M04_ARESETN",
           "iic_fpga/s_axi_aresetn",
           "microblaze_0_axi_periph/M05_ARESETN",
-          "marbleBootFlash/s_axi_aresetn",
           "microblaze_0_axi_periph/M06_ARESETN",
           "microblaze_0_axi_periph/M07_ARESETN",
           "ospreyUDP/s_axi_lite_aresetn",
-          "generic_reg/s_axi_aresetn"
+          "generic_reg/s_axi_aresetn",
+          "marbleBootFlash/s_axi_aresetn"
         ]
       },
       "rst_clk_wiz_1_100M_peripheral_reset": {

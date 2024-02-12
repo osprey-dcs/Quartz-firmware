@@ -33,9 +33,9 @@ preplace inst Gnd -pg 1 -lvl 1 -x 100 -y 820 -defaultsOSRD
 preplace inst hwicap -pg 1 -lvl 6 -x 1920 -y 400 -defaultsOSRD
 preplace inst xadc -pg 1 -lvl 6 -x 1920 -y 870 -defaultsOSRD
 preplace inst iic_fpga -pg 1 -lvl 6 -x 1920 -y 700 -defaultsOSRD
-preplace inst marbleBootFlash -pg 1 -lvl 6 -x 1920 -y 560 -defaultsOSRD
 preplace inst ospreyUDP -pg 1 -lvl 6 -x 1920 -y 1180 -defaultsOSRD
 preplace inst generic_reg -pg 1 -lvl 6 -x 1920 -y 90 -defaultsOSRD
+preplace inst marbleBootFlash -pg 1 -lvl 6 -x 1920 -y 560 -defaultsOSRD
 preplace netloc GPIO_IN_0_1 1 0 6 NJ 80 NJ 80 NJ 80 NJ 80 NJ 80 NJ
 preplace netloc Gnd_dout 1 1 1 180J 820n
 preplace netloc axi_lite_generic_reg_0_GPIO_OUT 1 6 1 NJ 100
@@ -43,6 +43,7 @@ preplace netloc axi_lite_generic_reg_0_GPIO_STROBES 1 6 1 NJ 80
 preplace netloc clk_100MHz_1 1 0 6 NJ 1140 NJ 1140 550J 1150 NJ 1150 1360 1180 NJ
 preplace netloc clk_wiz_1_clk32 1 5 2 NJ 1080 NJ
 preplace netloc clk_wiz_1_locked 1 1 5 190 1080 580J 1000 NJ 1000 NJ 1000 1680
+preplace netloc iic_fpga_gpo 1 6 1 N 720
 preplace netloc mdm_1_debug_sys_rst 1 1 4 180 1090 590J 1010 870 1070 N
 preplace netloc microblaze_0_Clk 1 1 6 190 760 580 960 870 960 1370 190 1710 1280 NJ
 preplace netloc microblaze_0_intr 1 2 1 550J 830n
@@ -52,7 +53,6 @@ preplace netloc rst_clk_wiz_1_100M_bus_struct_reset 1 2 3 570J 730 NJ 730 1380
 preplace netloc rst_clk_wiz_1_100M_mb_reset 1 2 2 590 950 860J
 preplace netloc rst_clk_wiz_1_100M_peripheral_aresetn 1 2 4 560 650 NJ 650 1360 180 1750
 preplace netloc rst_clk_wiz_1_100M_peripheral_reset 1 2 5 NJ 980 NJ 980 NJ 980 NJ 980 NJ
-preplace netloc iic_fpga_gpo 1 6 1 N 720
 preplace netloc axi_iic_0_IIC 1 6 1 NJ 680
 preplace netloc axi_uartlite_0_UART 1 6 1 NJ 230
 preplace netloc fastTx_0_1 1 0 6 NJ 1160 NJ 1160 NJ 1160 NJ 1160 NJ 1160 NJ
