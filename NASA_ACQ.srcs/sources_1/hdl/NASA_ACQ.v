@@ -82,7 +82,7 @@ module NASA_ACQ #(
     input  wire PMOD2_0,
     input  wire PMOD2_1,
     input  wire PMOD2_2,
-    input  wire PMOD2_3,  // PMOD-GPS PPS for testing
+    input  wire PMOD2_3,  // PMOD-GPS PPS
     input  wire PMOD2_4,
     input  wire PMOD2_5,
     input  wire PMOD2_6,
@@ -163,7 +163,8 @@ hwPPSselect #(.CLK_RATE(CFG_SYSCLK_RATE))
     .clk(sysClk),
     .pmodPPS_a(PMOD2_3),
     .quartzPPS_a(HARDWARE_PPS),
-    .hwPPS_a(hwPPS_a));
+    .hwPPS_a(hwPPS_a),
+    .status(GPIO_IN[GPIO_IDX_PPS_STATUS]));
 
 wire ppsMarker_a = isEVG ? hwPPS_a : evrPPSmarker;
 

@@ -1,15 +1,15 @@
 [*]
 [*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
-[*] Mon Jan 29 23:22:53 2024
+[*] Sun Feb 11 19:44:13 2024
 [*]
 [dumpfile] "hwPPSselect_tb.fst"
-[dumpfile_mtime] "Mon Jan 29 23:21:33 2024"
-[dumpfile_size] 45585
+[dumpfile_mtime] "Sun Feb 11 19:43:13 2024"
+[dumpfile_size] 123422
 [savefile] "hwPPSselect_tb.gtkw"
 [timestart] 0
 [size] 1672 600
 [pos] 1932 26
-*-20.263676 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+*-21.585604 220000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
 [markername] AA
 [markername] BB
 [markername] CC
@@ -45,8 +45,7 @@
 hwPPSselect_tb.HARDWARE_PPS
 hwPPSselect_tb.PMOD2_3
 hwPPSselect_tb.hwPPS_a
-hwPPSselect_tb.hwPPSselect.pmodTooFast
-hwPPSselect_tb.hwPPSselect.pmodTooSlow
-hwPPSselect_tb.hwPPSselect.pmodPPSvalid
+@23
+hwPPSselect_tb.status[31:0]
 [pattern_trace] 1
 [pattern_trace] 0

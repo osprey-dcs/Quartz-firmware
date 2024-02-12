@@ -36,6 +36,7 @@ reg clk = 0;
 reg PMOD2_3 = 0;
 reg HARDWARE_PPS = 0;
 wire hwPPS_a;
+wire [31:0] status;
 
 // Instantiate device under test
 hwPPSselect #(.CLK_RATE(CLK_RATE))
@@ -43,14 +44,17 @@ hwPPSselect #(.CLK_RATE(CLK_RATE))
     .clk(clk),
     .pmodPPS_a(PMOD2_3),
     .quartzPPS_a(HARDWARE_PPS),
-    .hwPPS_a(hwPPS_a));
+    .hwPPS_a(hwPPS_a),
+    .status(status));
 
 always begin #50 clk = !clk; end
+
+reg QUARTZ_ACTIVE = 0;
 always begin
     #10000 ;
     while(1) begin
          #10000 HARDWARE_PPS = 0;
-        #990000 if (!PMOD_ACTIVE) HARDWARE_PPS = 1;
+        #990000 if (QUARTZ_ACTIVE) HARDWARE_PPS = 1;
     end
 end
 reg PMOD_ACTIVE = 0;
@@ -63,15 +67,36 @@ always begin
 end
 
 
+integer good = 1;
 initial
 begin
     $dumpfile("hwPPSselect_tb.fst");
     $dumpvars(0, hwPPSselect_tb);
 
-    #4000000 ;
-    PMOD_ACTIVE = 1;
-    #4000000 ;
+    checkValid(0, 0, 4'h0);
+    checkValid(1, 0, 4'h3);
+    checkValid(1, 1, 4'h7);
+    checkValid(0, 1, 4'hC);
+    $display("%s", good ? "PASS" : "FAIL");
     $finish;
 end
 
+task checkValid;
+    input quartzValid;
+    input pmodValid;
+    input [3:0] expect;
+    begin
+    QUARTZ_ACTIVE = quartzValid;
+    PMOD_ACTIVE = pmodValid;
+    #5000000 ;
+    $write("Status:%X ", status[3:0]);
+    if (status[3:0] == expect) begin
+        $display("-- PASS");
+    end
+    else begin
+        $display("Expect:%X -- FAIL", expect);
+        good = 0;
+    end
+    end
+endtask
 endmodule
