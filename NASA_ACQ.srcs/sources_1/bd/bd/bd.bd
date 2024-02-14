@@ -121,7 +121,7 @@
         "vlnv": "xilinx.com:interface:axis_rtl:1.0",
         "parameters": {
           "CLK_DOMAIN": {
-            "value": "bd_clk20",
+            "value": "bd_clk125",
             "value_src": "default"
           },
           "FREQ_HZ": {
@@ -243,7 +243,7 @@
             "value_src": "default"
           },
           "CLK_DOMAIN": {
-            "value": "bd_clk20",
+            "value": "bd_clk125",
             "value_src": "default"
           },
           "FREQ_HZ": {
@@ -1779,7 +1779,12 @@
         "vlnv": "user.org:user:marbleBootFlash:1.0",
         "xci_name": "bd_marbleBootFlash_0_0",
         "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
-        "inst_hier_path": "marbleBootFlash"
+        "inst_hier_path": "marbleBootFlash",
+        "parameters": {
+          "DEBUG": {
+            "value": "false"
+          }
+        }
       }
     },
     "interface_nets": {

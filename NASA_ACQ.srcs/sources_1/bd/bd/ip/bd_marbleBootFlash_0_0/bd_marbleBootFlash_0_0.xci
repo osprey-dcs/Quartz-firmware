@@ -12,7 +12,7 @@
         "C_S_AXI_LITE_HIGHADDR": [ { "value": "0x00000000", "resolve_type": "user", "format": "bitString", "enabled": false, "usage": "all" } ],
         "Component_Name": [ { "value": "bd_marbleBootFlash_0_0", "resolve_type": "user", "usage": "all" } ],
         "C_S_AXI_ADDR_WIDTH": [ { "value": "2", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "DEBUG": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "DEBUG": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "C_S_AXI_DATA_WIDTH": [ { "value": "32", "resolve_type": "user", "format": "long", "usage": "all" } ]
       },
       "model_parameters": {
