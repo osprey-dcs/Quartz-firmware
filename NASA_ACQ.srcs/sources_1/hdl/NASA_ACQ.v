@@ -158,7 +158,8 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 wire evrPPSmarker;
 wire hwPPS_a;
 
-hwPPSselect #(.CLK_RATE(CFG_SYSCLK_RATE))
+hwPPSselect #(.CLK_RATE(CFG_SYSCLK_RATE),
+              .DEBUG("false"))
   hwPPSselect (
     .clk(sysClk),
     .pmodPPS_a(PMOD2_3),
@@ -189,8 +190,8 @@ evr #(
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
-    .DEBUG("true"),
-    .DEBUG_MGT("true"),
+    .DEBUG("false"),
+    .DEBUG_MGT("false"),
     .DEBUG_EVR("false"),
     .DEBUG_EVG("false"))
   evr (

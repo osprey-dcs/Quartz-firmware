@@ -30,13 +30,14 @@
  */
 `default_nettype none
 module hwPPSselect #(
-    parameter CLK_RATE = 100000000
+    parameter CLK_RATE = 100000000,
+    parameter DEBUG    = "false"
     ) (
-    input  wire        clk,
-    input  wire        pmodPPS_a,
-    input  wire        quartzPPS_a,
-    output wire        hwPPS_a,
-    output wire [31:0] status);
+    input  wire                             clk,
+    (*MARK_DEBUG=DEBUG*) input  wire        pmodPPS_a,
+    (*MARK_DEBUG=DEBUG*) input  wire        quartzPPS_a,
+    (*MARK_DEBUG=DEBUG*) output wire        hwPPS_a,
+    (*MARK_DEBUG=DEBUG*) output wire [31:0] status);
 
 localparam PPS_RELOAD         = CLK_RATE - 2;
 localparam PPS_COUNTER_WIDTH = $clog2(PPS_RELOAD+1) + 1;
@@ -51,13 +52,13 @@ reg usePMOD = 0, useQuartz = 0;
 assign hwPPS_a = useQuartz ? quartzPPS_a : (usePMOD ? pmodPPS_a : localPPS);
 assign status = { 28'b0, usePMOD, pmodValid, useQuartz, quartzValid };
 
-isPPSvalid_ #(.CLK_RATE(CLK_RATE))
+isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
   isQuartzValid (
     .clk(clk),
     .pps_a(quartzPPS_a),
     .ppsValid(quartzValid));
 
-isPPSvalid_ #(.CLK_RATE(CLK_RATE))
+isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
   isPMODvalid (
     .clk(clk),
     .pps_a(pmodPPS_a),
@@ -94,7 +95,8 @@ end
 endmodule
 
 module isPPSvalid_ #(
-    parameter CLK_RATE = 100000000
+    parameter CLK_RATE = 100000000,
+    parameter DEBUG    = "false"
     ) (
     input  wire clk,
     input  wire pps_a,
@@ -106,9 +108,9 @@ localparam PPS_RELOAD         = CLK_RATE - 2;
 localparam PPS_COUNTER_WIDTH = $clog2(PPS_TOOSLOW_RELOAD+1) + 1;
 
 reg [PPS_COUNTER_WIDTH-1:0] tooSlowCounter = PPS_TOOSLOW_RELOAD;
-wire tooSlow = tooSlowCounter[PPS_COUNTER_WIDTH-1];
+(*MARK_DEBUG=DEBUG*) wire tooSlow = tooSlowCounter[PPS_COUNTER_WIDTH-1];
 reg [PPS_COUNTER_WIDTH-1:0] tooFastCounter = PPS_TOOFAST_RELOAD;
-wire tooFast = !tooFastCounter[PPS_COUNTER_WIDTH-1];
+(*MARK_DEBUG=DEBUG*) wire tooFast = !tooFastCounter[PPS_COUNTER_WIDTH-1];
 (*ASYNC_REG="TRUE"*) reg pps_m = 0;
 reg pps = 0, pps_d = 0;
 
