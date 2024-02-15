@@ -249,6 +249,7 @@ marbleClockSync #(
     .status(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
     .ppsMarker_a(ppsMarker_a),
     .ppsStrobe(),
+    .isOffsetBinary(1'b1),
     .SPI_CLK(WR_DAC_SCLK_T),
     .SPI_SYNCn(WR_DAC1_SYNC_Tn),
     .SPI_SDI(WR_DAC_DIN_T));
@@ -356,9 +357,9 @@ ad7768 #(
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_RATE(CFG_MCLK_RATE),
     .DEBUG_ACQ("false"),
-    .DEBUG_ALIGN("false"),
-    .DEBUG_PPS("false"),
-    .DEBUG_PINS("false"),
+    .DEBUG_ALIGN("true"),
+    .DEBUG_PPS("true"),
+    .DEBUG_PINS("true"),
     .DEBUG_SKEW("false"),
     .DEBUG_SPI("false"))
   ad7768 (
