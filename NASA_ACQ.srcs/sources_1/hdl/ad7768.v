@@ -48,7 +48,7 @@ module ad7768 #(
 
 
     input  wire                                              acqClk,
-    input  wire                                              acqPPSstrobe,
+    (*MARK_DEBUG=DEBUG_PPS*) input  wire                     acqPPSstrobe,
     (*MARK_DEBUG=DEBUG_ACQ*) output reg                      acqStrobe=0,
     (*MARK_DEBUG=DEBUG_ACQ*) output wire
                 [(ADC_CHIP_COUNT*ADC_PER_CHIP*ADC_WIDTH)-1:0] acqData,
@@ -191,12 +191,20 @@ localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
 reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
 reg delaying = 0;
-(*ASYNC_REG="true"*) reg adcDCLK_m = 0;
+/*
+ * Need to at least latch all DCLK lines to be able to
+ * refer to them in a ChipScope instance.
+ */
+(*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] adcDCLK_m = 0;
+
+/*
+ * Only need the first since all should be aligned.
+ */
 (*MARK_DEBUG=DEBUG_ACQ*) reg adcDCLK = 0, adcDRDY = 0;
                      reg adcDCLK_d = 0;
 always @(posedge acqClk) begin
-    adcDCLK_m <= adcDCLK_a[0];
-    adcDCLK   <= adcDCLK_m;
+    adcDCLK_m <= adcDCLK_a;
+    adcDCLK   <= adcDCLK_m[0];
     adcDCLK_d <= adcDCLK;
     if (delaying) begin
         if (sampleFlag) begin
@@ -210,6 +218,10 @@ always @(posedge acqClk) begin
     else if (adcDCLK && !adcDCLK_d) begin
         delaying <= 1;
     end
+    /*
+     * No need to stabilize adcDRDY_a since they are
+     * sampled here only when they should be stable.
+     */
     if (acqActive) begin
         if (sampleFlag) begin
             if (adcBitCountDone) begin
@@ -224,7 +236,7 @@ always @(posedge acqClk) begin
             else begin
                 acqActive <= 0;
             end
-            adcDRDY <= adcDRDY_a;
+            adcDRDY <= adcDRDY_a[0];
         end
         else begin
             acqStrobe <= 0;
