@@ -37,6 +37,7 @@ module hwPPSselect #(
     (*MARK_DEBUG=DEBUG*) input  wire        pmodPPS_a,
     (*MARK_DEBUG=DEBUG*) input  wire        quartzPPS_a,
     (*MARK_DEBUG=DEBUG*) output wire        hwPPS_a,
+    (*MARK_DEBUG=DEBUG*) output wire        hwOrFallbackPPS_a,
     (*MARK_DEBUG=DEBUG*) output wire [31:0] status);
 
 localparam PPS_RELOAD         = CLK_RATE - 2;
@@ -49,8 +50,9 @@ wire localPPS = localStretch[5];
 wire pmodValid, quartzValid;
 reg usePMOD = 0, useQuartz = 0;
 
-assign hwPPS_a = useQuartz ? quartzPPS_a : (usePMOD ? pmodPPS_a : localPPS);
 assign status = { 28'b0, usePMOD, pmodValid, useQuartz, quartzValid };
+assign hwPPS_a = useQuartz ? quartzPPS_a : (usePMOD ? pmodPPS_a : 0);
+assign hwOrFallbackPPS_a = (useQuartz || (usePMOD) ? hwPPS_a : localPPS);
 
 isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
   isQuartzValid (
