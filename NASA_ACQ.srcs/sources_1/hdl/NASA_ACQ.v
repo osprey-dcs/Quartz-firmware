@@ -161,14 +161,17 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 //      this net tracks it.  If a valid signal is present at both, the
 //      signal from the Quartz is used.  If there is not a valid PPS signal
 //      on either hardware input port, this net remains low.
+//      Used by event generator only.  Produces ppsMarker_a.
+//                                     Used to measure event latency.
 //   hwOrFallbackPPS_a
 //      Like hwPPS_a, but with an internally generated PPS signal if neither
 //      hardware input is valie.
-//      Used by the event generator to allow development to proceed withou
-//      needing a real hardware PPS source.
+//      Used event generator only.  Allows development to proceed without
+//                                  needing a real hardware PPS source.
 //  ppsMarker_a
 //      If the unit is the event generator, this is the hwPPS_a signal,
 //      otherwise it is the PPS event from the event receiver.
+//      Used by all nodes as reference for clock VCXO and frequency counters.
 wire evrPPSmarker;
 wire hwPPS_a, hwOrFallbackPPS_a;
 
