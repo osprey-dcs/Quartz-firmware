@@ -28,16 +28,17 @@
  *        and acquisition alignment to just a little better than 100 ns.
  */
 `default_nettype none
-module evr #(
-    parameter CFG_EVG_CLK_RATE = 1,
-    parameter MGT_COUNT        = 1,
-    parameter EVG_CLK_RATE     = 1,
-    parameter TIMESTAMP_WIDTH  = 64,
-    parameter DEBUG_MGT        = "false",
-    parameter DEBUG_EVR        = "false",
-    parameter DEBUG_EVG        = "false",
-    parameter DEBUG            = "false"
-
+module eventSystem #(
+    parameter CFG_EVG_CLK_RATE   = 1,
+    parameter MGT_COUNT          = 1,
+    parameter EVG_CLK_RATE       = 1,
+    parameter TIMESTAMP_WIDTH    = 64,
+    parameter EVR_ACQ_START_CODE = 1,
+    parameter EVR_ACQ_STOP_CODE  = 1,
+    parameter DEBUG_MGT          = "false",
+    parameter DEBUG_EVR          = "false",
+    parameter DEBUG_EVG          = "false",
+    parameter DEBUG              = "false"
     ) (
                          input  wire                       sysClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysCsrStrobe,
@@ -47,6 +48,8 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] sysTimestamp,
 
                          output wire                       evrRxClk,
+    (*MARK_DEBUG=DEBUG_EVR*)output wire                    evrRxStartACQstrobe,
+    (*MARK_DEBUG=DEBUG_EVR*)output wire                    evrRxStopACQstrobe,
                          output wire                       evfRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
@@ -54,6 +57,10 @@ module evr #(
     (*MARK_DEBUG=DEBUG*) input  wire                       hwPPSmarker_a,
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
                          output reg                        isEVG = 0,
+
+                         output wire                       mgtTxClk,
+                         input  wire                 [7:0] evgTxCode,
+                         input  wire                       evgTxCodeValid,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
@@ -83,6 +90,7 @@ assign sysLinkStatus = { evrTimestampValid, {29{1'b0}}, evfRxLinkUp, evrRxLinkUp
 // Instantiate the tiny event receiver
 wire [TIMESTAMP_WIDTH-1:0] evrTimestamp;
 wire                       evrPPSstrobe;
+wire               [126:1] evrStrobes;
 tinyEVR #(
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
     .DEBUG(DEBUG_EVR))
@@ -94,7 +102,9 @@ tinyEVR #(
     .timestampValid(evrTimestampValid),
     .timestamp(evrTimestamp),
     .distributedDataBus(),
-    .evStrobe());
+    .evStrobe(evrStrobes));
+assign evrRxStartACQstrobe = evrStrobes[EVR_ACQ_START_CODE];
+assign evrRxStopACQstrobe  = evrStrobes[EVR_ACQ_STOP_CODE];
 
 // Stretch PPS strobe to marker sure to be seen in other clock domains
 localparam PPS_STRETCH_COUNTER_WIDTH = 5;
@@ -144,7 +154,6 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceiver
-wire mgtTxClk;
 mgtWrapper #(
     .MGT_COUNT(MGT_COUNT),
     .MGT_DATA_WIDTH(16),
@@ -259,8 +268,8 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
     .evgTxClk(mgtTxClk),
     .evgTxWord(evgTxChars),
     .evgTxIsK(evgTxCharIsK),
-    .eventCode(8'h00),
-    .eventStrobe(1'b0),
+    .eventCode(evgTxCode),
+    .eventStrobe(evgTxCodeValid),
     .heartbeatRequest(heartbeatCounterDone),
     .ppsStrobe(evgPPSmarker && !evgPPSmarker_d),
     .secondsStrobe(evgSecondsToggle != evgSecondsToggle_d),

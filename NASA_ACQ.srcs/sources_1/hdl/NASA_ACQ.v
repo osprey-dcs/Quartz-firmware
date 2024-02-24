@@ -123,10 +123,11 @@ module NASA_ACQ #(
 ///////////////////////////////////////////////////////////////////////////////
 // Static outputs
 assign VCXO_EN = 1'b1;
+assign WR_DAC2_SYNC_Tn = 1;b1; //WR_DAC1_SYNC_Tn; //FIXME == should be '1'.
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk32, evrRxClk, evfRxClk;
+wire sysClk, clk125, clk32, evrRxClk, evfRxClk, evgClk;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
 
 wire gtRefClk, gtRefClkDiv2;
@@ -198,21 +199,26 @@ sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
     .secondsSinceBoot(GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT]));
 
 ///////////////////////////////////////////////////////////////////////////////
-// Basic MRF-comptatible event receiver
+// Basic MRF-comptatible event receiver, generator, and fanout
 localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
+wire evrRxStartACQstrobe, evrRxStopACQstrobe;
 wire isEVG;
-evr #(
+wire [7:0] evgTxCode;
+wire       evgTxCodeValid;
+eventSystem #(
     .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .MGT_COUNT(CFG_MGT_COUNT),
     .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
+    .EVR_ACQ_START_CODE(CFG_EVR_ACQ_START_CODE),
+    .EVR_ACQ_STOP_CODE(CFG_EVR_ACQ_STOP_CODE),
     .DEBUG("false"),
     .DEBUG_MGT("false"),
     .DEBUG_EVR("false"),
     .DEBUG_EVG("false"))
-  evr (
+  eventSystem (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MGT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
@@ -221,10 +227,15 @@ evr #(
     .sysEVGsetTimeStrobe(GPIO_STROBES[GPIO_IDX_EVG_CSR]),
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evrRxClk(evrRxClk),
+    .evrRxStartACQstrobe(evrRxStartACQstrobe),
+    .evrRxStopACQstrobe(evrRxStopACQstrobe),
     .evfRxClk(evfRxClk),
     .hwPPSmarker_a(hwOrFallbackPPS_a),
     .evrPPSmarker(evrPPSmarker),
     .isEVG(isEVG),
+    .mgtTxClk(evgClk),
+    .evgTxCode(evgTxCode),
+    .evgTxCodeValid(evgTxCodeValid),
     .sysTimestamp(sysTimestamp),
     .acqClk(clk125),
     .acqTimestamp(acqTimestamp),
@@ -253,8 +264,8 @@ ppsLatencyCheck #(.CLK_RATE(CFG_SYSCLK_RATE))
 // DAC2 adjusts the 20 MHz system clock.
 marbleClockSync #(
     .CLK_RATE(CFG_ACQCLK_RATE),
-    .DAC_COUNTS_PER_HZ(CFG_ACKCLK_DAC_COUNTS_PER_HZ),
-    .DEBUG("true"))
+    .DAC_COUNTS_PER_HZ(CFG_MARBLE_VCXO_COUNTS_PER_HZ),
+    .DEBUG("false"))
   marbleClockSync (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ACQCLK_PLL_CSR]),
@@ -268,7 +279,6 @@ marbleClockSync #(
     .SPI_CLK(WR_DAC_SCLK_T),
     .SPI_SYNCn(WR_DAC1_SYNC_Tn),
     .SPI_SDI(WR_DAC_DIN_T));
-assign WR_DAC2_SYNC_Tn = WR_DAC1_SYNC_Tn; //FIXME == should be '1'.
 
 ///////////////////////////////////////////////////////////////////////////////
 // Measure clocks
@@ -277,11 +287,12 @@ wire measuredUsingInteralAcqMarker;
 reg [2:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(6))
+    .CHANNEL_COUNT(7))
   frequencyCounters (
     .clk(sysClk),
     .measuredClocks({ evfRxClk,
                       evrRxClk,
+                      evgClk,
                       gtRefClkDiv2,
                       clk32,
                       clk125,
@@ -356,7 +367,6 @@ amc7823SPI #(.CLK_RATE(CFG_SYSCLK_RATE))
     .SPI_DOUT(AMC7823_SPI_DOUT),
     .SPI_DIN(AMC7823_SPI_DIN));
 
-
 ///////////////////////////////////////////////////////////////////////////////
 // AD7768 FMC ADC
 wire ad7768Strobe;
@@ -392,6 +402,7 @@ ad7768 #(
     .adcCSn(AD7768_CS_n),
     .adcSDI(AD7768_SDI),
     .adcSDO(AD7768_SDO),
+    .adcMCLK(clk32),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
     .adcDOUT_a(AD7768_DOUT),
@@ -459,26 +470,29 @@ ospreyDownsampler #(
 // Build packet
 wire [7:0] unbufPK_TDATA;
 wire unbufPK_TVALID, unbufPK_TLAST, unbufPK_TREADY;
+wire acqEnableAcquisition;
 buildPacket #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
     .ADC_WIDTH(CFG_AD7768_WIDTH),
     .UDP_PACKET_CAPACITY(CFG_UDP_PACKET_CAPACITY),
-    .DEBUG("false"))
+    .DEBUG("true"))
   buildPacket (
     .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_BUILD_PACKET_CSR]),
     .sysActiveBitmapStrobe(GPIO_STROBES[GPIO_IDX_BUILD_PACKET_BITMAP]),
     .sysByteCountStrobe(GPIO_STROBES[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
     .sysGPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_BUILD_PACKET_CSR]),
-    .sysActiveBitmap(GPIO_IN[GPIO_IDX_BUILD_PACKET_BITMAP]),
-    .sysByteCount(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
+    .sysStatus(GPIO_IN[GPIO_IDX_BUILD_PACKET_STATUS]),
+    .sysActiveRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BITMAP]),
+    .sysByteCountRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
+    .sysTimeValid(GPIO_IN[GPIO_IDX_LINK_STATUS][31]),
     .acqClk(clk125),
     .acqStrobe(acqStrobe),
     .acqData(acqData),
     .acqSeconds(acqTimestamp[63:32]),
     .acqTicks(acqTimestamp[31:0]),
+    .acqClkLocked(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR][31]),
+    .acqEnableAcquisition(acqEnableAcquisition),
     .M_TVALID(unbufPK_TVALID),
     .M_TLAST(unbufPK_TLAST),
     .M_TDATA(unbufPK_TDATA),
@@ -498,6 +512,34 @@ fastDataFIFO fastDataFIFO (
   .m_axis_tready(PK_TREADY),
   .m_axis_tdata(PK_TDATA),
   .m_axis_tlast(PK_TLAST));
+
+///////////////////////////////////////////////////////////////////////////////
+// Event generator side of acquisition control
+evgAcqControl #(
+    .EVCODE_ACQ_START(CFG_EVR_ACQ_START_CODE),
+    .EVCODE_ACQ_STOP(CFG_EVR_ACQ_STOP_CODE),
+    .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
+    .DEBUG("false"))
+  evgAcqControl (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_EVG_ACQ_CSR]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_EVG_ACQ_CSR]),
+    .evgClk(evgClk),
+    .evgEventCode(evgTxCode),
+    .evgEventCodeValid(evgTxCodeValid),
+    .acqClk(clk125),
+    .acqStrobe(ad7768Strobe));
+
+///////////////////////////////////////////////////////////////////////////////
+// Event receiver side of acquisition control
+evrAcqControl #(.DEBUG("false"))
+  evrAcqControl (
+    .evrClk(evrRxClk),
+    .evrRxStartACQstrobe(evrRxStartACQstrobe),
+    .evrRxStopACQstrobe(evrRxStopACQstrobe),
+    .acqClk(clk125),
+    .acqEnableAcquisition(acqEnableAcquisition));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Block design

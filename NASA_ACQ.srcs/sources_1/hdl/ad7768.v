@@ -46,7 +46,6 @@ module ad7768 #(
     output wire [31:0] sysStatus,
     output wire [31:0] sysAuxStatus,
 
-
     input  wire                                              acqClk,
     (*MARK_DEBUG=DEBUG_PPS*) input  wire                     acqPPSstrobe,
     (*MARK_DEBUG=DEBUG_ACQ*) output reg                      acqStrobe=0,
@@ -60,6 +59,7 @@ module ad7768 #(
     (*MARK_DEBUG=DEBUG_SPI*) output wire                      adcSDI,
     (*MARK_DEBUG=DEBUG_SPI*) input  wire [ADC_CHIP_COUNT-1:0] adcSDO,
 
+                              input  wire                          adcMCLK,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire     [ADC_CHIP_COUNT-1:0] adcDCLK_a,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire     [ADC_CHIP_COUNT-1:0] adcDRDY_a,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire
@@ -81,6 +81,7 @@ localparam CEIL_CLOCKS_PER_DRDY = (ACQ_CLK_RATE + DRDY_RATE - 1) / DRDY_RATE;
 
 reg sysStartAlignmentToggle = 0;
 reg sysResetADC = 0;
+reg sysUseFakeAD7768 = 0;
 assign adcRESETn = !sysResetADC;
 
 wire [1:0] sysOpcode = sysGPIO_OUT[31:30];
@@ -93,6 +94,9 @@ always @(posedge sysClk) begin
         CSR_W_OP_CHIP_PINS: begin
             if (sysGPIO_OUT[1]) begin
                 sysResetADC <= sysGPIO_OUT[0];
+            end
+            if (sysGPIO_OUT[3]) begin
+                sysUseFakeAD7768 <= sysGPIO_OUT[2];
             end
             if (sysGPIO_OUT[8]) begin 
                 sysStartAlignmentToggle <= !sysStartAlignmentToggle;
@@ -175,6 +179,29 @@ assign sysStatus = { spiActive,
                      spiShiftReg };
 
 ///////////////////////////////////////////////////////////////////////////////
+// ADC MCLK (clk32) domain
+// Fake hardware
+wire                  [ADC_CHIP_COUNT-1:0] fake_DCLK;
+wire                  [ADC_CHIP_COUNT-1:0] fake_DRDY;
+wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] fake_DOUT;
+fakeQuartzAD7768 #(
+    .ADC_CHIP_COUNT(ADC_CHIP_COUNT),
+    .ADC_PER_CHIP(ADC_PER_CHIP),
+    .ADC_WIDTH(ADC_WIDTH))
+  fakeQuartzAD7768 (
+    .MCLK(adcMCLK),
+    .adcDCLK(fake_DCLK),
+    .adcDRDY(fake_DRDY),
+    .adcDOUT(fake_DOUT));
+wire                  [ADC_CHIP_COUNT-1:0] muxDCLK_a;
+wire                  [ADC_CHIP_COUNT-1:0] muxDRDY_a;
+wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] muxDOUT_a;
+
+assign muxDCLK_a = sysUseFakeAD7768 ? fake_DCLK : adcDCLK_a;
+assign muxDRDY_a = sysUseFakeAD7768 ? fake_DRDY : adcDRDY_a;
+assign muxDOUT_a = sysUseFakeAD7768 ? fake_DOUT : adcDOUT_a;
+
+///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock (acqClk) domain
 localparam ADC_BITCOUNT_LOAD = HEADER_WIDTH + ADC_WIDTH - 2;
 localparam ADC_BITCOUNT_WIDTH = $clog2(ADC_BITCOUNT_LOAD+1)+1;
@@ -203,7 +230,7 @@ reg delaying = 0;
 (*MARK_DEBUG=DEBUG_ACQ*) reg adcDCLK = 0, adcDRDY = 0;
                      reg adcDCLK_d = 0;
 always @(posedge acqClk) begin
-    adcDCLK_m <= adcDCLK_a;
+    adcDCLK_m <= muxDCLK_a;
     adcDCLK   <= adcDCLK_m[0];
     adcDCLK_d <= adcDCLK;
     if (delaying) begin
@@ -219,7 +246,7 @@ always @(posedge acqClk) begin
         delaying <= 1;
     end
     /*
-     * No need to stabilize adcDRDY_a since they are
+     * No need to stabilize muxDRDY_a since they are
      * sampled here only when they should be stable.
      */
     if (acqActive) begin
@@ -227,7 +254,7 @@ always @(posedge acqClk) begin
             if (adcBitCountDone) begin
                 acqStrobe <= 1;
             end
-            if (adcDRDY_a) begin
+            if (muxDRDY_a) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
             end
             else if (!adcBitCountDone) begin
@@ -236,7 +263,7 @@ always @(posedge acqClk) begin
             else begin
                 acqActive <= 0;
             end
-            adcDRDY <= adcDRDY_a[0];
+            adcDRDY <= muxDRDY_a[0];
         end
         else begin
             acqStrobe <= 0;
@@ -245,7 +272,7 @@ always @(posedge acqClk) begin
     else begin
         acqStrobe <= 0;
         if (sampleFlag) begin
-            if (adcDRDY_a) begin
+            if (muxDRDY_a) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
                 acqActive <= 1;
             end
@@ -258,7 +285,7 @@ generate
 for (i = 0 ; i < ADC_CHIP_COUNT * ADC_PER_CHIP ; i = i + 1) begin : adcDOUT
   reg  [HEADER_WIDTH+ADC_WIDTH-1:0] shiftReg;
   (*MARK_DEBUG=DEBUG_ACQ*)wire [HEADER_WIDTH+ADC_WIDTH-1:0] shiftNext = {
-                            shiftReg[HEADER_WIDTH+ADC_WIDTH-2:0], adcDOUT_a[i]};
+                            shiftReg[HEADER_WIDTH+ADC_WIDTH-2:0], muxDOUT_a[i]};
   assign acqData[i*ADC_WIDTH+:ADC_WIDTH] = shiftReg[0+:ADC_WIDTH];
   assign acqHeaders[i*HEADER_WIDTH+:HEADER_WIDTH] =
                                            shiftReg[ADC_WIDTH+:HEADER_WIDTH];
@@ -283,7 +310,7 @@ reg                           [SKEW_COUNT_WIDTH-1:0] skewCount = ~0;
 (*MARK_DEBUG=DEBUG_SKEW*) reg [SKEW_COUNT_WIDTH-1:0] skew = ~0;
 wire skewCountDone = skewCount[SKEW_COUNT_WIDTH-1];
 always @(posedge acqClk) begin
-    skewDRDY_m <= adcDRDY_a;
+    skewDRDY_m <= muxDRDY_a;
     skewDRDY   <= skewDRDY_m;
     skewDRDY_d <= skewDRDY;
     case (skewState)
