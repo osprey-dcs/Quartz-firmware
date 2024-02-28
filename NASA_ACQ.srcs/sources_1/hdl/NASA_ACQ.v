@@ -122,12 +122,12 @@ module NASA_ACQ #(
 
 ///////////////////////////////////////////////////////////////////////////////
 // Static outputs
-assign VCXO_EN = 1'b1;
-assign WR_DAC2_SYNC_Tn = 1;b1; //WR_DAC1_SYNC_Tn; //FIXME == should be '1'.
+assign VCXO_EN = 1'b0;
+assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk32, evrRxClk, evfRxClk, evgClk;
+wire sysClk, clk125, clk200, clk32, evrRxClk, evfRxClk, evgClk;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
 
 wire gtRefClk, gtRefClkDiv2;
@@ -476,7 +476,7 @@ buildPacket #(
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
     .ADC_WIDTH(CFG_AD7768_WIDTH),
     .UDP_PACKET_CAPACITY(CFG_UDP_PACKET_CAPACITY),
-    .DEBUG("true"))
+    .DEBUG("false"))
   buildPacket (
     .sysClk(sysClk),
     .sysActiveBitmapStrobe(GPIO_STROBES[GPIO_IDX_BUILD_PACKET_BITMAP]),
@@ -542,6 +542,16 @@ evrAcqControl #(.DEBUG("false"))
     .acqEnableAcquisition(acqEnableAcquisition));
 
 ///////////////////////////////////////////////////////////////////////////////
+// Delay data from PHY
+wire [3:0] rgmiiDataDelayed;
+wire       rgmiiCtrlDelayed;
+ethernetRxDelay ethernetRxDelay_inst (
+    .refClk200(clk200),
+    .rst(!RGMII_PHY_RESET_n),
+    .phyDataIn({RGMII_RX_CTRL, RGMII_RXD}),
+    .phyDataOut({rgmiiCtrlDelayed, rgmiiDataDelayed}));
+
+///////////////////////////////////////////////////////////////////////////////
 // Block design
 bd bd_i (
     .clk125(clk125),
@@ -549,6 +559,7 @@ bd bd_i (
 
     .sysClk(sysClk),
     .clk32(clk32),
+    .clk200(clk200),
 
     .FLASH_SPI_sclk(BOOT_SCLK),
     .FLASH_SPI_csb(BOOT_CS_B),
@@ -564,8 +575,8 @@ bd bd_i (
     .i2c_fpga_gpo(I2C_FPGA_SW_RSTn),
 
     .RGMII_rxc(RGMII_RX_CLK),
-    .RGMII_rd(RGMII_RXD),
-    .RGMII_rx_ctl(RGMII_RX_CTRL),
+    .RGMII_rd(rgmiiDataDelayed),
+    .RGMII_rx_ctl(rgmiiCtrlDelayed),
     .RGMII_txc(RGMII_TX_CLK),
     .RGMII_td(RGMII_TXD),
     .RGMII_tx_ctl(RGMII_TX_CTRL),
