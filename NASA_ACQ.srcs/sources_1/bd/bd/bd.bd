@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x633B3563515932FC",
+      "boundary_crc": "0x158ACDA192E58C9C",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -41,9 +41,9 @@
       "hwicap": "",
       "xadc": "",
       "iic_fpga": "",
-      "ospreyUDP": "",
       "generic_reg": "",
-      "marbleBootFlash": ""
+      "marbleBootFlash": "",
+      "ospreyUDP": ""
     },
     "interface_ports": {
       "console": {
@@ -352,6 +352,32 @@
         "direction": "O",
         "left": "0",
         "right": "0"
+      },
+      "clk200": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "bd_clk_wiz_1_0_sysClk",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "200000000",
+            "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
       }
     },
     "components": {
@@ -1580,16 +1606,16 @@
             "value": "BUFG"
           },
           "CLKOUT3_JITTER": {
-            "value": "123.762"
+            "value": "233.189"
           },
           "CLKOUT3_PHASE_ERROR": {
-            "value": "89.430"
+            "value": "265.359"
           },
           "CLKOUT3_REQUESTED_OUT_FREQ": {
-            "value": "75"
+            "value": "200"
           },
           "CLKOUT3_USED": {
-            "value": "false"
+            "value": "true"
           },
           "CLKOUT4_DRIVES": {
             "value": "BUFG"
@@ -1609,6 +1635,9 @@
           "CLK_OUT2_PORT": {
             "value": "clk32"
           },
+          "CLK_OUT3_PORT": {
+            "value": "clk200"
+          },
           "MMCM_CLKFBOUT_MULT_F": {
             "value": "32.000"
           },
@@ -1625,13 +1654,13 @@
             "value": "25"
           },
           "MMCM_CLKOUT2_DIVIDE": {
-            "value": "1"
+            "value": "4"
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "5"
           },
           "NUM_OUT_CLKS": {
-            "value": "2"
+            "value": "3"
           },
           "PRIM_IN_FREQ": {
             "value": "125"
@@ -1763,12 +1792,6 @@
           }
         }
       },
-      "ospreyUDP": {
-        "vlnv": "user.org:user:ospreyUDP:1.0",
-        "xci_name": "bd_ospreyUDP_0_0",
-        "xci_path": "ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci",
-        "inst_hier_path": "ospreyUDP"
-      },
       "generic_reg": {
         "vlnv": "ospreydcs.com:user:axi_lite_generic_reg_v3_0:1.0",
         "xci_name": "bd_axi_lite_generic_reg_0_0",
@@ -1782,6 +1805,23 @@
         "inst_hier_path": "marbleBootFlash",
         "parameters": {
           "DEBUG": {
+            "value": "false"
+          }
+        }
+      },
+      "ospreyUDP": {
+        "vlnv": "user.org:user:ospreyUDP:1.0",
+        "xci_name": "bd_ospreyUDP_0_0",
+        "xci_path": "ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci",
+        "inst_hier_path": "ospreyUDP",
+        "parameters": {
+          "DEBUG_RX_MAC": {
+            "value": "false"
+          },
+          "DEBUG_TX_MAC": {
+            "value": "false"
+          },
+          "DEBUG_TX_UDP": {
             "value": "false"
           }
         }
@@ -1936,6 +1976,12 @@
           "clk32"
         ]
       },
+      "clk_wiz_1_clk200": {
+        "ports": [
+          "clk_wiz_1/clk200",
+          "clk200"
+        ]
+      },
       "clk_wiz_1_locked": {
         "ports": [
           "clk_wiz_1/locked",
@@ -1979,9 +2025,9 @@
           "microblaze_0_axi_periph/M05_ACLK",
           "microblaze_0_axi_periph/M06_ACLK",
           "microblaze_0_axi_periph/M07_ACLK",
-          "ospreyUDP/s_axi_lite_aclk",
           "generic_reg/s_axi_aclk",
-          "marbleBootFlash/s_axi_aclk"
+          "marbleBootFlash/s_axi_aclk",
+          "ospreyUDP/s_axi_lite_aclk"
         ]
       },
       "microblaze_0_intr": {
@@ -2033,9 +2079,9 @@
           "microblaze_0_axi_periph/M05_ARESETN",
           "microblaze_0_axi_periph/M06_ARESETN",
           "microblaze_0_axi_periph/M07_ARESETN",
-          "ospreyUDP/s_axi_lite_aresetn",
           "generic_reg/s_axi_aresetn",
-          "marbleBootFlash/s_axi_aresetn"
+          "marbleBootFlash/s_axi_aresetn",
+          "ospreyUDP/s_axi_lite_aresetn"
         ]
       },
       "rst_clk_wiz_1_100M_peripheral_reset": {
