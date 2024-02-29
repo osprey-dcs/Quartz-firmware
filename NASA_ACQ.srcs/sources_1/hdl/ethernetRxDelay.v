@@ -49,7 +49,9 @@ generate
 for (i = 0 ; i < 5 ; i = i + 1) begin : ethernetPHYdelay
   IDELAYE2 #(
     .IDELAY_TYPE("FIXED"),
+    .DELAY_SRC("IDATAIN"),
     .IDELAY_VALUE(IDELAY_VALUE),
+    .SIGNAL_PATTERN("DATA"),
     .REFCLK_FREQUENCY(200))
   phy_rxd_idelay (
     .IDATAIN(phyDataIn[i]),
