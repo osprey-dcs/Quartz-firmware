@@ -217,6 +217,7 @@ eventSystem #(
     .DEBUG("false"),
     .DEBUG_MGT("false"),
     .DEBUG_EVR("false"),
+    .DEBUG_EVF("true"),
     .DEBUG_EVG("false"))
   eventSystem (
     .sysClk(sysClk),
@@ -533,7 +534,7 @@ evgAcqControl #(
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event receiver side of acquisition control
-evrAcqControl #(.DEBUG("false"))
+evrAcqControl #(.DEBUG("true"))
   evrAcqControl (
     .evrClk(evrRxClk),
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
