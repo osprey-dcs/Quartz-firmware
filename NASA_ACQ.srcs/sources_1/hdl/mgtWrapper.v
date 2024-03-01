@@ -780,14 +780,13 @@ module mgtLinkStatus #(
     output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
     output wire                       rxLinkUp);
 
-reg [4:0] syncCount;
-assign rxLinkUp = syncCount[4];
+reg [5:0] syncCount;
+assign rxLinkUp = syncCount[5];
 
 always @(posedge clk) begin
     rxChars <= mgtData;
     rxCharIsK <= mgtDataIsK;
     if ((mgtNotInTable != 0)
-     || (mgtDataIsK[MGT_BYTE_COUNT-1:1] != 0)
      || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
         syncCount <= 0;
     end
