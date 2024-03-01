@@ -73,7 +73,7 @@ localparam BYTECOUNT_WIDTH = $clog2(UDP_PACKET_CAPACITY-HEADER_BYTE_COUNT+1);
 localparam BYTECOUNTER_WIDTH = BYTECOUNT_WIDTH + 1;
 
 // Support for forwarding values from one clock domain to another
-localparam FORWARD_DATA_WIDTH = BYTECOUNT_WIDTH + ADC_COUNT;
+localparam FORWARD_DATA_WIDTH = 1 + BYTECOUNT_WIDTH + ADC_COUNT;
 reg sysForwardToggle = 0, acqForwardToggle = 0;
 (*ASYNC_REG="true"*) reg sysAcqForwardToggle_m = 0, acqSysForwardToggle_m = 0;
 reg sysAcqForwardToggle = 0, acqSysForwardToggle = 0;
@@ -84,20 +84,27 @@ reg [FORWARD_DATA_WIDTH-1:0] sysForwardData, acqForwardData;
 
 reg [ADC_COUNT-1:0] sysActiveChannels = ~0;
 reg [BYTECOUNT_WIDTH-1:0] sysByteCount = 1400;
+reg sysSubscriberPresent = 0;
 
 always @(posedge sysClk) begin
     if (sysActiveBitmapStrobe) begin
         sysActiveChannels <= sysGPIO_OUT[0+:ADC_COUNT];
     end
     if (sysByteCountStrobe) begin
-        sysByteCount <= sysGPIO_OUT[0+:BYTECOUNT_WIDTH];
+        if (sysGPIO_OUT[16]) sysByteCount <= sysGPIO_OUT[0+:BYTECOUNT_WIDTH];
+        if (sysGPIO_OUT[30]) begin
+            sysSubscriberPresent <= 0;
+        end
+        else if (sysGPIO_OUT[31]) begin
+            sysSubscriberPresent <= 1;
+        end
     end
 
     // Forward values to ACQ clock domain
     sysAcqForwardToggle_m <= acqForwardToggle;
     sysAcqForwardToggle   <= sysAcqForwardToggle_m;
     if (sysForwardToggle == sysAcqForwardToggle) begin
-        sysForwardData <= {sysByteCount, sysActiveChannels};
+        sysForwardData <= {sysSubscriberPresent,sysByteCount,sysActiveChannels};
         sysForwardToggle <= !sysForwardToggle;
     end
 end
@@ -106,7 +113,10 @@ end
 (*MARK_DEBUG=DEBUG*) reg acquisitionActive = 0;
 (*MARK_DEBUG=DEBUG*) reg adcOverrun = 0;
 (*MARK_DEBUG=DEBUG*) reg sendOverrun = 0;
-assign sysStatus = { acqEnableAcquisition, acquisitionActive, 26'b0,
+assign sysStatus = { acqEnableAcquisition,
+                     acquisitionActive,
+                     sysSubscriberPresent,
+                     25'b0,
                      sendOverrun, adcOverrun, !sysTimeValid, !acqClkLocked };
 assign sysActiveRbk = sysActiveChannels;
 assign sysByteCountRbk = { {32-BYTECOUNT_WIDTH{1'b0}}, sysByteCount};
@@ -130,6 +140,7 @@ end
 wire       [ADC_COUNT-1:0] acqActiveChannels = acqForwardData[0+:ADC_COUNT];
 wire [BYTECOUNT_WIDTH-1:0] acqByteCount =
                                      acqForwardData[ADC_COUNT+:BYTECOUNT_WIDTH];
+wire acqSubscriberPresent = acqForwardData[ADC_COUNT+BYTECOUNT_WIDTH];
 
 // State machine counters
 
@@ -259,7 +270,8 @@ always @(posedge acqClk) begin
                 M_TLAST <= 0;
                 if (M_TLAST) begin
                     inPacket <= 0;
-                    acquisitionActive <= acqEnableAcquisition;
+                    acquisitionActive <= (acqEnableAcquisition &&
+                                          acqSubscriberPresent);
                 end
                 awaitAcqStrobe <= 1;
             end
@@ -268,7 +280,7 @@ always @(posedge acqClk) begin
     else begin
         sequenceNumber <= {acqSeconds, 32'b0};
         awaitAcqStrobe <= 1;
-        if (acqEnableAcquisition) begin
+        if (acqEnableAcquisition && acqSubscriberPresent) begin
             adcOverrun <= 0;
             sendOverrun <= 0;
             acquisitionActive <= 1;
