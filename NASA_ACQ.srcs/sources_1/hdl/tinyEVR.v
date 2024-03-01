@@ -143,9 +143,22 @@ localparam EVCODE_SECONDS_MARKER = 8'h7D;
 
 wire [7:0] evCode = evrRxWord[7:0];
 assign distributedDataBus = evrRxWord[15:8];
-wire evCodeValid = !evrCharIsK[0];
+
+(*MARK_DEBUG=DEBUG*) reg [3:0] commaCount = 0;
+wire commaCountGood = commaCount[3];
+wire evCodeValid = commaCountGood && !evrCharIsK[0];
 
 always @(posedge evrRxClk) begin
+    /*
+     * Sanity check on received values
+     */
+    if (evrCharIsK[0] && (evrRxWord[7:0] != 8'hBC)) begin
+        commaCount <= 0;
+    end
+    else if (!commaCountGood && evrCharIsK[0] && (evrRxWord[7:0]==8'hBC)) begin
+        commaCount <= commaCount + 1;
+    end
+
     // Update time stamp seconds and clear time stamp ticks
     // on arrival of 'pulse per second' marker event code.
     if (evCodeValid && (evCode == EVCODE_SECONDS_MARKER)) begin
