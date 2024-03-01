@@ -144,8 +144,8 @@ localparam EVCODE_SECONDS_MARKER = 8'h7D;
 wire [7:0] evCode = evrRxWord[7:0];
 assign distributedDataBus = evrRxWord[15:8];
 
-(*MARK_DEBUG=DEBUG*) reg [3:0] commaCount = 0;
-wire commaCountGood = commaCount[3];
+(*MARK_DEBUG=DEBUG*) reg [5:0] commaCount = 0;
+wire commaCountGood = commaCount[5];
 wire evCodeValid = commaCountGood && !evrCharIsK[0];
 
 always @(posedge evrRxClk) begin

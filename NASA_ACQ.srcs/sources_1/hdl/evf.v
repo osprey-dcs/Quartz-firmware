@@ -66,8 +66,8 @@ reg        txCodeIsK;
 reg rxReady = 0;
 reg fifoRST = 1;
 
-(*MARK_DEBUG=DEBUG*) reg [3:0] rxCommaCount = 0;
-wire rxCommaCountGood = rxCommaCount[3];
+(*MARK_DEBUG=DEBUG*) reg [5:0] rxCommaCount = 0;
+wire rxCommaCountGood = rxCommaCount[5];
 
 always @(posedge rxClk) begin
     /*
