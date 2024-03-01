@@ -66,25 +66,12 @@ reg        txCodeIsK;
 reg rxReady = 0;
 reg fifoRST = 1;
 
-(*MARK_DEBUG=DEBUG*) reg [5:0] rxCommaCount = 0;
-wire rxCommaCountGood = rxCommaCount[5];
-
 always @(posedge rxClk) begin
-    /*
-     * Sanity check on received values
-     */
-    if (!rxLinkUp || (rxCharIsK[0] && (rxChars[7:0] != 8'hBC))) begin
-        rxCommaCount <= 0;
-    end
-    else if (!rxCommaCountGood && rxCharIsK[0] && (rxChars[7:0] == 8'hBC)) begin
-        rxCommaCount <= rxCommaCount + 1;
-    end
-
     /*
      * FIFO write side
      */
     fifoIN <= rxChars[7:0];
-    if (rxCommaCountGood && !rxCharIsK[0] && (rxChars[7:0] != EVCODE_NOP)) begin
+    if (rxLinkUp && !rxCharIsK[0] && (rxChars[7:0] != EVCODE_NOP)) begin
         fifoWREN <= 1;
     end
     else begin
