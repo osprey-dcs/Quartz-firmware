@@ -29,11 +29,10 @@
  */
 `default_nettype none
 module evf #(
-    parameter CFG_EVG_CLK_RATE = 125000000,
     parameter DEBUG            = "false"
     ) (
                          input  wire        rxClk,
-                         input  wire        rxLinkUp,
+    (*MARK_DEBUG=DEBUG*) input  wire        rxLinkUp,
     (*MARK_DEBUG=DEBUG*) input  wire [15:0] rxChars,
     (*MARK_DEBUG=DEBUG*) input  wire  [1:0] rxCharIsK,
                          input  wire        txClk,
@@ -52,8 +51,8 @@ wire commaCounterDone = commaCounter[2];
 /*
  * FIFO write side
  */
-reg [7:0] fifoIN;
-reg       fifoWREN;
+(*MARK_DEBUG=DEBUG*) reg [7:0] fifoIN;
+(*MARK_DEBUG=DEBUG*) reg       fifoWREN;
 
 /*
  * FIFO read side
@@ -66,14 +65,26 @@ reg        txCodeIsK;
 (*ASYNC_REG="TRUE"*) reg rxReady_m = 0;
 reg rxReady = 0;
 reg fifoRST = 1;
+
+(*MARK_DEBUG=DEBUG*) reg [3:0] rxCommaCount = 0;
+wire rxCommaCountGood = rxCommaCount[3];
+
 always @(posedge rxClk) begin
+    /*
+     * Sanity check on received values
+     */
+    if (!rxLinkUp || (rxCharIsK[0] && (rxChars[7:0] != 8'hBC))) begin
+        rxCommaCount <= 0;
+    end
+    else if (!rxCommaCountGood && rxCharIsK[0] && (rxChars[7:0] == 8'hBC)) begin
+        rxCommaCount <= rxCommaCount + 1;
+    end
+
     /*
      * FIFO write side
      */
     fifoIN <= rxChars[7:0];
-    if (!rxLinkUp
-     && (rxCharIsK == 2'b00)
-     && (rxChars[7:0] != EVCODE_NOP)) begin
+    if (rxCommaCountGood && !rxCharIsK[0] && (rxChars[7:0] != EVCODE_NOP)) begin
         fifoWREN <= 1;
     end
     else begin

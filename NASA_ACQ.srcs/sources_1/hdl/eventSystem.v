@@ -37,6 +37,7 @@ module eventSystem #(
     parameter EVR_ACQ_STOP_CODE  = 1,
     parameter DEBUG_MGT          = "false",
     parameter DEBUG_EVR          = "false",
+    parameter DEBUG_EVF          = "false",
     parameter DEBUG_EVG          = "false",
     parameter DEBUG              = "false"
     ) (
@@ -286,8 +287,7 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
 // Minimal event fanout
 wire [MGT_DATA_WIDTH-1:0] evfTxChars;
 wire [MGT_BYTE_COUNT-1:0] evfTxCharIsK;
-evf #(.CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
-      .DEBUG("false"))
+evf #(.DEBUG(DEBUG_EVF))
   evf_i (
     .rxClk(evfRxClk),
     .rxLinkUp(evfRxLinkUp && !isEVG),
