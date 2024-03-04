@@ -53,6 +53,7 @@ function integer ns2ticks;
     end
 endfunction
 localparam DELAY_TICKS = ns2ticks(800);
+localparam WATCHDOG_TICKS = ns2ticks(8000);
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
@@ -106,6 +107,11 @@ localparam DELAY_WIDTH = $clog2(DELAY_LOAD+1) + 1;
 reg [DELAY_WIDTH-1:0] delay = DELAY_LOAD;
 (*MARK_DEBUG=DEBUG*) wire delayDone = delay[DELAY_WIDTH-1];
 
+localparam WATCHDOG_LOAD = WATCHDOG_TICKS - 1;
+localparam WATCHDOG_WIDTH = $clog2(WATCHDOG_LOAD+1) + 1;
+reg [WATCHDOG_WIDTH-1:0] watchdog = WATCHDOG_LOAD;
+(*MARK_DEBUG=DEBUG*) wire watchdogTimeout = delay[WATCHDOG_WIDTH-1];
+
 always @(posedge evgClk) begin
     evgAcqToggle_m <= sysAcqToggle;
     evgAcqToggle   <= evgAcqToggle_m;
@@ -134,13 +140,15 @@ always @(posedge evgClk) begin
     end
     ST_AWAIT_ACQ: begin
         delay <= DELAY_LOAD;
+        watchdog <= WATCHDOG_LOAD;
         if (evgAcqStretched && !evgAcqStretched_d) begin
             state <= ST_DELAY;
         end
     end
     ST_DELAY: begin
         delay <= delay - 1;
-        if (delayDone) begin
+        watchdog <= watchdog - 1;
+        if (delayDone || watchdogTimeout) begin
             state <= ST_SEND_START;
         end
     end
