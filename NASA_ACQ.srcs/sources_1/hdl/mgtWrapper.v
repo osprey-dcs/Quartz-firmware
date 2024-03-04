@@ -780,27 +780,31 @@ module mgtLinkStatus #(
     output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
     output wire                       rxLinkUp);
 
-localparam IDLES_REQUIRED = 8;
+localparam NULLS_REQUIRED = 8;
 
-localparam IDLE_COUNTER_LOAD = IDLES_REQUIRED - 1;
-localparam IDLE_COUNTER_WIDTH = $clog2(IDLES_REQUIRED + 1) + 1;
-reg [IDLE_COUNTER_WIDTH-1:0] idlesNeeded = IDLE_COUNTER_LOAD;
-assign rxLinkUp = idlesNeeded[IDLE_COUNTER_WIDTH-1];
+reg needComma = 1;
+localparam NULL_COUNTER_LOAD = NULLS_REQUIRED - 1;
+localparam NULL_COUNTER_WIDTH = $clog2(NULLS_REQUIRED + 1) + 1;
+reg [NULL_COUNTER_WIDTH-1:0] nullsNeeded = NULL_COUNTER_LOAD;
+assign rxLinkUp = nullsNeeded[NULL_COUNTER_WIDTH-1];
 
 always @(posedge clk) begin
     rxChars <= mgtData;
     rxCharIsK <= mgtDataIsK;
     if ((mgtNotInTable != 0)
      || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
-        idlesNeeded <= IDLE_COUNTER_LOAD;
+        nullsNeeded <= NULL_COUNTER_LOAD;
+        needComma <= 1;
     end
     else if (!rxLinkUp) begin
-        if ((mgtDataIsK[0] && (mgtData[7:0] == 8'hBC))
-         || (!mgtDataIsK[0] && (mgtData[7:0] == 8'h00))) begin
-            idlesNeeded <= idlesNeeded - 1;
+        if (mgtDataIsK[0] && (mgtData[7:0] == 8'hBC)) begin
+            needComma <= 0;
+        end
+        else if (!needComma && !mgtDataIsK[0] && (mgtData[7:0] == 8'h00)) begin
+            nullsNeeded <= nullsNeeded - 1;
         end
         else begin
-            idlesNeeded <= IDLE_COUNTER_LOAD;
+            nullsNeeded <= NULL_COUNTER_LOAD;
         end
     end
 end
