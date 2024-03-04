@@ -766,7 +766,7 @@ MGT MGT_i (
 endmodule
 
 /*
- * Check link validity
+ * Require a period of contiguous NULL/comma values to declare link valid.
  */
 module mgtLinkStatus #(
     parameter MGT_DATA_WIDTH = -1,
@@ -780,18 +780,28 @@ module mgtLinkStatus #(
     output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
     output wire                       rxLinkUp);
 
-reg [5:0] syncCount;
-assign rxLinkUp = syncCount[5];
+localparam IDLES_REQUIRED = 8;
+
+localparam IDLE_COUNTER_LOAD = IDLES_REQUIRED - 1;
+localparam IDLE_COUNTER_WIDTH = $clog2(IDLES_REQUIRED + 1) + 1;
+reg [IDLE_COUNTER_WIDTH-1:0] idlesNeeded = IDLE_COUNTER_LOAD;
+assign rxLinkUp = idlesNeeded[IDLE_COUNTER_WIDTH-1];
 
 always @(posedge clk) begin
     rxChars <= mgtData;
     rxCharIsK <= mgtDataIsK;
     if ((mgtNotInTable != 0)
      || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
-        syncCount <= 0;
+        idlesNeeded <= IDLE_COUNTER_LOAD;
     end
-    else if (!rxLinkUp && mgtDataIsK[0] && (mgtData[7:0] == 8'hBC)) begin
-        syncCount <= syncCount + 1;
+    else if (!rxLinkUp) begin
+        if ((mgtDataIsK[0] && (mgtData[7:0] == 8'hBC))
+         || (!mgtDataIsK[0] && (mgtData[7:0] == 8'h00))) begin
+            idlesNeeded <= idlesNeeded - 1;
+        end
+        else begin
+            idlesNeeded <= IDLE_COUNTER_LOAD;
+        end
     end
 end
 endmodule
