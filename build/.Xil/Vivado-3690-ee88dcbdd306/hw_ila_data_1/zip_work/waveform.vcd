@@ -1,0 +1,45 @@
+$date
+        2024-Feb-28 09:17:16
+$end
+$version
+        Vivado v2023.1 (64-bit)
+$end
+$timescale
+        1ps
+$end
+$scope module dut $end
+$var reg 5 " \ethernetRxDelay_inst/ethernetPHYdelay[4].dlyVal [4:0] $end
+$var reg 5 ' \ethernetRxDelay_inst/ethernetPHYdelay[2].dlyVal [4:0] $end
+$var reg 5 , \ethernetRxDelay_inst/ethernetPHYdelay[3].dlyVal [4:0] $end
+$var reg 5 1 \ethernetRxDelay_inst/ethernetPHYdelay[0].dlyVal [4:0] $end
+$var reg 5 6 \ethernetRxDelay_inst/ethernetPHYdelay[1].dlyVal [4:0] $end
+$var reg 1 ; _TRIGGER $end
+$var reg 1 < _WINDOW $end
+$var reg 1 = _GAP $end
+$upscope $end
+$enddefinitions $end
+#0
+$dumpvars
+b11111 "
+b11111 '
+b11111 ,
+b11111 1
+b11111 6
+0;
+1<
+0=
+$end
+#8
+1;
+#512
+0<
+#520
+0;
+#1024
+1<
+#1032
+1;
+#1536
+0<
+#1544
+0;
