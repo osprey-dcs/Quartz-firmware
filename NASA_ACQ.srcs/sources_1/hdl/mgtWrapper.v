@@ -780,8 +780,8 @@ module mgtLinkStatus #(
     output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
     output wire                       rxLinkUp);
 
-localparam COMMAS_REQUIRED = 128;
-localparam NULLS_REQUIRED  = 150;
+localparam COMMAS_REQUIRED = 50;
+localparam NULLS_REQUIRED  = 100;
 
 localparam COMMA_COUNTER_LOAD = COMMAS_REQUIRED - 1;
 localparam COMMA_COUNTER_WIDTH = $clog2(COMMAS_REQUIRED + 1) + 1;

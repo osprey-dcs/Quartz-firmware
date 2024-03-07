@@ -97,7 +97,7 @@ tinyEVR #(
     .DEBUG(DEBUG_EVR))
   tinyEVR_i (
     .evrRxClk(evrRxClk),
-    .evrRxWord(evrRxChars),
+    .evrRxWord(evrRxChars & {MGT_DATA_WIDTH{evrRxLinkUp}}),
     .evrCharIsK(evrRxCharIsK),
     .ppsMarker(evrPPSstrobe),
     .timestampValid(evrTimestampValid),
