@@ -203,11 +203,6 @@ evgInit(void)
             break;
         }
     }
-    /*
-     * Noise on receiver sometimes produces spurious 'start acquisition'
-     * events, so disable acquisition here.
-     */
-    evgAcqControl(0);
     evgShow();
 }
 
