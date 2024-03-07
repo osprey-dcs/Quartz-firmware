@@ -2,7 +2,7 @@
 
 ## Preliminaries
 
-1. Download and install the Vivado/Vitis 2023.1 development tools from the AMD website.  Ensure that you include support for Kintex7 devices.
+1. Download and install the [Vivado/Vitis 2023.1 development tools](https://www.xilinx.com/support/download/index.html/content/xilinx/en/downloadNav/vivado-design-tools/2023-1.html) from the AMD website.  Ensure that you include support for Kintex7 devices.
 1. Some of the commands mentioned below require that the FPGA development tools be on the search path.  For bash this can be done by adding the following to the .bash_login in your home directory:
 
         source /path_to_Vivado_installation/2023.1/settings64.sh
