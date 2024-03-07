@@ -18,7 +18,7 @@ The following support modules must be cloned from their github repositories.  Th
     git clone git@github.com:osprey-dcs/marble-boot-flash.git
     git clone git@github.com:osprey-dcs/marble-clock-sync-PLL.git
     git clone git@github.com:osprey-dcs/osprey-series7-downsampler.git
-    git clone git@github.com:osprey-dcs/osprey-UDP.git
+    git clone git@github.com:osprey-dcs/ospreyUDP.git
 
 ## Fetch the application firmware repository
 
