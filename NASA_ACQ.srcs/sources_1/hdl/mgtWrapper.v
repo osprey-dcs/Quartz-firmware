@@ -780,9 +780,14 @@ module mgtLinkStatus #(
     output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
     output wire                       rxLinkUp);
 
-localparam NULLS_REQUIRED = 8;
+localparam COMMAS_REQUIRED = 128;
+localparam NULLS_REQUIRED = 32;
 
-reg needComma = 1;
+localparam COMMA_COUNTER_LOAD = COMMAS_REQUIRED - 1;
+localparam COMMA_COUNTER_WIDTH = $clog2(COMMAS_REQUIRED + 1) + 1;
+reg [COMMA_COUNTER_WIDTH-1:0] commasNeeded = COMMA_COUNTER_LOAD;
+wire commasDone = commasNeeded[COMMA_COUNTER_WIDTH-1];
+
 localparam NULL_COUNTER_LOAD = NULLS_REQUIRED - 1;
 localparam NULL_COUNTER_WIDTH = $clog2(NULLS_REQUIRED + 1) + 1;
 reg [NULL_COUNTER_WIDTH-1:0] nullsNeeded = NULL_COUNTER_LOAD;
@@ -794,17 +799,22 @@ always @(posedge clk) begin
     if ((mgtNotInTable != 0)
      || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
         nullsNeeded <= NULL_COUNTER_LOAD;
-        needComma <= 1;
+        commasNeeded <= COMMA_COUNTER_LOAD;
     end
     else if (!rxLinkUp) begin
-        if (mgtDataIsK[0] && (mgtData[7:0] == 8'hBC)) begin
-            needComma <= 0;
-        end
-        else if (!needComma && !mgtDataIsK[0] && (mgtData[7:0] == 8'h00)) begin
-            nullsNeeded <= nullsNeeded - 1;
-        end
-        else begin
+        if (!commasDone) begin
             nullsNeeded <= NULL_COUNTER_LOAD;
+            if (mgtDataIsK[0] && (mgtData[7:0] == 8'hBC)) begin
+                commasNeeded <= commasNeeded - 1;
+            end
+        end
+        else if (!mgtDataIsK[0]) begin
+            if (mgtData[7:0] == 8'h00) begin
+                nullsNeeded <= nullsNeeded - 1;
+            end
+            else begin
+                nullsNeeded <= NULL_COUNTER_LOAD;
+            end
         end
     end
 end
