@@ -107,20 +107,25 @@ ad7768DumpReg(void)
 static void
 ad7768step(int startAlignment)
 {
+    static int alignmentRequested = 0;
     static enum { ST_IDLE,
                   ST_START_ALIGN,
                   ST_AWAIT_FIRST_ALIGNMENT,
                   ST_AWAIT_SECOND_ALIGNMENT } state = ST_IDLE;
     if (startAlignment) {
-        printf("AD7768 alignment from step %d\n", state);
-        if (state == ST_IDLE) state = ST_START_ALIGN;
+        alignmentRequested = 1;
         return;
     }
     switch (state) {
     case ST_IDLE:
+        if (alignmentRequested) {
+            alignmentRequested = 0;
+            state = ST_START_ALIGN;
+        }
         break;
 
     case ST_START_ALIGN:
+        printf("AD7768 alignment started.\n");
         CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
         state = ST_AWAIT_FIRST_ALIGNMENT;
         break;
