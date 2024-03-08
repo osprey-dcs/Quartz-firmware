@@ -375,6 +375,16 @@ wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
                                                                      ad7768Data;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*8)-1:0] ad7768Headers;
 
+// Analog input numbers do not map directly to DOUT lines (!!!).
+// Untangle them here.
+wire [(CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP)-1:0] AD7768_DOUT_MAPPED;
+quartzMapDOUT #(
+    .AD7768_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
+    .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP))
+  quartzMapDOUT(
+    .DOUT_RAW(AD7768_DOUT),
+    .DOUT_MAPPED(AD7768_DOUT_MAPPED));
+
 ad7768 #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -406,7 +416,7 @@ ad7768 #(
     .adcMCLK(clk32),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
-    .adcDOUT_a(AD7768_DOUT),
+    .adcDOUT_a(AD7768_DOUT_MAPPED),
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
 
