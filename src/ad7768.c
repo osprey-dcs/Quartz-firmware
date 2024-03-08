@@ -112,9 +112,7 @@ ad7768step(int startAlignment)
                   ST_AWAIT_FIRST_ALIGNMENT,
                   ST_AWAIT_SECOND_ALIGNMENT } state = ST_IDLE;
     if (startAlignment) {
-        if (debugFlags & DEBUGFLAG_USE_FAKE_AD7768) {
-            printf("Start AD7768 alignment from step %d\n", state);
-        }
+        printf("AD7768 alignment from step %d\n", state);
         if (state == ST_IDLE) state = ST_START_ALIGN;
         return;
     }
