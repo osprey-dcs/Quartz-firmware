@@ -59,6 +59,8 @@ sysmon(uint32_t *buf)
     buf = amc7823FetchSysmon(buf);
     buf = acqFetchSysmon(buf);
     buf = clockAdjustFetchSysmon(buf);
+    *buf++ = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
+    *buf++ = GPIO_READ(GPIO_IDX_PPS_STATUS);
     return buf - base;
 }
 
