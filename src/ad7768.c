@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <xparameters.h>
 #include "ad7768.h"
+#include "clockAdjust.h"
 #include "gpio.h"
 #include "util.h"
 
@@ -108,14 +109,35 @@ static void
 ad7768step(int startAlignment)
 {
     static int alignmentRequested = 0;
+    static int clockAdjustWasLocked = 0;
     static enum { ST_IDLE,
                   ST_START_ALIGN,
                   ST_AWAIT_FIRST_ALIGNMENT,
                   ST_AWAIT_SECOND_ALIGNMENT } state = ST_IDLE;
+    /*
+     * Request alignment on demand
+     */
     if (startAlignment) {
         alignmentRequested = 1;
         return;
     }
+
+    /*
+     * Request alignment when clock locks
+     */
+    if (clockAdjustIsLocked()) {
+        if (!clockAdjustWasLocked ) {
+            clockAdjustWasLocked = 1;
+            alignmentRequested = 1;
+        }
+    }
+    else {
+        clockAdjustWasLocked = 0;
+    }
+
+    /*
+     * ADC alignment state machine
+     */
     switch (state) {
     case ST_IDLE:
         if (alignmentRequested) {
@@ -182,7 +204,6 @@ ad7768Init(void)
     broadcastReg(0x04, 0x3B); // Fast mode, LVDS, MCLK_DIV=4
     broadcastReg(0x07, 0x01); // No CRC, DCLK_DIV=4
     broadcastReg(0x03, 0x00); // All channels in Mode A
-    ad7768StartAlignment();
 }
 
 int
