@@ -29,14 +29,18 @@ The following support modules must be cloned from their github repositories.  Th
 
 ## Application firmware – part 1
 
-1. Start Vivado and in the **Quick Start** pane click the `Open Project` link.  In the window that pops up navigate to the **NASA_ACQ** directory created in the previous step.  Select the `NASA_ACQ.xpr` project file and click `OK`.
+1. Start Vivado and in the **Quick Start** pane click the `Open Project` link.  In the window that pops up navigate to the **NASA_ACQ** directory created in the previous step.  Select the `NASA_ACQ.xpr` project file and click `OK`.  A window with ominous 'Critical Warnings' may pop up.  Don't worry, the following step fixes them.
 1. In the **Project Manager** pane click `Settings`.  In the **Project Settings** of the window that pops up expand the IP entry and ensure that the **IP Repositories** values match the locations of the support modules.  If not, select the incorrect entries and click the `-` button, then click the `+` button and navigate to and select the correct locations.
  Note that if all the support modules were checked out into a
 single directory (e.g. ip_repo in the above section) it is
 necessary to specify only that directory.
 Once all the repository paths are correct, click `OK` to close the window.
 1. Click the `Reports` menu item and click `Report IP Status`.  In the **IP Status** pane at the bottom of the window click `Upgrade Selected` if it is not greyed out (i.e. if any of the support modules has changed).
-1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....
+1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....  When the block design has been generated a green check mark will appear between the right angle bracked and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
+2. In the menu bar, click `File`, then select`Export`, then click `Export Hardware...`.
+3. In the 'Export Hardware Platform' window that appears, click `Next`.
+4. In the 'Output' pane that appears, ensure that the 'Pre-synthesis' menu item is selected, then click `Next`.
+5. In the 'Files' pane, set the 'XSA file name' to `NASA_XSA` and the 'Export to' to the top directory of your Vivado project.
 
 ## Application software
 
