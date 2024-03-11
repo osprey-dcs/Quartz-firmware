@@ -86,27 +86,6 @@ crankReboot(int value)
 }
 
 /*
- * Crank the ADC alignment state machine
- */
-static void
-crankAlignADC(int value)
-{
-    static int match = 1;
-    if (value == match) {
-        if (match == 10000) {
-            ad7768StartAlignment();
-        }
-        match *= 100;
-    }
-    else if (value == 1) {
-        match = 100;
-    }
-    else {
-        match = 1;
-    }
-}
-
-/*
  * Process a command from the IOC
  * Return value is reply argument count, or -1 if no reply is to be sent
  */
@@ -126,10 +105,6 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
 
         case FPGA_IOC_CMD_CLR_POWERUP:
             isPowerup = 0;
-            return 0;
-
-        case FPGA_IOC_CMD_ALIGN_ADC:
-            crankAlignADC(cmd->args[1]);
             return 0;
 
         case FPGA_IOC_CMD_ACQ_ENABLE:
