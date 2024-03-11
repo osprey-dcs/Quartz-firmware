@@ -151,9 +151,14 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
         return sysmon(&reply->args[1]) + 1;
 
     case FPGA_IOC_MSGID_GET_BUILD_DATES:
+        /*
+         * Provide dummy 'nsec' values
+         */
         reply->args[0] = GPIO_READ(GPIO_IDX_FIRMWARE_DATE);
-        reply->args[1] = SOFTWARE_BUILD_DATE;
-        return 2;
+        reply->args[1] = 0;
+        reply->args[2] = SOFTWARE_BUILD_DATE;
+        reply->args[3] = 0;
+        return 4;
     }
     return -1;
 }
