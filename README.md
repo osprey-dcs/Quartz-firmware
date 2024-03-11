@@ -40,7 +40,7 @@ Once all the repository paths are correct, click `OK` to close the window.
 2. In the menu bar, click `File`, then select`Export`, then click `Export Hardware...`.
 3. In the 'Export Hardware Platform' window that appears, click `Next`.
 4. In the 'Output' pane that appears, ensure that the 'Pre-synthesis' menu item is selected, then click `Next`.
-5. In the 'Files' pane, set the 'XSA file name' to `NASA_XSA` and the 'Export to' to the top directory of your Vivado project.
+5. In the 'Files' pane, set the 'XSA file name' to `NASA_ACQ` and the 'Export to' to the top directory of your Vivado project.
 
 ## Application software
 
