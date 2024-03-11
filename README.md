@@ -36,7 +36,7 @@ single directory (e.g. ip_repo in the above section) it is
 necessary to specify only that directory.
 Once all the repository paths are correct, click `OK` to close the window.
 1. Click the `Reports` menu item and click `Report IP Status`.  In the **IP Status** pane at the bottom of the window click `Upgrade Selected` if it is not greyed out (i.e. if any of the support modules has changed).
-1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....  When the block design has been generated a green check mark will appear between the right angle bracked and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
+1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....  When the block design has been generated a green check mark will appear between the right angle bracket and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
 2. In the menu bar, click `File`, then select`Export`, then click `Export Hardware...`.
 3. In the 'Export Hardware Platform' window that appears, click `Next`.
 4. In the 'Output' pane that appears, ensure that the 'Pre-synthesis' menu item is selected, then click `Next`.
