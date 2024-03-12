@@ -189,6 +189,10 @@ tftpHandler(ospreyUDPendpoint endpoint, uint32_t fromAddr, int fromPort,
             ackBlock = -1;
             prevBlock = 1;
             prevSend = sendBlock(endpoint, fromAddr, fromPort, prevBlock, fp);
+            if (prevSend != TFTP_BLOCKSIZE) {
+                f_close(fp);
+                fp = NULL;
+            }
         }
     }
     else if (opcode == TFTP_OPCODE_DATA) {
@@ -223,7 +227,7 @@ tftpHandler(ospreyUDPendpoint endpoint, uint32_t fromAddr, int fromPort,
     else if (opcode == TFTP_OPCODE_ACK) {
         int block = (cp[2] << 8) | cp[3];
         if (block == prevBlock) {
-            if(fp != NULL) {
+            if (fp != NULL) {
                 prevBlock++;
                 prevSend=sendBlock(endpoint, fromAddr, fromPort, prevBlock, fp);
                 if (prevSend != TFTP_BLOCKSIZE) {
