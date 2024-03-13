@@ -68,6 +68,11 @@ int
 f_open(FIL *fp, const char *name, int mode)
 {
     int i;
+    /*
+     * Be paranoid
+     */
+    bootFlashEnableEraseConfirmation(1);
+    bootFlashEnableWriteConfirmation(1);
     if (offset != UINT32_MAX) {
         return FR_NOT_READY;
     }
