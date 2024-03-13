@@ -186,7 +186,7 @@ end
 endgenerate
 
 /*
- * The '- 8' arises frm the fact that the pscdrvByteCount does not include
+ * The '- 8' arises from the fact that the pscdrvByteCount does not include
  * the first 8 bytes of the header (4-byte magic word and 4-byte size).
  */
 wire [31:0] pscdrvByteCount = {1'b0, acqByteCount} + HEADER_BYTE_COUNT - 8;
