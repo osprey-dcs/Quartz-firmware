@@ -45,6 +45,7 @@ module ad7768 #(
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
     output wire [31:0] sysAuxStatus,
+    output reg  [31:0] sysDRDYhistory,
 
     input  wire                                              acqClk,
     (*MARK_DEBUG=DEBUG_PPS*) input  wire                     acqPPSstrobe,
@@ -90,7 +91,7 @@ localparam CSR_W_OP_CHIP_PINS    = 2'h1,
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        case (sysOpcode) 
+        case (sysOpcode)
         CSR_W_OP_CHIP_PINS: begin
             if (sysGPIO_OUT[1]) begin
                 sysResetADC <= sysGPIO_OUT[0];
@@ -98,7 +99,7 @@ always @(posedge sysClk) begin
             if (sysGPIO_OUT[3]) begin
                 sysUseFakeAD7768 <= sysGPIO_OUT[2];
             end
-            if (sysGPIO_OUT[8]) begin 
+            if (sysGPIO_OUT[8]) begin
                 sysStartAlignmentToggle <= !sysStartAlignmentToggle;
             end
         end
@@ -309,32 +310,43 @@ localparam S_SKEW_AWAIT_LOW        = 2'd0,
 reg                           [SKEW_COUNT_WIDTH-1:0] skewCount = ~0;
 (*MARK_DEBUG=DEBUG_SKEW*) reg [SKEW_COUNT_WIDTH-1:0] skew = ~0;
 wire skewCountDone = skewCount[SKEW_COUNT_WIDTH-1];
+
+/*
+ * Tiny logic analyzer
+ * sysDRDYhistory is not really in system clock domain,
+ * but C code knows that its value may be metastable.
+ */
+localparam DRDY_HISTORY_CAPACITY = 32 / ADC_CHIP_COUNT;
+localparam DRDY_HISTORY_COUNTER_WIDTH = $clog2(DRDY_HISTORY_CAPACITY) + 1;
+reg [31:0] drdyHistory;
+reg [DRDY_HISTORY_COUNTER_WIDTH-1:0] drdyHistoryCounter;
+wire [DRDY_HISTORY_COUNTER_WIDTH-2:0] drdyHistoryIndex =
+                            drdyHistoryCounter[0+:DRDY_HISTORY_COUNTER_WIDTH-1];
+wire drdyHistoryCounterDone = drdyHistoryCounter[DRDY_HISTORY_COUNTER_WIDTH-1];
+
 always @(posedge acqClk) begin
     skewDRDY_m <= muxDRDY_a;
     skewDRDY   <= skewDRDY_m;
     skewDRDY_d <= skewDRDY;
     case (skewState)
     S_SKEW_AWAIT_LOW: begin
+        skewCount <= 0;
+        sysDRDYhistory <= drdyHistory;
+        drdyHistoryCounter <= 1;
         if (skewDRDY == 0) begin
-            skewCount <= 0;
+            drdyHistory <= ~0;
             skewState <= S_SKEW_AWAIT_FIRST_HIGH;
-        end
-        else if (skewCountDone) begin
-            skew <= ~0;
-            skewCount <= 0;
-        end
-        else begin
-            skewCount <= skewCount + 1;
         end
     end
     S_SKEW_AWAIT_FIRST_HIGH: begin
+        drdyHistory[0+:ADC_CHIP_COUNT] <= skewDRDY;
         if (skewDRDY == {ADC_CHIP_COUNT{1'b1}}) begin
             skew <= 0;
             skewCount <= 0;
             skewState <= S_SKEW_AWAIT_LOW;
         end
         else if (skewDRDY != 0) begin
-            skewCount <= 0;
+            skewCount <= 1;
             skewState <= S_SKEW_AWAIT_ALL_HIGH;
         end
         else if (skewCountDone) begin
@@ -345,12 +357,18 @@ always @(posedge acqClk) begin
         end
     end
     S_SKEW_AWAIT_ALL_HIGH: begin
+        if (!drdyHistoryCounterDone) begin
+            drdyHistory[(drdyHistoryIndex*ADC_CHIP_COUNT)+:ADC_CHIP_COUNT] <=
+                                                                       skewDRDY;
+            drdyHistoryCounter <= drdyHistoryCounter + 1;
+        end
         if (skewDRDY == {ADC_CHIP_COUNT{1'b1}}) begin
             skew <= skewCount;
             skewCount <= 0;
             skewState <= S_SKEW_AWAIT_LOW;
         end
         else if (skewCountDone) begin
+            skew <= ~0;
             skewState <= S_SKEW_AWAIT_LOW;
         end
         else begin
