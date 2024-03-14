@@ -259,7 +259,14 @@ ad7768FetchSysmon(uint32_t *buf)
 void
 ad7768ShowPPSalignment(void)
 {
+    int i;
     uint32_t csr = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
     showEVRclocks("PPS Event to", csr >> 16);
     showEVRclocks("Skew between", csr & 0xFFFF);
+    printf("DRDY History: %08X\n", GPIO_READ(GPIO_IDX_AD7768_DRDY_HISTORY));
+    for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
+        int r;
+        r = readReg(i, 0x09);
+        if (r != 0) printf("AD7768[%d] R9:%02X\n", i, r);
+    }
 }
