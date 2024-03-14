@@ -249,6 +249,13 @@ showEVRclocks(const char *msg, int n)
     printf("%s AD7768 DRDY (EVR clocks): %d\n", msg, n);
 }
 
+uint32_t *
+ad7768FetchSysmon(uint32_t *buf)
+{
+    *buf++ = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
+    return buf;
+}
+
 void
 ad7768ShowPPSalignment(void)
 {

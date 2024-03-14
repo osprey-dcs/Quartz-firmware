@@ -35,6 +35,8 @@ void ad7768StartAlignment(void);
 void ad7768Crank(void);
 int ad7768SetOfst(int channel, int offset);
 int ad7768SetGain(int channel, int gain);
+uint32_t *ad7768FetchSysmon(uint32_t *buf);
+
 void ad7768ShowPPSalignment(void);
 
 #endif /* _AD7768_H_ */

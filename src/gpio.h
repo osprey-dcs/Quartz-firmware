@@ -48,16 +48,17 @@
 #define GPIO_IDX_ACQCLK_PLL_AUX_STATUS     12 // More VCXO clock adjust status
 #define GPIO_IDX_AD7768_CSR                13 // AD7768 ADC control/status
 #define GPIO_IDX_AD7768_AUX_STATUS         14 // AD7768 extra status
-#define GPIO_IDX_INPUT_COUPLING_CSR        15 // AD7768 ADC control/status
-#define GPIO_IDX_DOWNSAMPLE_CSR            16 // Downsampling CSR
-#define GPIO_IDX_BUILD_PACKET_STATUS       17 // Packet builder status (R)
-#define GPIO_IDX_BUILD_PACKET_BITMAP       18 // Packet builder active channels
-#define GPIO_IDX_BUILD_PACKET_BYTECOUNT    19 // Packet builder packet size
-#define GPIO_IDX_INPUT_COUPLING_CLR        20 // Input coupling RESET coils (AC)
-#define GPIO_IDX_INPUT_COUPLING_SET_START  21 // SET coils (DC) and start SPI
-#define GPIO_IDX_DIGITIZER_AMC7823         22 // Digitizer slow monitors
-#define GPIO_IDX_PPS_LATENCY               23 // HW to EVR PPS interval
-#define GPIO_IDX_PPS_STATUS                24 // Hardware PPS status
+#define GPIO_IDX_AD7768_DRDY_HISTORY       15 // AD7768 DRDY logic analyzer
+#define GPIO_IDX_INPUT_COUPLING_CSR        16 // AD7768 ADC control/status
+#define GPIO_IDX_DOWNSAMPLE_CSR            17 // Downsampling CSR
+#define GPIO_IDX_BUILD_PACKET_STATUS       18 // Packet builder status (R)
+#define GPIO_IDX_BUILD_PACKET_BITMAP       19 // Packet builder active channels
+#define GPIO_IDX_BUILD_PACKET_BYTECOUNT    20 // Packet builder packet size
+#define GPIO_IDX_INPUT_COUPLING_CLR        21 // Input coupling RESET coils (AC)
+#define GPIO_IDX_INPUT_COUPLING_SET_START  22 // SET coils (DC) and start SPI
+#define GPIO_IDX_DIGITIZER_AMC7823         23 // Digitizer slow monitors
+#define GPIO_IDX_PPS_LATENCY               24 // HW to EVR PPS interval
+#define GPIO_IDX_PPS_STATUS                25 // Hardware PPS status
 
 #define GPIO_IDX_COUNT                     32 // Number of GPIO registers
 

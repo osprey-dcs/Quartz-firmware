@@ -61,7 +61,7 @@ sysmon(uint32_t *buf)
     buf = amc7823FetchSysmon(buf);
     buf = acqFetchSysmon(buf);
     buf = clockAdjustFetchSysmon(buf);
-    *buf++ = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
+    buf = ad7768FetchSysmon(buf);
     /*
      * Merge HW->EVR latency and PPS source info
      */
