@@ -404,6 +404,7 @@ ad7768 #(
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_CSR]),
     .sysAuxStatus(GPIO_IN[GPIO_IDX_AD7768_AUX_STATUS]),
+    .sysDRDYhistory(GPIO_IN[GPIO_IDX_AD7768_DRDY_HISTORY]),
     .acqClk(clk125),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
