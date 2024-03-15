@@ -51,6 +51,39 @@
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
 #define CSR_READ()   GPIO_READ(GPIO_IDX_AD7768_CSR)
 
+#define MCLK_CSR_W_32p000   0x0
+#define MCLK_CSR_W_25p600   0x1
+#define MCLK_CSR_W_20p480   0x2
+#define MCLK_CSR_W_16p384   0x3
+
+#define CHAN_MODE_DEC_32    0x00
+#define CHAN_MODE_DEC_64    0x01
+#define CHAN_MODE_DEC_128   0x02
+#define CHAN_MODE_DEC_256   0x03
+#define CHAN_MODE_DEC_512   0x04
+#define CHAN_MODE_DEC_1024  0x05
+#define CHAN_MODE_SINC_FILT 0x08
+
+#define POWER_MODE_MCLK_DIV_4   0x03
+#define POWER_MODE_MCLK_DIV_8   0x02
+#define POWER_MODE_MCLK_DIV_32  0x00
+#define POWER_MODE_LVDS         0x08
+#define POWER_MODE_FAST         0x30
+
+struct downSampleInfo {
+    uint8_t divisor;
+    uint8_t mclkSelect;
+    uint8_t channelMode;
+    uint8_t powerMode;
+};
+static const struct downSampleInfo downSampleTable[] = {
+ {   1, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
+ {   5, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
+ {  25, MCLK_CSR_W_20p480, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_4 },
+ {  50, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
+ { 250, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
+};
+
 static void
 awaitCompletion(void)
 {
@@ -204,6 +237,7 @@ ad7768Init(void)
     broadcastReg(0x04, 0x3B); // Fast mode, LVDS, MCLK_DIV=4
     broadcastReg(0x07, 0x01); // No CRC, DCLK_DIV=4
     broadcastReg(0x03, 0x00); // All channels in Mode A
+    ad7768SetSamplingDivisor(1);
 }
 
 int
@@ -243,6 +277,38 @@ ad7768SetGain(int channel, int gain)
     return 0;
 }
 
+int
+ad7768SetSamplingDivisor(int divisor)
+{
+    int i;
+    for (i = 0 ; i < (sizeof downSampleTable/sizeof downSampleTable[0]) ; i++) {
+        struct downSampleInfo const * const dp = &downSampleTable[i];
+        if (dp->divisor == divisor) {
+            if (debugFlags & DEBUGFLAG_ACQ) {
+                printf("Divisor:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
+                   dp->divisor, dp->mclkSelect, dp->channelMode, dp->powerMode);
+            }
+            GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
+
+            // Mode A: Wideband, Decimate by N
+            broadcastReg(0x01, dp->channelMode);
+
+            // Fast mode, LVDS, MCLK divide by N
+            broadcastReg(0x04, POWER_MODE_FAST|POWER_MODE_LVDS|dp->powerMode);
+
+            // Check that clock is good
+            for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
+                uint8_t r = readReg(i, 0x09);
+                if (r != 0) printf("AD7768[%d] R9:%02X\n", i, r);
+            }
+            ad7768StartAlignment();
+            return 0;
+        }
+    }
+    printf("AD77689 sampling divisor %d not supported.\n", divisor);
+    return -1;
+}
+
 static void
 showEVRclocks(const char *msg, int n)
 {
@@ -261,8 +327,8 @@ ad7768ShowPPSalignment(void)
 {
     int i;
     uint32_t csr = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
-    showEVRclocks("PPS Event to", csr >> 16);
-    showEVRclocks("Skew between", csr & 0xFFFF);
+    showEVRclocks("PPS Event to", csr >> 12);
+    showEVRclocks("Skew between", csr & 0xFFF);
     printf("DRDY History: %08X\n", GPIO_READ(GPIO_IDX_AD7768_DRDY_HISTORY));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;

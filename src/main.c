@@ -30,7 +30,6 @@
 #include "bootFlash.h"
 #include "clockAdjust.h"
 #include "console.h"
-#include "downsample.h"
 #include "epics.h"
 #include "evg.h"
 #include "fastDataStream.h"
@@ -74,7 +73,6 @@ main()
     ad7768Init();
     amc7823Init();
     inputCouplingInit();
-    downsampleInit();
     fastDataInit();
     for (;;) {
         mgtCrank();

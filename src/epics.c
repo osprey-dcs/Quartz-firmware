@@ -31,7 +31,6 @@
 #include "ad7768.h"
 #include "amc7823.h"
 #include "clockAdjust.h"
-#include "downsample.h"
 #include "epics.h"
 #include "evg.h"
 #include "gpio.h"
@@ -122,11 +121,7 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
             } return -1;
 
         case FPGA_IOC_CMD_DOWNSAMPLE_RATIO:
-            downsampleSetDownsample(cmd->args[1]);
-            return 0;
-
-        case FPGA_IOC_CMD_DOWNSAMPLE_ALPHA:
-            downsampleSetAlpha(cmd->args[1]);
+            ad7768SetSamplingDivisor(cmd->args[1]);
             return 0;
         }
         if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_ACTIVE)

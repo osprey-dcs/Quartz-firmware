@@ -9,8 +9,6 @@ softwareBuildDate.h: acq.c \
                      config.h \
                      console.c \
                      console.h \
-                     downsample.c \
-                     downsample.h \
                      epics.c \
                      epics.h \
                      evg.c \
