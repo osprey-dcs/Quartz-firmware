@@ -379,29 +379,31 @@ always @(posedge acqClk) begin
     chipsAreAligned <= (skew <= SKEW_LIMIT_ACQ_TICKS);
 end
 
-// Measure skew beween PPS strobe and rising edge of first DRDY
-reg                           [SKEW_COUNT_WIDTH-1:0] skewCountPPS = ~0;
-(*MARK_DEBUG=DEBUG_SKEW*) reg [SKEW_COUNT_WIDTH-1:0] skewPPS = ~0;
-wire skewCountPPSoverflow = skewCountPPS[SKEW_COUNT_WIDTH-1];
-reg skewPPSactive = 0;
+// Measure time beween PPS strobe and rising edge of first DRDY
+localparam PPS_DRDY_COUNT_MAX = (ACQ_CLK_RATE/1000) + (ACQ_CLK_RATE/100000);
+localparam PPS_DRDY_COUNT_WIDTH = $clog2(PPS_DRDY_COUNT_MAX+1) + 1;
+reg                           [PPS_DRDY_COUNT_WIDTH-1:0] ppsDrdyCount = ~0;
+(*MARK_DEBUG=DEBUG_SKEW*) reg [PPS_DRDY_COUNT_WIDTH-1:0] ppsDrdyTicks = ~0;
+wire ppsDrdyOverflow = ppsDrdyCount[PPS_DRDY_COUNT_WIDTH-1];
+reg ppsDrdyActive = 0;
 always @(posedge acqClk) begin
-    if (skewPPSactive) begin
+    if (ppsDrdyActive) begin
         if (skewDRDY[0] && !skewDRDY_d[0]) begin
-            skewPPS <= skewCountPPS;
-            skewPPSactive <= 0;
+            ppsDrdyTicks <= ppsDrdyCount;
+            ppsDrdyActive <= 0;
         end
-        else if (skewCountPPSoverflow) begin
-            skewPPS <= ~0;
-            skewPPSactive <= 0;
+        else if (ppsDrdyOverflow) begin
+            ppsDrdyTicks <= ~0;
+            ppsDrdyActive <= 0;
         end
         else begin
-            skewCountPPS <= skewCountPPS + 1;
+            ppsDrdyCount <= ppsDrdyCount + 1;
         end
     end
     else begin
-        skewCountPPS <= 0;
+        ppsDrdyCount <= 0;
         if (acqPPSstrobe) begin
-            skewPPSactive <= 1;
+            ppsDrdyActive <= 1;
         end
     end
 end
@@ -410,8 +412,8 @@ end
  * Don't worry about clock-crossing.
  * C code knows that values may be metastable.
  */
-assign sysAuxStatus = { {16-SKEW_COUNT_WIDTH{1'b0}}, skewPPS,
-                        {16-SKEW_COUNT_WIDTH{1'b0}}, skew };
+assign sysAuxStatus = { {20-PPS_DRDY_COUNT_WIDTH{1'b0}}, ppsDrdyTicks,
+                        {12-SKEW_COUNT_WIDTH{1'b0}}, skew };
 
 // See where ADC DRDY arrives relative to PPS strobe.
 localparam PPS_CHECK_TICKS = (ACQ_CLK_RATE + DCLK_RATE) /  DCLK_RATE;

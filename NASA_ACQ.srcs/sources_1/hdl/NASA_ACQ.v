@@ -127,8 +127,10 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk200, clk32, evrRxClk, evfRxClk, evgClk;
-IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(clk125));
+wire refClk125;
+wire sysClk, clk125, clk200, evrRxClk, evfRxClk, evgClk;
+wire clk32, clk25p6, clk20p48, clk16p384;
+IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
 wire gtRefClk, gtRefClkDiv2;
 IBUFDS_GTE2 gtRefClkBuf (
@@ -421,7 +423,20 @@ ad7768 #(
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
 
-OBUFDS AD7768_MCLK_OBUF(.I(clk32), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
+// Need different MCLK values to get the sampling rates we need.
+wire mclk;
+mclkSelect #(.DEBUG("true"))
+  mclkSelect (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
+    .clk32(clk32),
+    .clk25p6(clk25p6),
+    .clk20p48(clk20p48),
+    .clk16p384(clk16p384),
+    .MCLK(mclk));
+OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
@@ -459,30 +474,36 @@ coilDriverSPI #(.CLK_RATE(CFG_SYSCLK_RATE))
 
 ///////////////////////////////////////////////////////////////////////////////
 // Downsample
+wire acqEnableAcquisition;
 wire acqStrobe;
 wire [(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP*CFG_AD7768_WIDTH)-1:0]
-                                                                       acqData;
-ospreyDownsampler #(
+                                                                        acqData;
+`ifdef notdef
+rateSelect #(
     .CHANNEL_COUNT(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP),
     .DATA_WIDTH(CFG_AD7768_WIDTH),
     .DEBUG("false"))
-  downSampler (
+  rateSelect (
     .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_CSR]),
+    .sysRateStrobe(GPIO_STROBES[GPIO_IDX_RATE_SELECT_CSR]),
+    .sysFilterStrobe5(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_5_CSR]),
+    .sysFilterStrobe2(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_2_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_DOWNSAMPLE_CSR]),
-    .clk(clk125),
-    .ppsStrobe(acqPPSstrobe),
-    .inTDATA(coupledData),
-    .inTVALID(coupledDataStrobe),
-    .outTDATA(acqData),
-    .outTVALID(acqStrobe));
+    .acqClk(clk125),
+    .acqEnabled(acqEnableAcquisition),
+    .S_TDATA(coupledData),
+    .S_TVALID(coupledDataStrobe),
+    .M_TDATA(acqData),
+    .M_TVALID(acqStrobe));
+`else
+assign acqData = coupledData;
+assign acqStrobe = coupledDataStrobe;
+`endif
 
 ///////////////////////////////////////////////////////////////////////////////
 // Build packet
 wire [7:0] unbufPK_TDATA;
 wire unbufPK_TVALID, unbufPK_TLAST, unbufPK_TREADY;
-wire acqEnableAcquisition;
 buildPacket #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -566,12 +587,16 @@ ethernetRxDelay ethernetRxDelay_inst (
 ///////////////////////////////////////////////////////////////////////////////
 // Block design
 bd bd_i (
-    .clk125(clk125),
+    .refClk125(refClk125),
     .ext_reset_n(1'b1),
 
     .sysClk(sysClk),
-    .clk32(clk32),
+    .clk125(clk125),
     .clk200(clk200),
+    .clk32(clk32),
+    .clk25p6(clk25p6),
+    .clk20p48(clk20p48),
+    .clk16p384(clk16p384),
 
     .FLASH_SPI_sclk(BOOT_SCLK),
     .FLASH_SPI_csb(BOOT_CS_B),
