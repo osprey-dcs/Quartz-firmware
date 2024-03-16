@@ -49,7 +49,7 @@
 #define GPIO_IDX_AD7768_CSR                13 // AD7768 ADC control/status
 #define GPIO_IDX_AD7768_AUX_STATUS         14 // AD7768 extra status
 #define GPIO_IDX_AD7768_DRDY_HISTORY       15 // AD7768 DRDY logic analyzer
-#define GPIO_IDX_INPUT_COUPLING_CSR        16 // AD7768 ADC control/status
+#define GPIO_IDX_INPUT_COUPLING_CSR        16 // Firmware AC/DC coupling
 #define GPIO_IDX_MCLK_SELECT_CSR           17 // ADC MCLK selection CSR
 #define GPIO_IDX_BUILD_PACKET_STATUS       18 // Packet builder status (R)
 #define GPIO_IDX_BUILD_PACKET_BITMAP       19 // Packet builder active channels
