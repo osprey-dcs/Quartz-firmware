@@ -1774,7 +1774,7 @@
             "value": "125"
           },
           "PRIM_SOURCE": {
-            "value": "Global_buffer"
+            "value": "Single_ended_clock_capable_pin"
           },
           "SECONDARY_SOURCE": {
             "value": "Single_ended_clock_capable_pin"
@@ -2030,6 +2030,9 @@
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "1"
+          },
+          "PRIM_SOURCE": {
+            "value": "Global_buffer"
           },
           "USE_LOCKED": {
             "value": "false"
