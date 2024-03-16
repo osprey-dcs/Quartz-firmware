@@ -121,7 +121,7 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
             } return -1;
 
         case FPGA_IOC_CMD_DOWNSAMPLE_RATIO:
-            ad7768SetSamplingDivisor(cmd->args[1]);
+            ad7768SetSamplingRate(cmd->args[1]);
             return 0;
         }
         if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_ACTIVE)

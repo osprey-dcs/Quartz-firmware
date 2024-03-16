@@ -71,17 +71,17 @@
 #define POWER_MODE_FAST         0x30
 
 struct downSampleInfo {
-    uint8_t divisor;
+    int     rate;
     uint8_t mclkSelect;
     uint8_t channelMode;
     uint8_t powerMode;
 };
 static const struct downSampleInfo downSampleTable[] = {
- {   1, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
- {   5, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
- {  25, MCLK_CSR_W_20p480, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_4 },
- {  50, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
- { 250, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
+ { 250000, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
+ {  50000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
+ {  10000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_4 },
+ {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
+ {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
 };
 
 static void
@@ -237,7 +237,7 @@ ad7768Init(void)
     broadcastReg(0x04, 0x3B); // Fast mode, LVDS, MCLK_DIV=4
     broadcastReg(0x07, 0x01); // No CRC, DCLK_DIV=4
     broadcastReg(0x03, 0x00); // All channels in Mode A
-    ad7768SetSamplingDivisor(1);
+    ad7768SetSamplingRate(downSampleTable[0].rate);
 }
 
 int
@@ -278,15 +278,15 @@ ad7768SetGain(int channel, int gain)
 }
 
 int
-ad7768SetSamplingDivisor(int divisor)
+ad7768SetSamplingRate(int rate)
 {
     int i;
     for (i = 0 ; i < (sizeof downSampleTable/sizeof downSampleTable[0]) ; i++) {
         struct downSampleInfo const * const dp = &downSampleTable[i];
-        if (dp->divisor == divisor) {
+        if (dp->rate == rate) {
             if (debugFlags & DEBUGFLAG_ACQ) {
-                printf("Divisor:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
-                   dp->divisor, dp->mclkSelect, dp->channelMode, dp->powerMode);
+                printf("Rate:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
+                   dp->rate, dp->mclkSelect, dp->channelMode, dp->powerMode);
             }
             GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
 
@@ -305,7 +305,7 @@ ad7768SetSamplingDivisor(int divisor)
             return 0;
         }
     }
-    printf("AD77689 sampling divisor %d not supported.\n", divisor);
+    printf("AD77689 sampling rate %d not supported.\n", rate);
     return -1;
 }
 
