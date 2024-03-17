@@ -129,7 +129,7 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 // Clocks
 wire refClk125;
 wire sysClk, clk125, clk200, evrRxClk, evfRxClk, evgClk;
-wire clk32, clk25p6, clk20p48, clk16p384;
+wire clk32, clk25p6, clk20p48, clk16p384, mclk;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
 wire gtRefClk, gtRefClkDiv2;
@@ -297,7 +297,7 @@ frequencyCounters #(
                       evrRxClk,
                       evgClk,
                       gtRefClkDiv2,
-                      clk32,
+                      mclk,
                       clk125,
                       sysClk }),
     .acqMarker_a(ppsMarker_a),
@@ -424,8 +424,7 @@ ad7768 #(
     .adcRESETn(AD7768_RESET_n));
 
 // Need different MCLK values to get the sampling rates we need.
-wire mclk;
-mclkSelect #(.DEBUG("true"))
+mclkSelect #(.DEBUG("false"))
   mclkSelect (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
