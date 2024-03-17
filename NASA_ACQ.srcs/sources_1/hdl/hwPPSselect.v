@@ -52,7 +52,7 @@ reg usePMOD = 0, useQuartz = 0;
 
 assign status = { 28'b0, usePMOD, pmodValid, useQuartz, quartzValid };
 assign hwPPS_a = useQuartz ? quartzPPS_a : (usePMOD ? pmodPPS_a : 0);
-assign hwOrFallbackPPS_a = (useQuartz || (usePMOD) ? hwPPS_a : localPPS);
+assign hwOrFallbackPPS_a = (useQuartz || usePMOD) ? hwPPS_a : localPPS;
 
 isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
   isQuartzValid (
