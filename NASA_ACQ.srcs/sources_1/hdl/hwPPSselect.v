@@ -38,12 +38,14 @@ module hwPPSselect #(
     parameter DEBOUNCE_NS = 1000,
     parameter DEBUG       = "false"
     ) (
-    input  wire                             clk,
+    input  wire                             sysClk,
+    input  wire                             sysCsrStrobe,
+    input  wire                      [31:0] sysGPIO_OUT,
+    (*MARK_DEBUG=DEBUG*) output wire [31:0] sysStatus,
     (*MARK_DEBUG=DEBUG*) input  wire        pmodPPS_a,
     (*MARK_DEBUG=DEBUG*) input  wire        quartzPPS_a,
     (*MARK_DEBUG=DEBUG*) output wire        hwPPS_a,
-    (*MARK_DEBUG=DEBUG*) output wire        hwOrFallbackPPS_a,
-    (*MARK_DEBUG=DEBUG*) output wire [31:0] status);
+    (*MARK_DEBUG=DEBUG*) output wire        hwOrFallbackPPS_a);
 
 localparam PPS_RELOAD         = CLK_RATE - 2;
 localparam PPS_COUNTER_WIDTH = $clog2(PPS_RELOAD+1) + 1;
@@ -56,17 +58,40 @@ wire pmodDebounced_n, quartzDebounced_n;
 wire pmodValid, quartzValid;
 reg usePMOD = 0, useQuartz = 0;
 
-assign status = { 28'b0, usePMOD, pmodValid, useQuartz, quartzValid };
 assign hwPPS_a = useQuartz ? !quartzDebounced_n :
                                                (usePMOD ? !pmodDebounced_n : 0);
 assign hwOrFallbackPPS_a = (useQuartz || usePMOD) ? hwPPS_a : localPPS;
 
+/*
+ * Watch for changes in PPS status
+ */
+reg pmodValid_d = 0, quartzValid_d = 0;
+reg pmodValidCOS = 0, quartzValidCOS = 0;
+always @(posedge sysClk) begin
+    quartzValid_d <= quartzValid;
+    if (quartzValid_d  != quartzValid) begin
+        quartzValidCOS <= 1;
+    end
+    else if (sysCsrStrobe && sysGPIO_OUT[8]) begin
+        quartzValidCOS <= 0;
+    end
+    pmodValid_d <= pmodValid;
+    if (pmodValid_d  != pmodValid) begin
+        pmodValidCOS <= 1;
+    end
+    else if (sysCsrStrobe && sysGPIO_OUT[9]) begin
+        pmodValidCOS <= 0;
+    end
+end
+assign sysStatus = { 22'b0, pmodValidCOS, quartzValidCOS,
+                             4'b0, usePMOD, pmodValid, useQuartz, quartzValid };
+ 
 isPPSvalid_ #(
     .CLK_RATE(CLK_RATE),
     .DEBOUNCE_NS(DEBOUNCE_NS),
     .DEBUG(DEBUG))
   isQuartzValid (
-    .clk(clk),
+    .clk(sysClk),
     .pps_a(quartzPPS_a),
     .ppsDebounced_n(quartzDebounced_n),
     .ppsIsValid(quartzValid));
@@ -76,12 +101,12 @@ isPPSvalid_ #(
     .DEBOUNCE_NS(DEBOUNCE_NS),
     .DEBUG(DEBUG))
   isPMODvalid (
-    .clk(clk),
+    .clk(sysClk),
     .pps_a(pmodPPS_a),
     .ppsDebounced_n(pmodDebounced_n),
     .ppsIsValid(pmodValid));
 
-always @(posedge clk) begin
+always @(posedge sysClk) begin
     if (localPPSstrobe) begin
         localCounter <= PPS_RELOAD;
         localStretch <= ~0;

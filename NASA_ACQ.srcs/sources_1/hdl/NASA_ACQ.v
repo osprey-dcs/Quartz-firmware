@@ -183,12 +183,14 @@ hwPPSselect #(
     .DEBOUNCE_NS(1000),
     .DEBUG("true"))
   hwPPSselect (
-    .clk(sysClk),
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_PPS_STATUS]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_PPS_STATUS]),
     .pmodPPS_a(PMOD2_3),
     .quartzPPS_a(HARDWARE_PPS),
     .hwPPS_a(hwPPS_a),
-    .hwOrFallbackPPS_a(hwOrFallbackPPS_a),
-    .status(GPIO_IN[GPIO_IDX_PPS_STATUS]));
+    .hwOrFallbackPPS_a(hwOrFallbackPPS_a));
 
 wire ppsMarker_a = isEVG ? hwPPS_a : evrPPSmarker;
 
