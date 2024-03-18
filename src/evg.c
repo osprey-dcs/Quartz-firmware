@@ -37,6 +37,8 @@
 #define CSR_R_SECONDS_VALID     0x2
 #define CSR_R_PPS_VALID         0x1
 
+#define PPS_CSR_PMOD_COS        0x200
+#define PPS_CSR_QUARTZ_COS      0x100
 #define PPS_CSR_USE_PMOD        0x8
 #define PPS_CSR_PMOD_VALID      0x4
 #define PPS_CSR_QUARTZ_VALID    0x2
@@ -203,6 +205,11 @@ evgInit(void)
             break;
         }
     }
+
+    /*
+     * Clear change-of-state status
+     */
+    GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_QUARTZ_COS | PPS_CSR_PMOD_COS);
     evgShow();
 }
 
@@ -335,4 +342,12 @@ evgShow(void)
                PPS_CSR_PMOD_VALID |
                PPS_CSR_USE_QUARTZ |
                PPS_CSR_QUARTZ_VALID)) printf("\n");
+    if (csr & PPS_CSR_QUARTZ_COS) {
+        printf("Quartz PPS present change-of-state.\n");
+        GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_QUARTZ_COS);
+    }
+    if (csr & PPS_CSR_PMOD_COS) {
+        printf("PMOD PPS present change-of-state.\n");
+        GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_PMOD_COS);
+    }
 }
