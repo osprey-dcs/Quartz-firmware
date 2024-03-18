@@ -178,8 +178,10 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 wire evrPPSmarker;
 wire hwPPS_a, hwOrFallbackPPS_a;
 
-hwPPSselect #(.CLK_RATE(CFG_SYSCLK_RATE),
-              .DEBUG("false"))
+hwPPSselect #(
+    .CLK_RATE(CFG_SYSCLK_RATE),
+    .DEBOUNCE_NS(1000),
+    .DEBUG("true"))
   hwPPSselect (
     .clk(sysClk),
     .pmodPPS_a(PMOD2_3),

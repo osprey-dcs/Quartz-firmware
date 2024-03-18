@@ -27,11 +27,16 @@
  * Use Quartz HARDWARE_PPS if present,
  * otherwise use PMOD-GPS PPS if present,
  * otherwise use local clock.
+ *
+ * Note that only the rising edge of the output is timed to the rising edge
+ * of the input.  The falling edge of the output is delayed from the falling
+ * edge of the input to allow for debouncing.
  */
 `default_nettype none
 module hwPPSselect #(
-    parameter CLK_RATE = 100000000,
-    parameter DEBUG    = "false"
+    parameter CLK_RATE    = -1,
+    parameter DEBOUNCE_NS = 1000,
+    parameter DEBUG       = "false"
     ) (
     input  wire                             clk,
     (*MARK_DEBUG=DEBUG*) input  wire        pmodPPS_a,
@@ -47,24 +52,34 @@ wire localPPSstrobe = localCounter[PPS_COUNTER_WIDTH-1];
 reg [5:0] localStretch = 0;
 wire localPPS = localStretch[5];
 
+wire pmodDebounced_n, quartzDebounced_n;
 wire pmodValid, quartzValid;
 reg usePMOD = 0, useQuartz = 0;
 
 assign status = { 28'b0, usePMOD, pmodValid, useQuartz, quartzValid };
-assign hwPPS_a = useQuartz ? quartzPPS_a : (usePMOD ? pmodPPS_a : 0);
+assign hwPPS_a = useQuartz ? !quartzDebounced_n :
+                                               (usePMOD ? !pmodDebounced_n : 0);
 assign hwOrFallbackPPS_a = (useQuartz || usePMOD) ? hwPPS_a : localPPS;
 
-isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
+isPPSvalid_ #(
+    .CLK_RATE(CLK_RATE),
+    .DEBOUNCE_NS(DEBOUNCE_NS),
+    .DEBUG(DEBUG))
   isQuartzValid (
     .clk(clk),
     .pps_a(quartzPPS_a),
-    .ppsValid(quartzValid));
+    .ppsDebounced_n(quartzDebounced_n),
+    .ppsIsValid(quartzValid));
 
-isPPSvalid_ #(.CLK_RATE(CLK_RATE), .DEBUG(DEBUG))
+isPPSvalid_ #(
+    .CLK_RATE(CLK_RATE),
+    .DEBOUNCE_NS(DEBOUNCE_NS),
+    .DEBUG(DEBUG))
   isPMODvalid (
     .clk(clk),
     .pps_a(pmodPPS_a),
-    .ppsValid(pmodValid));
+    .ppsDebounced_n(pmodDebounced_n),
+    .ppsIsValid(pmodValid));
 
 always @(posedge clk) begin
     if (localPPSstrobe) begin
@@ -96,13 +111,27 @@ always @(posedge clk) begin
 end
 endmodule
 
+/*
+ * Debounce and confirm validity of PPS signal.
+ * Negative logic on output to ensure the absolute minimum
+ * number of LUTs between the input and output signals.
+ */
 module isPPSvalid_ #(
-    parameter CLK_RATE = 100000000,
-    parameter DEBUG    = "false"
+    parameter CLK_RATE    = -1,
+    parameter DEBOUNCE_NS = -1,
+    parameter DEBUG       = "false"
     ) (
     input  wire clk,
     input  wire pps_a,
-    output reg  ppsValid = 0);
+    output wire ppsDebounced_n,
+    output reg  ppsIsValid = 0);
+
+localparam DEBOUNCE_TICKS = (DEBOUNCE_NS * (CLK_RATE/1000) + 999999) / 1000000;
+localparam DEBOUNCE_RELOAD = DEBOUNCE_TICKS - 2;
+localparam DEBOUNCE_COUNTER_WIDTH = $clog2(DEBOUNCE_RELOAD+1) + 1;
+reg [DEBOUNCE_COUNTER_WIDTH-1:0] debounceCounter = DEBOUNCE_RELOAD;
+wire debounceDone = debounceCounter[DEBOUNCE_COUNTER_WIDTH-1];
+(*MARK_DEBUG=DEBUG*) reg debounceDone_d = 0;
 
 localparam PPS_TOOSLOW_RELOAD = ((CLK_RATE / 100) * 101) - 2;
 localparam PPS_TOOFAST_RELOAD = ((CLK_RATE / 100) * 99) - 2;
@@ -113,19 +142,46 @@ reg [PPS_COUNTER_WIDTH-1:0] tooSlowCounter = PPS_TOOSLOW_RELOAD;
 (*MARK_DEBUG=DEBUG*) wire tooSlow = tooSlowCounter[PPS_COUNTER_WIDTH-1];
 reg [PPS_COUNTER_WIDTH-1:0] tooFastCounter = PPS_TOOFAST_RELOAD;
 (*MARK_DEBUG=DEBUG*) wire tooFast = !tooFastCounter[PPS_COUNTER_WIDTH-1];
-(*ASYNC_REG="TRUE"*) reg pps_m = 0;
-reg pps = 0, pps_d = 0;
 
+wire pps_na = ~pps_a;
+(*ASYNC_REG="true"*) reg ppsDebounced_nr = 1;
+always @(posedge clk or posedge pps_a) begin
+    if (pps_a) begin
+        ppsDebounced_nr <= 0;
+    end
+    else begin
+        if (debounceDone && !debounceDone_d) begin
+            ppsDebounced_nr <= 1;
+        end
+    end
+end
+assign ppsDebounced_n = ppsDebounced_nr;
+
+(*ASYNC_REG="TRUE"*) reg pps_m = 0;
+reg pps = 0;
+(*ASYNC_REG="TRUE"*) reg debounce_m = 0;
+reg debounce = 0, debounce_d = 0;;
 always @(posedge clk) begin
     pps_m <= pps_a;
     pps   <= pps_m;
-    pps_d <= pps;
-    if (pps && !pps_d) begin
+    debounceDone_d <= debounceDone;
+    if (pps) begin
+        debounceCounter <= DEBOUNCE_RELOAD;
+    end
+    else if (!debounceDone) begin
+        debounceCounter <= debounceCounter - 1;
+    end
+
+    debounce_m <= !ppsDebounced_nr;
+    debounce   <= debounce_m;
+    debounce_d <= debounce;
+    debounceDone_d <= debounceDone;
+    if (debounce && !debounce_d) begin
         if (!tooFast && !tooSlow) begin
-            ppsValid <= 1;
+            ppsIsValid <= 1;
         end
         else begin
-            ppsValid <= 0;
+            ppsIsValid <= 0;
         end
         tooSlowCounter <= PPS_TOOSLOW_RELOAD;
         tooFastCounter <= PPS_TOOFAST_RELOAD;
@@ -135,7 +191,7 @@ always @(posedge clk) begin
             tooFastCounter <= tooFastCounter - 1;
         end
         if (tooSlow) begin
-            ppsValid <= 0;
+            ppsIsValid <= 0;
         end
         else begin
             tooSlowCounter <= tooSlowCounter - 1;
