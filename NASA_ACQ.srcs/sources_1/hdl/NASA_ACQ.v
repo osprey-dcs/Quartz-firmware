@@ -181,7 +181,7 @@ wire hwPPS_a, hwOrFallbackPPS_a;
 hwPPSselect #(
     .CLK_RATE(CFG_SYSCLK_RATE),
     .DEBOUNCE_NS(1000),
-    .DEBUG("true"))
+    .DEBUG("false"))
   hwPPSselect (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_PPS_STATUS]),
