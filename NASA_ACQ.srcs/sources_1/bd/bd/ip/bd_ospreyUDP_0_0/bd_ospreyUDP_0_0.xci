@@ -4,7 +4,7 @@
     "xci_name": "bd_ospreyUDP_0_0",
     "cell_name": "ospreyUDP",
     "component_reference": "user.org:user:ospreyUDP:1.0",
-    "ip_revision": "64",
+    "ip_revision": "65",
     "gen_directory": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_ospreyUDP_0_0",
     "parameters": {
       "component_parameters": {
@@ -23,7 +23,8 @@
         "ENABLE_ICMP_ECHO": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "DEBUG_ICMP": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "DEBUG_TX_FAST": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
-        "DEBUG_RX_MAC": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ]
+        "DEBUG_RX_MAC": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "RX_FIFO_DEPTH": [ { "value": "16384", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ]
       },
       "model_parameters": {
         "PKBUF_CAPACITY": [ { "value": "1472", "resolve_type": "generated", "format": "long", "usage": "all" } ],
@@ -38,7 +39,8 @@
         "ENABLE_ICMP_ECHO": [ { "value": "false", "resolve_type": "generated", "usage": "all" } ],
         "DEBUG_ICMP": [ { "value": "false", "resolve_type": "generated", "usage": "all" } ],
         "DEBUG_TX_FAST": [ { "value": "false", "resolve_type": "generated", "usage": "all" } ],
-        "DEBUG_RX_MAC": [ { "value": "false", "resolve_type": "generated", "usage": "all" } ]
+        "DEBUG_RX_MAC": [ { "value": "false", "resolve_type": "generated", "usage": "all" } ],
+        "RX_FIFO_DEPTH": [ { "value": "16384", "resolve_type": "generated", "format": "long", "usage": "all" } ]
       },
       "project_parameters": {
         "ARCHITECTURE": [ { "value": "kintex7" } ],
@@ -55,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "64" } ],
+        "IPREVISION": [ { "value": "65" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_ospreyUDP_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],

@@ -42,12 +42,12 @@
       "xadc": "",
       "iic_fpga": "",
       "generic_reg": "",
-      "ospreyUDP": "",
-      "marbleBootFlash": "",
       "clk_wiz_0": "",
       "clk_wiz_2": "",
       "clk_wiz_3": "",
-      "clk_wiz_4": ""
+      "clk_wiz_4": "",
+      "marbleBootFlash": "",
+      "ospreyUDP": ""
     },
     "interface_ports": {
       "console": {
@@ -244,7 +244,7 @@
         "direction": "I",
         "parameters": {
           "CLK_DOMAIN": {
-            "value": "bd_clk125",
+            "value": "bd_refClk125",
             "value_src": "default"
           },
           "FREQ_HZ": {
@@ -1906,37 +1906,6 @@
         "xci_path": "ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci",
         "inst_hier_path": "generic_reg"
       },
-      "ospreyUDP": {
-        "vlnv": "user.org:user:ospreyUDP:1.0",
-        "xci_name": "bd_ospreyUDP_0_0",
-        "xci_path": "ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci",
-        "inst_hier_path": "ospreyUDP",
-        "parameters": {
-          "DEBUG_RX_MAC": {
-            "value": "false"
-          },
-          "DEBUG_TX_MAC": {
-            "value": "false"
-          },
-          "DEBUG_TX_UDP": {
-            "value": "false"
-          },
-          "ENABLE_ICMP_ECHO": {
-            "value": "false"
-          }
-        }
-      },
-      "marbleBootFlash": {
-        "vlnv": "user.org:user:marbleBootFlash:1.0",
-        "xci_name": "bd_marbleBootFlash_0_0",
-        "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
-        "inst_hier_path": "marbleBootFlash",
-        "parameters": {
-          "DEBUG": {
-            "value": "false"
-          }
-        }
-      },
       "clk_wiz_0": {
         "vlnv": "xilinx.com:ip:clk_wiz:6.0",
         "xci_name": "bd_clk_wiz_0_0",
@@ -2056,6 +2025,40 @@
           },
           "USE_LOCKED": {
             "value": "false"
+          }
+        }
+      },
+      "marbleBootFlash": {
+        "vlnv": "user.org:user:marbleBootFlash:1.0",
+        "xci_name": "bd_marbleBootFlash_0_0",
+        "xci_path": "ip/bd_marbleBootFlash_0_0/bd_marbleBootFlash_0_0.xci",
+        "inst_hier_path": "marbleBootFlash",
+        "parameters": {
+          "DEBUG": {
+            "value": "false"
+          }
+        }
+      },
+      "ospreyUDP": {
+        "vlnv": "user.org:user:ospreyUDP:1.0",
+        "xci_name": "bd_ospreyUDP_0_0",
+        "xci_path": "ip/bd_ospreyUDP_0_0/bd_ospreyUDP_0_0.xci",
+        "inst_hier_path": "ospreyUDP",
+        "parameters": {
+          "DEBUG_RX_MAC": {
+            "value": "false"
+          },
+          "DEBUG_TX_MAC": {
+            "value": "false"
+          },
+          "DEBUG_TX_UDP": {
+            "value": "false"
+          },
+          "ENABLE_ICMP_ECHO": {
+            "value": "false"
+          },
+          "RX_FIFO_DEPTH": {
+            "value": "16384"
           }
         }
       }
@@ -2291,8 +2294,8 @@
           "microblaze_0_axi_periph/M06_ACLK",
           "microblaze_0_axi_periph/M07_ACLK",
           "generic_reg/s_axi_aclk",
-          "ospreyUDP/s_axi_lite_aclk",
-          "marbleBootFlash/s_axi_aclk"
+          "marbleBootFlash/s_axi_aclk",
+          "ospreyUDP/s_axi_lite_aclk"
         ]
       },
       "microblaze_0_intr": {
@@ -2345,8 +2348,8 @@
           "microblaze_0_axi_periph/M06_ARESETN",
           "microblaze_0_axi_periph/M07_ARESETN",
           "generic_reg/s_axi_aresetn",
-          "ospreyUDP/s_axi_lite_aresetn",
-          "marbleBootFlash/s_axi_aresetn"
+          "marbleBootFlash/s_axi_aresetn",
+          "ospreyUDP/s_axi_lite_aresetn"
         ]
       },
       "rst_clk_wiz_1_100M_peripheral_reset": {
