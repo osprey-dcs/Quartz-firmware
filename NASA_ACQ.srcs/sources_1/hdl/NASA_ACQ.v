@@ -180,7 +180,7 @@ wire hwPPS_a, hwOrFallbackPPS_a;
 
 hwPPSselect #(
     .CLK_RATE(CFG_SYSCLK_RATE),
-    .DEBOUNCE_NS(1000),
+    .DEBOUNCE_NS(5000),
     .DEBUG("false"))
   hwPPSselect (
     .sysClk(sysClk),
