@@ -34,9 +34,10 @@
 #define CSR_R_LOCKED            0x80000000
 #define CSR_R_PPS_TOGGLE        0x40000000
 #define CSR_R_PPS_ENABLED       0x20000000
-#define CSR_R_PHASE_ERROR_MASK  0xFFFF
+#define CSR_R_PHASE_ERROR_MASK  0xFFFFFFF
+#define CSR_R_PHASE_ERROR_SIGN  0x8000000
 
-#define AUX_R_STATE_MASK        0x70000
+#define AUX_R_STATE_MASK        0xF0000
 #define AUX_R_STATE_SHIFT       16
 #define AUX_R_DAC_MASK          0xFFFF
 
@@ -46,6 +47,10 @@ clockAdjustInit(void)
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC | 0);
     microsecondSpin(10);
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
+    if (debugFlags & DEBUGFLAG_CLOCKADJUST_STEP) {
+        clockAdjustShow(30);
+        debugFlags &= ~DEBUGFLAG_CLOCKADJUST_STEP;
+    }
 }
 
 uint32_t *
@@ -62,20 +67,36 @@ clockAdjustIsLocked(void)
 }
     
 void
-clockAdjustShow(void)
+clockAdjustShow(int count)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
-    uint32_t aux = GPIO_READ(GPIO_IDX_ACQCLK_PLL_AUX_STATUS);
-    printf("Clock adjustment %sabled  State:%X  DAC:%d  ",
+    uint32_t ocsr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+    if (count <= 0) count = 1;
+    if (count > 30) count = 30;
+    while (count--) {
+        uint32_t csr, aux;
+        uint32_t then = microsecondsSinceBoot();
+        int phaseError;
+        while ((((csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR)) ^ ocsr) &
+                                                       CSR_R_PPS_TOGGLE) == 0) {
+            if ((microsecondsSinceBoot() - then) > 1200000) {
+                break;
+            }
+        }
+        ocsr = csr;
+        aux = GPIO_READ(GPIO_IDX_ACQCLK_PLL_AUX_STATUS);
+        phaseError = csr & CSR_R_PHASE_ERROR_MASK;
+        if (phaseError & CSR_R_PHASE_ERROR_SIGN) {
+            phaseError -= CSR_R_PHASE_ERROR_SIGN << 1;
+        }
+        printf("Clock adjustment %sabled  State:%X  DAC:%d  Phase error:%d",
                                   csr & CSR_R_PPS_ENABLED ? "en" : "dis",
                                   (aux & AUX_R_STATE_MASK) >> AUX_R_STATE_SHIFT,
-                                  (int16_t)(aux & AUX_R_DAC_MASK));
-    if (csr & CSR_R_LOCKED){
-        int16_t phaseError = csr & CSR_R_PHASE_ERROR_MASK;
-        printf("Phase error:%d\n", phaseError);
-    }
-    else {
-        printf("-- UNLOCKED!\n");
+                                  (int16_t)(aux & AUX_R_DAC_MASK),
+                                  phaseError);
+        if (!(csr & CSR_R_LOCKED)){
+            printf(" -- UNLOCKED!");
+        }
+        printf("\n");
     }
     evgShow();
 }
@@ -107,5 +128,5 @@ clockAdjustStep(void)
         break;
     }
     microsecondSpin(2);
-    clockAdjustShow();
+    clockAdjustShow(0);
 }

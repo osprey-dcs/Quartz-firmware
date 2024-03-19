@@ -460,7 +460,18 @@ cmdNTP(int argc, char **argv)
 static void
 cmdPPS(int argc, char **argv)
 {
-    uint32_t csr = GPIO_READ(GPIO_IDX_PPS_LATENCY);
+    uint32_t csr;
+    int loopFlag = 0;
+    if ((argc >= 2) && (strcmp(argv[1], "-l") == 0)) {
+        loopFlag = 1;
+        argc--;
+        argv++;
+    }
+    if (argc != 1) {
+        printf("Bad argument");
+        return;
+    }
+    csr = GPIO_READ(GPIO_IDX_PPS_LATENCY);
     printf("HW->PPS Event Latency: ");
     if (csr & 0x80000000) {
         printf("Overrun\n");
@@ -469,7 +480,7 @@ cmdPPS(int argc, char **argv)
         printf("%d ns\n", (csr & 0xFFFF) * (1000000000 / CFG_SYSCLK_RATE));
     }
     ad7768ShowPPSalignment();
-    clockAdjustShow();
+    clockAdjustShow(loopFlag ? 10 : 1);
 }
 
 static void
