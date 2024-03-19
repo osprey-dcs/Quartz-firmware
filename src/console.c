@@ -276,6 +276,10 @@ cmdDEBUG(int argc, char **argv)
         mgtClkSwitchShow();
         debugFlags &= ~DEBUGFLAG_MGTCLKSWITCHSHOW;
     }
+    if (debugFlags & DEBUGFLAG_DUMP_AD7768_REG) {
+        ad7768DumpReg();
+        debugFlags &= ~DEBUGFLAG_DUMP_AD7768_REG;
+    }
     if (debugFlags & DEBUGFLAG_CLOCKADJUST_STEP) {
         clockAdjustStep();
         debugFlags &= ~DEBUGFLAG_CLOCKADJUST_STEP;

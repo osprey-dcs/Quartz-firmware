@@ -66,11 +66,10 @@
 #define CHAN_MODE_DEC_1024  0x05
 #define CHAN_MODE_SINC_FILT 0x08
 
-#define POWER_MODE_MCLK_DIV_4   0x03
-#define POWER_MODE_MCLK_DIV_8   0x02
+#define POWER_MODE_MCLK_DIV_4   0x33
+#define POWER_MODE_MCLK_DIV_8   0x22
 #define POWER_MODE_MCLK_DIV_32  0x00
 #define POWER_MODE_LVDS         0x08
-#define POWER_MODE_FAST         0x30
 
 struct downSampleInfo {
     int     rate;
@@ -151,16 +150,11 @@ void
 ad7768DumpReg(void)
 {
     int chip, reg;
-    printf("  ");
-    for (reg = 0 ; reg <= 0x14 ; reg++) {
+    for (reg = 0 ; reg <= 0x59 ; reg++) {
         if ((reg >= 0x0B) && (reg <= 0x0D)) continue;
-        printf(" %02X", reg);
-    }
-    printf("\n");
-    for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
-        printf("%d:", chip);
-        for (reg = 0 ; reg <= 0x14 ; reg++) {
-            if ((reg >= 0x0B) && (reg <= 0x0D)) continue;
+        if ((reg >= 0x15) && (reg <= 0x1D)) continue;
+        printf(" %02X:", reg);
+        for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
             printf(" %02X", readReg(chip, reg));
         }
         printf("\n");
@@ -333,7 +327,7 @@ ad7768SetSamplingRate(int rate)
     broadcastReg(0x02, 0x08);
 
     // Fast mode, LVDS, MCLK divide by N
-    broadcastReg(0x04, POWER_MODE_FAST|POWER_MODE_LVDS|dp->powerMode);
+    broadcastReg(0x04, POWER_MODE_LVDS | dp->powerMode);
 
     // No CRC, DCLK_DIV=4
     broadcastReg(0x07, 0x01);
