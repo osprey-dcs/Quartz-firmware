@@ -46,6 +46,8 @@
 #define CSR_R_CHIPS_ALIGNED     0x20000000
 #define CSR_R_SPI_READ_MASK     0xFFFF
 
+#define RESTORE_VALUE 0x70000000
+
 #define CSR_SPI_DATA_MASK 0xFFFF
 
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
@@ -76,13 +78,34 @@ struct downSampleInfo {
     uint8_t channelMode;
     uint8_t powerMode;
 };
-static const struct downSampleInfo downSampleTable[] = {
- { 250000, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
- {  50000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
- {  10000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_4 },
- {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
- {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
-};
+
+static struct downSampleInfo const *
+downsampleInfo(int rate)
+{
+    /*
+     * Table is small, linear search is fine.
+     */
+    int i;
+    static const struct downSampleInfo downSampleTable[] = {
+      { 250000, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
+      {  50000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
+      {  10000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_4 },
+      {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
+      {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
+    };
+    for (i = 0 ; i < (sizeof downSampleTable/sizeof downSampleTable[0]) ; i++) {
+        struct downSampleInfo const * const dp = &downSampleTable[i];
+        if (dp->rate == rate) {
+            if (debugFlags & DEBUGFLAG_ACQ) {
+                printf("Rate:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
+                      dp->rate, dp->mclkSelect, dp->channelMode, dp->powerMode);
+            }
+            return dp;
+        }
+    }
+    printf("CRITICAL WARNING -- %d samples/second not supported.\n", rate);
+    return NULL;
+}
 
 static void
 awaitCompletion(void)
@@ -93,6 +116,9 @@ awaitCompletion(void)
 static void
 broadcastReg(int reg, int value)
 {
+    if (debugFlags & DEBUGFLAG_SHOW_AD7768_UPDATES) {
+        printf("AD7768 broadcast %02X<-%02X\n", reg, value);
+    }
     CSR_WRITE(CSR_W_OP_SPI_TRANSFER | OP_SPI_CS_MASK |
                                         ((reg << 8) & 0xFF00) | (value & 0XFF));
     awaitCompletion();
@@ -101,6 +127,9 @@ broadcastReg(int reg, int value)
 static void
 writeReg(int chip, int reg, int value)
 {
+    if (debugFlags & DEBUGFLAG_SHOW_AD7768_UPDATES) {
+        printf("AD7768:%d %02X<-%02X\n", chip, reg, value);
+    }
     CSR_WRITE(CSR_W_OP_SPI_TRANSFER | ((0x10000<<chip) & OP_SPI_CS_MASK) |
                                         ((reg << 8) & 0xFF00) | (value & 0XFF));
     awaitCompletion();
@@ -216,38 +245,29 @@ void
 ad7768Init(void)
 {
     int i;
-
-    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
-                                   OP_CHIP_PINS_ASSERT_RESET);
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_FAKE_ADC |
-                                   ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
-                                                OP_CHIP_PINS_ASSERT_FAKE_ADC :
-                                                0));
-    microsecondSpin(10);
-    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
-    microsecondSpin(50000);
+                                    ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
+                                                 OP_CHIP_PINS_ASSERT_FAKE_ADC :
+                                                 0));
+    ad7768SetSamplingRate(1000);
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r = readReg(i, 0x0A);
         if (r != 0x06) {
             printf("AD7768 %d: Warning -- unexpected revision %02X.\n", i, r);
         }
     }
-    broadcastReg(0x01, 0x00); // Mode A: Wideband, Decimate by 32
-    broadcastReg(0x02, 0x08); // Mode B: Sinc5, Decimate by 32
-    broadcastReg(0x04, 0x3B); // Fast mode, LVDS, MCLK_DIV=4
-    broadcastReg(0x07, 0x01); // No CRC, DCLK_DIV=4
-    broadcastReg(0x03, 0x00); // All channels in Mode A
-    ad7768SetSamplingRate(downSampleTable[0].rate);
 }
 
 int
 ad7768SetOfst(int channel, int offset)
 {
     int i, chip, reg;
+    static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
     }
+    if (offset == RESTORE_VALUE) offset = offsets[channel];
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x20;
     for (i = 0 ; i < 3 ; i++) {
@@ -255,6 +275,7 @@ ad7768SetOfst(int channel, int offset)
         offset >>= 8;
         reg--;
     }
+    offsets[channel] = offset;
     return 0;
 }
 
@@ -266,6 +287,8 @@ ad7768SetGain(int channel, int gain)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
     }
+    static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
+    if (gain == RESTORE_VALUE) gain = gains[channel];
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x338;
     gain += 0x555555;
@@ -274,6 +297,7 @@ ad7768SetGain(int channel, int gain)
         gain >>= 8;
         reg--;
     }
+    gains[channel] = gain;
     return 0;
 }
 
@@ -281,32 +305,57 @@ int
 ad7768SetSamplingRate(int rate)
 {
     int i;
-    for (i = 0 ; i < (sizeof downSampleTable/sizeof downSampleTable[0]) ; i++) {
-        struct downSampleInfo const * const dp = &downSampleTable[i];
-        if (dp->rate == rate) {
-            if (debugFlags & DEBUGFLAG_ACQ) {
-                printf("Rate:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
-                   dp->rate, dp->mclkSelect, dp->channelMode, dp->powerMode);
-            }
-            GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
+    struct downSampleInfo const *dp = downsampleInfo(rate);
+    static struct downSampleInfo const *dpOld;
 
-            // Mode A: Wideband, Decimate by N
-            broadcastReg(0x01, dp->channelMode);
-
-            // Fast mode, LVDS, MCLK divide by N
-            broadcastReg(0x04, POWER_MODE_FAST|POWER_MODE_LVDS|dp->powerMode);
-
-            // Check that clock is good
-            for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-                uint8_t r = readReg(i, 0x09);
-                if (r != 0) printf("AD7768[%d] R9:%02X\n", i, r);
-            }
-            ad7768StartAlignment();
-            return 0;
+    /*
+     * Reset ADC on MCLK change
+     * Restore all gains and offsets
+     */
+    if (dp == NULL) return -1;
+    if ((dpOld == NULL) || (dp->mclkSelect != dpOld->mclkSelect)) {
+        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
+                                       OP_CHIP_PINS_ASSERT_RESET);
+        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
+        microsecondSpin(10);
+        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
+        microsecondSpin(2000);
+        for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
+            ad7768SetOfst(i, RESTORE_VALUE);
+            ad7768SetGain(i, RESTORE_VALUE);
         }
     }
-    printf("AD77689 sampling rate %d not supported.\n", rate);
-    return -1;
+
+    // Mode A: Wideband, Decimate by N
+    broadcastReg(0x01, dp->channelMode);
+
+    // Mode B: Sinc5, Decimate by 32
+    broadcastReg(0x02, 0x08);
+
+    // Fast mode, LVDS, MCLK divide by N
+    broadcastReg(0x04, POWER_MODE_FAST|POWER_MODE_LVDS|dp->powerMode);
+
+    // No CRC, DCLK_DIV=4
+    broadcastReg(0x07, 0x01);
+
+    // All channels in Mode A
+    broadcastReg(0x03, 0x00);
+
+    // Check status
+    for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
+        int c;
+        uint8_t r = readReg(i, 0x09);
+        if (r != 0) {
+            printf("CRITICAL WARNING -- AD7768[%d] R9:%02X\n", i, r);
+        }
+        for (c = 0 ; c < CFG_AD7768_ADC_PER_CHIP ; c++) {
+        }
+    }
+
+    // Align ADCs
+    ad7768StartAlignment();
+    dpOld = dp;
+    return 0;
 }
 
 static void
