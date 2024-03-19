@@ -43,8 +43,11 @@
 
 /*
  * Marble system clock VCXO
+ * Some boards have a value of 35 for this, some a value of 21. (!!!)
+ * Set the value on the low side since that merely makes loop more sluggish
+ * but erring on the high side can make the loop unstable.
  */
-#define CFG_MARBLE_VCXO_COUNTS_PER_HZ   35
+#define CFG_MARBLE_VCXO_COUNTS_PER_HZ   25
 
 /*
  * Multi-gigabit transceivers
