@@ -318,10 +318,10 @@ ad7768ShowAlignment(void)
     int i;
     uint32_t csr;
     csr = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
-    printf("DRDY %sligned.  PPS Event to DRDY: %d\n",
-                                    csr & DRDY_STATUS_MISALIGNED ? "Misa" : "A",
-                                    csr & DRDY_STATUS_PPS_LATENCY_MASK);
-    printf("DRDY History: %03X\n", fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY));
+    printf("DRDY %sligned.  PPS Event to DRDY: %d.  DRDY History: %03X\n",
+                                   csr & DRDY_STATUS_MISALIGNED ? "Misa" : "A",
+                                   csr & DRDY_STATUS_PPS_LATENCY_MASK,
+                                   fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY));
     printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;
