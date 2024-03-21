@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x46B37957356DF4F5",
+      "boundary_crc": "0x1F6E802DB3E2068F",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -47,7 +47,8 @@
       "clk_wiz_3": "",
       "clk_wiz_4": "",
       "marbleBootFlash": "",
-      "ospreyUDP": ""
+      "ospreyUDP": "",
+      "clk_wiz_5": ""
     },
     "interface_ports": {
       "console": {
@@ -471,6 +472,57 @@
           },
           "FREQ_HZ": {
             "value": "125000000",
+            "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      },
+      "CLK20_VCXO": {
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "bd_clk_in1_0",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "20000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      },
+      "fixedClk200": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "/clk_wiz_5_clk_out1",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "200000000",
             "value_src": "default"
           },
           "FREQ_TOLERANCE_HZ": {
@@ -2061,6 +2113,29 @@
             "value": "16384"
           }
         }
+      },
+      "clk_wiz_5": {
+        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
+        "xci_name": "bd_clk_wiz_5_0",
+        "xci_path": "ip/bd_clk_wiz_5_0/bd_clk_wiz_5_0.xci",
+        "inst_hier_path": "clk_wiz_5",
+        "parameters": {
+          "CLKOUT1_JITTER": {
+            "value": "237.367"
+          },
+          "CLKOUT1_REQUESTED_OUT_FREQ": {
+            "value": "200"
+          },
+          "MMCM_CLKOUT0_DIVIDE_F": {
+            "value": "5.000"
+          },
+          "USE_LOCKED": {
+            "value": "false"
+          },
+          "USE_RESET": {
+            "value": "false"
+          }
+        }
       }
     },
     "interface_nets": {
@@ -2207,6 +2282,12 @@
           "clk_wiz_4/clk_in1"
         ]
       },
+      "clk_in1_0_1": {
+        "ports": [
+          "CLK20_VCXO",
+          "clk_wiz_5/clk_in1"
+        ]
+      },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "clk_wiz_0/clk_out1",
@@ -2250,6 +2331,12 @@
           "clk_wiz_4/clk_out1",
           "clk125",
           "ospreyUDP/clk125"
+        ]
+      },
+      "clk_wiz_5_clk_out1": {
+        "ports": [
+          "clk_wiz_5/clk_out1",
+          "fixedClk200"
         ]
       },
       "iic_fpga_gpo": {
