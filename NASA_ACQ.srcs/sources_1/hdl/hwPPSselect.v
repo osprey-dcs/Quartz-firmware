@@ -185,7 +185,7 @@ assign ppsDebounced_n = ppsDebounced_nr;
 (*ASYNC_REG="TRUE"*) reg pps_m = 0;
 reg pps = 0;
 (*ASYNC_REG="TRUE"*) reg debounce_m = 0;
-reg debounce = 0, debounce_d = 0;;
+reg debounce = 0, debounce_d = 0;
 always @(posedge clk) begin
     pps_m <= pps_a;
     pps   <= pps_m;
