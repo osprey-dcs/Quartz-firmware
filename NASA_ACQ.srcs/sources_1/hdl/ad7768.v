@@ -428,7 +428,7 @@ assign sysStatus = { spiActive,
                      {32 - 2 - SPI_SHIFTREG_WIDTH{1'b0}},
                      spiShiftReg };
 
-assign sysDRDYstatus = { drdyAligned,
+assign sysDRDYstatus = { !drdyAligned,
                          {32-1-PPS_DRDY_COUNT_WIDTH{1'b0}},
                          ppsDrdyTicks };
 
