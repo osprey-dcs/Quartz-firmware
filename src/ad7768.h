@@ -32,12 +32,11 @@
 void ad7768Init(void);
 void ad7768DumpReg(void);
 void ad7768StartAlignment(void);
-void ad7768Crank(void);
 int ad7768SetOfst(int channel, int offset);
 int ad7768SetGain(int channel, int gain);
 int ad7768SetSamplingRate(int rate);
 uint32_t *ad7768FetchSysmon(uint32_t *buf);
 
-void ad7768ShowPPSalignment(void);
+void ad7768ShowAlignment(void);
 
 #endif /* _AD7768_H_ */

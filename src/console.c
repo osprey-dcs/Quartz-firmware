@@ -483,7 +483,7 @@ cmdPPS(int argc, char **argv)
     else {
         printf("%d ns\n", (csr & 0xFFFF) * (1000000000 / CFG_SYSCLK_RATE));
     }
-    ad7768ShowPPSalignment();
+    ad7768ShowAlignment();
     clockAdjustShow(loopFlag ? 10 : 1);
 }
 

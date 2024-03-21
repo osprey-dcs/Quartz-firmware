@@ -43,7 +43,6 @@
 # define OP_SPI_CS_MASK                 (((1<<CFG_AD7768_CHIP_COUNT)-1)<<16)
 #define CSR_R_SPI_ACTIVE        0x80000000
 #define CSR_R_ALIGNMENT_ACTIVE  0x40000000
-#define CSR_R_CHIPS_ALIGNED     0x20000000
 #define CSR_R_SPI_READ_MASK     0xFFFF
 
 #define RESTORE_VALUE 0x70000000
@@ -161,78 +160,10 @@ ad7768DumpReg(void)
     }
 }
 
-static void
-ad7768step(int startAlignment)
-{
-    static int alignmentRequested = 0;
-    static int clockAdjustWasLocked = 0;
-    static enum { ST_IDLE,
-                  ST_START_ALIGN,
-                  ST_AWAIT_FIRST_ALIGNMENT,
-                  ST_AWAIT_SECOND_ALIGNMENT } state = ST_IDLE;
-    /*
-     * Request alignment on demand
-     */
-    if (startAlignment) {
-        alignmentRequested = 1;
-        return;
-    }
-
-    /*
-     * Request alignment when clock locks
-     */
-    if (clockAdjustIsLocked()) {
-        if (!clockAdjustWasLocked ) {
-            clockAdjustWasLocked = 1;
-            alignmentRequested = 1;
-        }
-    }
-    else {
-        clockAdjustWasLocked = 0;
-    }
-
-    /*
-     * ADC alignment state machine
-     */
-    switch (state) {
-    case ST_IDLE:
-        if (alignmentRequested) {
-            alignmentRequested = 0;
-            state = ST_START_ALIGN;
-        }
-        break;
-
-    case ST_START_ALIGN:
-        printf("AD7768 alignment started.\n");
-        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
-        state = ST_AWAIT_FIRST_ALIGNMENT;
-        break;
-
-    case ST_AWAIT_FIRST_ALIGNMENT:
-        if (!(CSR_READ() & CSR_R_ALIGNMENT_ACTIVE)) {
-            CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
-            state = ST_AWAIT_SECOND_ALIGNMENT;
-        }
-        break;
-
-    case ST_AWAIT_SECOND_ALIGNMENT:
-        if (!(CSR_READ() & CSR_R_ALIGNMENT_ACTIVE)) {
-            state = ST_IDLE;
-        }
-        break;
-    }
-}
-
 void
 ad7768StartAlignment(void)
 {
-    ad7768step(1);
-}
-
-void
-ad7768Crank(void)
-{
-    ad7768step(0);
+    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
 }
 
 void
@@ -352,27 +283,41 @@ ad7768SetSamplingRate(int rate)
     return 0;
 }
 
-static void
-showEVRclocks(const char *msg, int n)
+/*
+ * Fetch register from some other clock domain
+ */
+static uint32_t
+fetchRegister(int idx)
 {
-    printf("%s AD7768 DRDY (EVR clocks): %d\n", msg, n);
+    uint32_t ocsr, csr;
+    int passesLeft = 10;
+    ocsr = GPIO_READ(idx);
+    for (;;) {
+        csr = GPIO_READ(idx);
+        if ((csr == ocsr) || (--passesLeft == 0)) {
+            return csr;
+        }
+        ocsr = csr;
+    }
 }
 
 uint32_t *
 ad7768FetchSysmon(uint32_t *buf)
 {
-    *buf++ = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
+    *buf++ = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
+    *buf++ = fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
     return buf;
 }
 
 void
-ad7768ShowPPSalignment(void)
+ad7768ShowAlignment(void)
 {
     int i;
-    uint32_t csr = GPIO_READ(GPIO_IDX_AD7768_AUX_STATUS);
-    showEVRclocks("PPS Event to", csr >> 12);
-    showEVRclocks("Skew between", csr & 0xFFF);
-    printf("DRDY History: %08X\n", GPIO_READ(GPIO_IDX_AD7768_DRDY_HISTORY));
+    uint32_t csr;
+    csr = GPIO_READ(GPIO_IDX_AD7768_DRDY_STATUS);
+    printf("PPS Event to DRDY: %d", csr);
+    printf("DRDY History: %03X\n", GPIO_READ(GPIO_IDX_AD7768_DRDY_HISTORY));
+    printf("Alignment Count: %d\n", GPIO_READ(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;
         r = readReg(i, 0x09);

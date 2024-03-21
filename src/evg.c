@@ -334,6 +334,7 @@ void
 evgShow(void)
 {
     uint32_t csr = GPIO_READ(GPIO_IDX_PPS_STATUS);
+    uint32_t ocsr;
     if (csr & PPS_CSR_QUARTZ_VALID) printf("Quartz PPS present. ");
     if (csr & PPS_CSR_USE_QUARTZ)   printf("Use Quartz PPS. ");
     if (csr & PPS_CSR_PMOD_VALID)   printf("PMOD PPS present. ");
@@ -349,5 +350,18 @@ evgShow(void)
     if (csr & PPS_CSR_PMOD_COS) {
         printf("PMOD PPS present change-of-state.\n");
         GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_PMOD_COS);
+    }
+    /*
+     * Value in other clock domain, may be metastable
+     */
+    ocsr = GPIO_READ(GPIO_IDX_PPS_JITTER);
+    for (;;) {
+        csr = GPIO_READ(GPIO_IDX_PPS_JITTER);
+        if (csr == ocsr) {
+            csr = (csr * 50) >> 6;
+            printf("PPS jitter %d.%d ns.\n", csr / 10, csr % 10);
+            break;
+        }
+        ocsr = csr;
     }
 }

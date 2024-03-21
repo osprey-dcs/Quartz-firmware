@@ -79,7 +79,6 @@ main()
         evgCrank();
         consoleCrank();
         ospreyUDPcrank();
-        ad7768Crank();
         inputCouplingCrank();
     }
     return 0;

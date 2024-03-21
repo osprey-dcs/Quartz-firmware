@@ -47,18 +47,20 @@
 #define GPIO_IDX_ACQCLK_PLL_CSR            11 // VCXO clock adjust status
 #define GPIO_IDX_ACQCLK_PLL_AUX_STATUS     12 // More VCXO clock adjust status
 #define GPIO_IDX_AD7768_CSR                13 // AD7768 ADC control/status
-#define GPIO_IDX_AD7768_AUX_STATUS         14 // AD7768 extra status
+#define GPIO_IDX_AD7768_DRDY_STATUS        14 // AD7768 DRDY alignment status
 #define GPIO_IDX_AD7768_DRDY_HISTORY       15 // AD7768 DRDY logic analyzer
-#define GPIO_IDX_INPUT_COUPLING_CSR        16 // Firmware AC/DC coupling
-#define GPIO_IDX_MCLK_SELECT_CSR           17 // ADC MCLK selection CSR
-#define GPIO_IDX_BUILD_PACKET_STATUS       18 // Packet builder status (R)
-#define GPIO_IDX_BUILD_PACKET_BITMAP       19 // Packet builder active channels
-#define GPIO_IDX_BUILD_PACKET_BYTECOUNT    20 // Packet builder packet size
-#define GPIO_IDX_INPUT_COUPLING_CLR        21 // Input coupling RESET coils (AC)
-#define GPIO_IDX_INPUT_COUPLING_SET_START  22 // SET coils (DC) and start SPI
-#define GPIO_IDX_DIGITIZER_AMC7823         23 // Digitizer slow monitors
-#define GPIO_IDX_PPS_LATENCY               24 // HW to EVR PPS interval
-#define GPIO_IDX_PPS_STATUS                25 // Hardware PPS status
+#define GPIO_IDX_AD7768_ALIGN_COUNT        16 // AD7768 (re)alignment count
+#define GPIO_IDX_INPUT_COUPLING_CSR        17 // Firmware AC/DC coupling
+#define GPIO_IDX_MCLK_SELECT_CSR           18 // ADC MCLK selection CSR
+#define GPIO_IDX_BUILD_PACKET_STATUS       19 // Packet builder status (R)
+#define GPIO_IDX_BUILD_PACKET_BITMAP       20 // Packet builder active channels
+#define GPIO_IDX_BUILD_PACKET_BYTECOUNT    21 // Packet builder packet size
+#define GPIO_IDX_INPUT_COUPLING_CLR        22 // Input coupling RESET coils (AC)
+#define GPIO_IDX_INPUT_COUPLING_SET_START  23 // SET coils (DC) and start SPI
+#define GPIO_IDX_DIGITIZER_AMC7823         24 // Digitizer slow monitors
+#define GPIO_IDX_PPS_LATENCY               25 // HW to EVR PPS interval
+#define GPIO_IDX_PPS_STATUS                26 // Hardware PPS status
+#define GPIO_IDX_PPS_JITTER                27 // Average PPS jitter
 
 #define GPIO_IDX_COUNT                     32 // Number of GPIO registers
 
