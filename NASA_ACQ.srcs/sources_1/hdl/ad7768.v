@@ -74,8 +74,6 @@ localparam SKEW_LIMIT_ACQ_TICKS =  (((ACQ_CLK_RATE / 1000) * SKEW_LIMIT_NS) +
 localparam HEADER_WIDTH = 8;
 localparam DCLK_DIV = 4;
 localparam DCLK_RATE = MCLK_RATE / DCLK_DIV;
-localparam DRDY_RATE = DCLK_RATE / 32;
-localparam CEIL_CLOCKS_PER_DRDY = (ACQ_CLK_RATE + DRDY_RATE - 1) / DRDY_RATE;
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock (sysClk) domain
@@ -273,7 +271,7 @@ end
 // No need to stabilize them since they are should be stable when sampled.
 
 localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_RATE) / (2 * DCLK_RATE);
-localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 2;
+localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 4;
 localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
 reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
