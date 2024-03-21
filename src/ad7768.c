@@ -45,12 +45,15 @@
 #define CSR_R_ALIGNMENT_ACTIVE  0x40000000
 #define CSR_R_SPI_READ_MASK     0xFFFF
 
-#define RESTORE_VALUE 0x70000000
+#define DRDY_STATUS_MISALIGNED          0x80000000
+#define DRDY_STATUS_PPS_LATENCY_MASK    0xFFFFF
 
 #define CSR_SPI_DATA_MASK 0xFFFF
 
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
 #define CSR_READ()   GPIO_READ(GPIO_IDX_AD7768_CSR)
+
+#define RESTORE_VALUE 0x70000000
 
 #define MCLK_CSR_W_32p000   0x0
 #define MCLK_CSR_W_25p600   0x1
@@ -314,10 +317,12 @@ ad7768ShowAlignment(void)
 {
     int i;
     uint32_t csr;
-    csr = GPIO_READ(GPIO_IDX_AD7768_DRDY_STATUS);
-    printf("PPS Event to DRDY: %d", csr);
-    printf("DRDY History: %03X\n", GPIO_READ(GPIO_IDX_AD7768_DRDY_HISTORY));
-    printf("Alignment Count: %d\n", GPIO_READ(GPIO_IDX_AD7768_ALIGN_COUNT));
+    csr = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
+    printf("DRDY %sligned.  PPS Event to DRDY: %d",
+                                    csr & DRDY_STATUS_MISALIGNED ? "Misa" : "A",
+                                    csr & DRDY_STATUS_PPS_LATENCY_MASK);
+    printf("DRDY History: %03X\n", fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY));
+    printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;
         r = readReg(i, 0x09);
