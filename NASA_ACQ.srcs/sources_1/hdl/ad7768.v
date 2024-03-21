@@ -33,24 +33,24 @@ module ad7768 #(
     parameter SYSCLK_RATE    = 100000000,
     parameter ACQ_CLK_RATE   = 125000000,
     parameter MCLK_RATE      = 32000000,
-    parameter DEBUG_ACQ      = "false",
+    parameter DEBUG_DRDY     = "false",
     parameter DEBUG_ALIGN    = "false",
+    parameter DEBUG_ACQ      = "false",
     parameter DEBUG_PINS     = "false",
-    parameter DEBUG_PPS      = "false",
-    parameter DEBUG_SKEW     = "false",
     parameter DEBUG_SPI      = "false"
     ) (
     input  wire        sysClk,
     input  wire        sysCsrStrobe,
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
-    output wire [31:0] sysAuxStatus,
-    output reg  [31:0] sysDRDYhistory,
+    output wire [31:0] sysDRDYstatus,
+    output wire [31:0] sysDRDYhistory,
+    output wire [31:0] sysAlignCount,
 
-    input  wire                                              acqClk,
-    (*MARK_DEBUG=DEBUG_PPS*) input  wire                     acqPPSstrobe,
-    (*MARK_DEBUG=DEBUG_ACQ*) output reg                      acqStrobe=0,
-    (*MARK_DEBUG=DEBUG_ACQ*) output wire
+    input  wire                                                acqClk,
+    (*MARK_DEBUG=DEBUG_ALIGN*) input  wire                     acqPPSstrobe,
+    (*MARK_DEBUG=DEBUG_ACQ*)   output reg                      acqStrobe=0,
+    (*MARK_DEBUG=DEBUG_ACQ*)   output wire
                 [(ADC_CHIP_COUNT*ADC_PER_CHIP*ADC_WIDTH)-1:0] acqData,
     (*MARK_DEBUG=DEBUG_ACQ*) output wire
                         [(ADC_CHIP_COUNT*ADC_PER_CHIP*8)-1:0] acqHeaders,
@@ -79,6 +79,7 @@ localparam CEIL_CLOCKS_PER_DRDY = (ACQ_CLK_RATE + DRDY_RATE - 1) / DRDY_RATE;
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock (sysClk) domain
+///////////////////////////////////////////////////////////////////////////////
 
 reg sysStartAlignmentToggle = 0;
 reg sysResetADC = 0;
@@ -166,21 +167,10 @@ assign adcSCLK = spiClk;
 assign adcCSn  = spiCSn;
 assign adcSDI = spiShiftReg[SPI_SHIFTREG_WIDTH-1];
 
-/*
- * Some of these signals are in clock domain other than the system clock
- * domain where they are read by the microBlaze, but race conditions are
- * unimportant so there's no need for fancy domain-crossing logic
- */
-(*MARK_DEBUG=DEBUG_ALIGN*) reg doneAlignmentToggle = 0;
-(*MARK_DEBUG=DEBUG_SKEW*)  reg chipsAreAligned = 0;
-assign sysStatus = { spiActive,
-                     doneAlignmentToggle ^ sysStartAlignmentToggle,
-                     chipsAreAligned,
-                     {32 - 3 - SPI_SHIFTREG_WIDTH{1'b0}},
-                     spiShiftReg };
 
 ///////////////////////////////////////////////////////////////////////////////
 // ADC MCLK (clk32) domain
+///////////////////////////////////////////////////////////////////////////////
 // Fake hardware
 wire                  [ADC_CHIP_COUNT-1:0] fake_DCLK;
 wire                  [ADC_CHIP_COUNT-1:0] fake_DRDY;
@@ -204,36 +194,99 @@ assign muxDOUT_a = sysUseFakeAD7768 ? fake_DOUT : adcDOUT_a;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock (acqClk) domain
+///////////////////////////////////////////////////////////////////////////////
+
+///////////////////////////////////////////////////////////////////////////////
+// Get asynchronous DCLK and DRDY from into acquisition clock domain.
+// Use delayed synchronized value to sample first DRDY and all data lines.
+(*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] dclk_m = 0, drdy_m = 0;
+reg [ADC_CHIP_COUNT-1:0] dclk = 0, dclk_d = 0, dclkRising = 0;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [ADC_CHIP_COUNT-1:0] drdy = 0;
+reg [ADC_CHIP_COUNT-1:0] drdy_d = 0, drdyRising = 0;
+
+always @(posedge acqClk) begin
+    dclk_m <= muxDCLK_a;
+    dclk   <= dclk_m;
+    dclk_d <= dclk;
+    dclkRising <= dclk & ~dclk_d;
+    drdy_m <= muxDRDY_a;
+    drdy   <= drdy_m;
+    drdy_d <= drdy;
+    drdyRising <= drdy & ~drdy_d;
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Check DRDY alignment
+(*MARK_DEBUG=DEBUG_DRDY*) reg drdyAligned = 0;
+localparam [1:0] DRDY_STATE_AWAIT_RISING = 2'd0,
+                 DRDY_STATE_SKEW_1       = 2'd1,
+                 DRDY_STATE_SKEW_2       = 2'd1,
+                 DRDY_STATE_AWAIT_LOW    = 2'd3;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [1:0] drdyState = DRDY_STATE_AWAIT_RISING;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [(3*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
+
+always @(posedge acqClk) begin
+    case (drdyState)
+    DRDY_STATE_AWAIT_RISING: begin
+        if (drdyRising) begin
+            drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+            if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+                drdyAligned <= 1;
+            end
+            else begin
+                drdyState <= DRDY_STATE_SKEW_1;
+            end
+        end
+    end
+    DRDY_STATE_SKEW_1: begin
+        drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+            drdyAligned <= 1;
+            drdyState <= DRDY_STATE_AWAIT_RISING;
+        end
+        else begin
+            drdyState <= DRDY_STATE_SKEW_2;
+        end
+    end
+    DRDY_STATE_SKEW_2: begin
+        drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+            drdyAligned <= 1;
+            drdyState <= DRDY_STATE_AWAIT_RISING;
+        end
+        else begin
+            drdyAligned <= 0;
+            drdyState <= DRDY_STATE_AWAIT_LOW;
+        end
+    end
+    DRDY_STATE_AWAIT_LOW: begin
+        if (drdy == {ADC_CHIP_COUNT{1'b0}}) begin
+            drdyState <= DRDY_STATE_AWAIT_RISING;
+        end
+    end
+    default: drdyState <= DRDY_STATE_AWAIT_LOW;
+    endcase
+end
+
+///////////////////////////////////////////////////////////////////////////////
+// Sample DRDY and DOUT
+// No need to stabilize them since they are should be stable when sampled.
+
+localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_RATE) / (2 * DCLK_RATE);
+localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 3;
+localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
+reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
+(*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
+reg delaying = 0;
+
 localparam ADC_BITCOUNT_LOAD = HEADER_WIDTH + ADC_WIDTH - 2;
 localparam ADC_BITCOUNT_WIDTH = $clog2(ADC_BITCOUNT_LOAD+1)+1;
 reg [ADC_BITCOUNT_WIDTH-1:0] adcBitCount = ADC_BITCOUNT_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) wire adcBitCountDone=adcBitCount[ADC_BITCOUNT_WIDTH-1];
 reg acqActive = 0;
 
-// Get asynchronous DCLK from from ADC chip into acquisition clock domain.
-// Use delayed synchronized value to sample first DRDY and all data lines.
-localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_RATE) / (2 * DCLK_RATE);
-// Account for DCLK debouncing and the fact that the counter goes to minus one.
-localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 3;
-localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
-reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
-(*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
-reg delaying = 0;
-/*
- * Need to at least latch all DCLK lines to be able to
- * refer to them in a ChipScope instance.
- */
-(*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] adcDCLK_m = 0;
-
-/*
- * Only need the first since all should be aligned.
- */
-(*MARK_DEBUG=DEBUG_ACQ*) reg adcDCLK = 0, adcDRDY = 0;
-                     reg adcDCLK_d = 0;
 always @(posedge acqClk) begin
-    adcDCLK_m <= muxDCLK_a;
-    adcDCLK   <= adcDCLK_m[0];
-    adcDCLK_d <= adcDCLK;
+    // Assert sampleFlag near center of shortest DCLK cycle
     if (delaying) begin
         if (sampleFlag) begin
             sampleDelay <= SAMPLE_DELAY_LOAD;
@@ -243,19 +296,17 @@ always @(posedge acqClk) begin
             sampleDelay <= sampleDelay - 1;
         end
     end
-    else if (adcDCLK && !adcDCLK_d) begin
+    else if (dclkRising[0] != 0) begin
         delaying <= 1;
     end
-    /*
-     * No need to stabilize muxDRDY_a since they are
-     * sampled here only when they should be stable.
-     */
+
+    // Enable shift register when framed by DRDY
     if (acqActive) begin
         if (sampleFlag) begin
             if (adcBitCountDone) begin
                 acqStrobe <= 1;
             end
-            if (muxDRDY_a) begin
+            if (muxDRDY_a[0]) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
             end
             else if (!adcBitCountDone) begin
@@ -264,7 +315,6 @@ always @(posedge acqClk) begin
             else begin
                 acqActive <= 0;
             end
-            adcDRDY <= muxDRDY_a[0];
         end
         else begin
             acqStrobe <= 0;
@@ -272,15 +322,15 @@ always @(posedge acqClk) begin
     end
     else begin
         acqStrobe <= 0;
+        adcBitCount <= ADC_BITCOUNT_LOAD;
         if (sampleFlag) begin
-            if (muxDRDY_a) begin
-                adcBitCount <= ADC_BITCOUNT_LOAD;
+            if (muxDRDY_a[0]) begin
+                // FIXME: Should acqActive be set only if DRDY are aligned?
                 acqActive <= 1;
             end
         end
     end
 end
-
 genvar i;
 generate
 for (i = 0 ; i < ADC_CHIP_COUNT * ADC_PER_CHIP ; i = i + 1) begin : adcDOUT
@@ -298,97 +348,18 @@ for (i = 0 ; i < ADC_CHIP_COUNT * ADC_PER_CHIP ; i = i + 1) begin : adcDOUT
 end
 endgenerate
 
-// Measure skew beween ADC DRDY signals.
-localparam SKEW_COUNT_WIDTH = $clog2(CEIL_CLOCKS_PER_DRDY) + 1;
-(*ASYNC_REG="true"*)      reg [ADC_CHIP_COUNT-1:0] skewDRDY_m = 0;
-(*MARK_DEBUG=DEBUG_SKEW*) reg [ADC_CHIP_COUNT-1:0] skewDRDY = 0;
-                          reg [ADC_CHIP_COUNT-1:0] skewDRDY_d = 0;
-localparam S_SKEW_AWAIT_LOW        = 2'd0,
-           S_SKEW_AWAIT_FIRST_HIGH = 2'd1,
-           S_SKEW_AWAIT_ALL_HIGH   = 2'd2;
-(*MARK_DEBUG=DEBUG_SKEW*) reg [1:0] skewState = S_SKEW_AWAIT_LOW;
-reg                           [SKEW_COUNT_WIDTH-1:0] skewCount = ~0;
-(*MARK_DEBUG=DEBUG_SKEW*) reg [SKEW_COUNT_WIDTH-1:0] skew = ~0;
-wire skewCountDone = skewCount[SKEW_COUNT_WIDTH-1];
-
-/*
- * Tiny logic analyzer
- * sysDRDYhistory is not really in system clock domain,
- * but C code knows that its value may be metastable.
- */
-localparam DRDY_HISTORY_CAPACITY = 32 / ADC_CHIP_COUNT;
-localparam DRDY_HISTORY_COUNTER_WIDTH = $clog2(DRDY_HISTORY_CAPACITY) + 1;
-reg [31:0] drdyHistory;
-reg [DRDY_HISTORY_COUNTER_WIDTH-1:0] drdyHistoryCounter;
-wire [DRDY_HISTORY_COUNTER_WIDTH-2:0] drdyHistoryIndex =
-                            drdyHistoryCounter[0+:DRDY_HISTORY_COUNTER_WIDTH-1];
-wire drdyHistoryCounterDone = drdyHistoryCounter[DRDY_HISTORY_COUNTER_WIDTH-1];
-
-always @(posedge acqClk) begin
-    skewDRDY_m <= muxDRDY_a;
-    skewDRDY   <= skewDRDY_m;
-    skewDRDY_d <= skewDRDY;
-    case (skewState)
-    S_SKEW_AWAIT_LOW: begin
-        skewCount <= 0;
-        sysDRDYhistory <= drdyHistory;
-        drdyHistoryCounter <= 1;
-        if (skewDRDY == 0) begin
-            drdyHistory <= ~0;
-            skewState <= S_SKEW_AWAIT_FIRST_HIGH;
-        end
-    end
-    S_SKEW_AWAIT_FIRST_HIGH: begin
-        drdyHistory[0+:ADC_CHIP_COUNT] <= skewDRDY;
-        if (skewDRDY == {ADC_CHIP_COUNT{1'b1}}) begin
-            skew <= 0;
-            skewCount <= 0;
-            skewState <= S_SKEW_AWAIT_LOW;
-        end
-        else if (skewDRDY != 0) begin
-            skewCount <= 1;
-            skewState <= S_SKEW_AWAIT_ALL_HIGH;
-        end
-        else if (skewCountDone) begin
-            skewState <= S_SKEW_AWAIT_LOW;
-        end
-        else begin
-            skewCount <= skewCount + 1;
-        end
-    end
-    S_SKEW_AWAIT_ALL_HIGH: begin
-        if (!drdyHistoryCounterDone) begin
-            drdyHistory[(drdyHistoryIndex*ADC_CHIP_COUNT)+:ADC_CHIP_COUNT] <=
-                                                                       skewDRDY;
-            drdyHistoryCounter <= drdyHistoryCounter + 1;
-        end
-        if (skewDRDY == {ADC_CHIP_COUNT{1'b1}}) begin
-            skew <= skewCount;
-            skewCount <= 0;
-            skewState <= S_SKEW_AWAIT_LOW;
-        end
-        else if (skewCountDone) begin
-            skew <= ~0;
-            skewState <= S_SKEW_AWAIT_LOW;
-        end
-        else begin
-            skewCount <= skewCount + 1;
-        end
-    end
-    endcase
-    chipsAreAligned <= (skew <= SKEW_LIMIT_ACQ_TICKS);
-end
-
+//////////////////////////////////////////////////////////////////////////////
 // Measure time beween PPS strobe and rising edge of first DRDY
+//
 localparam PPS_DRDY_COUNT_MAX = (ACQ_CLK_RATE/1000) + (ACQ_CLK_RATE/100000);
 localparam PPS_DRDY_COUNT_WIDTH = $clog2(PPS_DRDY_COUNT_MAX+1) + 1;
 reg                           [PPS_DRDY_COUNT_WIDTH-1:0] ppsDrdyCount = ~0;
-(*MARK_DEBUG=DEBUG_SKEW*) reg [PPS_DRDY_COUNT_WIDTH-1:0] ppsDrdyTicks = ~0;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [PPS_DRDY_COUNT_WIDTH-1:0] ppsDrdyTicks = ~0;
 wire ppsDrdyOverflow = ppsDrdyCount[PPS_DRDY_COUNT_WIDTH-1];
 reg ppsDrdyActive = 0;
 always @(posedge acqClk) begin
     if (ppsDrdyActive) begin
-        if (skewDRDY[0] && !skewDRDY_d[0]) begin
+        if (drdyRising[0]) begin
             ppsDrdyTicks <= ppsDrdyCount;
             ppsDrdyActive <= 0;
         end
@@ -408,65 +379,62 @@ always @(posedge acqClk) begin
     end
 end
 
-/*
- * Don't worry about clock-crossing.
- * C code knows that values may be metastable.
- */
-assign sysAuxStatus = { {20-PPS_DRDY_COUNT_WIDTH{1'b0}}, ppsDrdyTicks,
-                        {12-SKEW_COUNT_WIDTH{1'b0}}, skew };
-
-// See where ADC DRDY arrives relative to PPS strobe.
-localparam PPS_CHECK_TICKS = (ACQ_CLK_RATE + DCLK_RATE) /  DCLK_RATE;
-localparam PPS_CHECK_WIDTH = $clog2(PPS_CHECK_TICKS+1) + 1;
-reg [PPS_CHECK_WIDTH-1:0] ppsCheck = ~0;
-(*MARK_DEBUG=DEBUG_PPS*) wire ppsCheckOverflow = ppsCheck[PPS_CHECK_WIDTH-1];
-(*MARK_DEBUG=DEBUG_PPS*) reg [PPS_CHECK_WIDTH-1:0] ppsAlignment = ~0;
-reg ppsCheckInProgress = 0;
-always @(posedge acqClk) begin
-    if (acqPPSstrobe) begin
-        ppsCheck <= 0;
-        ppsCheckInProgress <= 1;
-    end
-    else if (ppsCheckInProgress) begin
-        if (adcDRDY || ppsCheckOverflow) begin
-            ppsCheckInProgress <= 0;
-            ppsAlignment <= ppsCheck;
-        end
-        else begin
-            ppsCheck <= ppsCheck + 1;
-        end
-    end
-end
-
+//////////////////////////////////////////////////////////////////////////////
 // Emit ADC alignment START synchronized to PPS
-localparam PPS_ALIGN_STRETCH_TICKS = ACQ_CLK_RATE / (MCLK_RATE / 4);
-localparam PPS_ALIGN_STRETCH_COUNT_WIDTH = $clog2(PPS_ALIGN_STRETCH_TICKS+1)+1;
-reg [PPS_ALIGN_STRETCH_COUNT_WIDTH-1:0] ppsAlignCount=PPS_ALIGN_STRETCH_TICKS;
-wire ppsAlignDone = ppsAlignCount[PPS_ALIGN_STRETCH_COUNT_WIDTH-1];
+// Request an alignment upon request from the system or on DRDY misalignment.
+// Stretch START* to about 500 ns.
+localparam ADC_ALIGN_STRETCH_TICKS = ACQ_CLK_RATE / 2000000;
+localparam ADC_ALIGN_STRETCH_COUNT_WIDTH = $clog2(ADC_ALIGN_STRETCH_TICKS+1)+1;
+reg [ADC_ALIGN_STRETCH_COUNT_WIDTH-1:0] adcAlignStretch=ADC_ALIGN_STRETCH_TICKS;
+wire adcAlignDone = adcAlignStretch[ADC_ALIGN_STRETCH_COUNT_WIDTH-1];
 (*ASYNC_REG="true"*) reg startAlignmentToggle_m = 0;
 (*MARK_DEBUG=DEBUG_ALIGN*) reg startAlignmentToggle = 0;
+(*MARK_DEBUG=DEBUG_ALIGN*) reg doneAlignmentToggle = 0;
 (*MARK_DEBUG=DEBUG_ALIGN*) reg alignmentActive = 0;
+
+localparam ADC_ALIGN_COUNT_WIDTH = 20;
+reg [ADC_ALIGN_COUNT_WIDTH-1:0] adcAlignCount = 0;
 
 always @(posedge acqClk) begin
     startAlignmentToggle_m <= sysStartAlignmentToggle;
     startAlignmentToggle   <= startAlignmentToggle_m;
     if (alignmentActive) begin
-        if (ppsAlignDone) begin
+        if (adcAlignDone) begin
             alignmentActive <= 0;
             doneAlignmentToggle <= !doneAlignmentToggle;
         end
         else begin
-            ppsAlignCount <= ppsAlignCount - 1;
+            adcAlignStretch <= adcAlignStretch - 1;
         end
     end
     else begin
-        ppsAlignCount <= PPS_ALIGN_STRETCH_TICKS;
-        if ((startAlignmentToggle != doneAlignmentToggle) && acqPPSstrobe) begin
+        adcAlignStretch <= ADC_ALIGN_STRETCH_TICKS;
+        if ((!drdyAligned || (startAlignmentToggle != doneAlignmentToggle))
+         && acqPPSstrobe) begin
+            adcAlignCount <= adcAlignCount + 1;
             alignmentActive <=1;
         end
     end
 end
 assign adcSTARTn = ~alignmentActive;
+
+//////////////////////////////////////////////////////////////////////////////
+// Pass status back to system
+// Don't worry about clock-crossing since the C code
+// knows the values may be metastable.
+
+assign sysStatus = { spiActive,
+                     doneAlignmentToggle ^ sysStartAlignmentToggle,
+                     {32 - 2 - SPI_SHIFTREG_WIDTH{1'b0}},
+                     spiShiftReg };
+
+assign sysDRDYstatus = { drdyAligned,
+                         {32-1-PPS_DRDY_COUNT_WIDTH{1'b0}},
+                         ppsDrdyTicks };
+
+assign sysDRDYhistory = { {32-(3*ADC_CHIP_COUNT){1'b0}}, drdySkewPattern };
+
+assign sysAlignCount = { {32-ADC_ALIGN_COUNT_WIDTH{1'b0}}, adcAlignCount };
 
 endmodule
 `default_nettype wire

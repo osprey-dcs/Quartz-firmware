@@ -74,9 +74,9 @@ set_property -dict {PACKAGE_PIN AD9 IOSTANDARD DIFF_SSTL15} [get_ports DDR_REF_C
 create_clock -period 8.000 -name ddr_ref_clk [get_ports DDR_REF_CLK_P]
 
 # 20 MHz from Y3
-#set_property -dict {PACKAGE_PIN W11 IOSTANDARD LVCMOS15} [get_ports CLK20_VCXO]
+set_property -dict {PACKAGE_PIN W11 IOSTANDARD LVCMOS15} [get_ports CLK20_VCXO]
 #create_clock -period 50.000 -name clk20_vcxo [get_ports CLK20_VCXO]
-#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets CLK20_VCXO]
+set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets CLK20_VCXO]
 set_property -dict {PACKAGE_PIN V9 IOSTANDARD LVCMOS15} [get_ports VCXO_EN]
 
 # UART to USB

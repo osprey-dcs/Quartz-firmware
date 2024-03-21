@@ -34,6 +34,7 @@ module NASA_ACQ #(
     input  wire DDR_REF_CLK_N,
     input  wire MGTREFCLK0_116_P,
     input  wire MGTREFCLK0_116_N,
+    input  wire CLK20_VCXO,
     output wire VCXO_EN,
 
     output wire BOOT_CS_B,
@@ -122,7 +123,7 @@ module NASA_ACQ #(
 
 ///////////////////////////////////////////////////////////////////////////////
 // Static outputs
-assign VCXO_EN = 1'b0;
+assign VCXO_EN = 1'b1;
 assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -193,6 +194,15 @@ hwPPSselect #(
     .hwOrFallbackPPS_a(hwOrFallbackPPS_a));
 
 wire ppsMarker_a = isEVG ? hwPPS_a : evrPPSmarker;
+
+///////////////////////////////////////////////////////////////////////////////
+// Monitor hardware PPS interval
+wire fixedClk200;
+ppsMonitor #(.DEBOUNCE_NS(5000))
+  ppsMonitor_i (
+    .fixedClk200(fixedClk200),
+    .pps_a(hwPPS_a),
+    .status(GPIO_IN[GPIO_IDX_PPS_INTERVAL]));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Keep track of elapsed time
@@ -398,19 +408,19 @@ ad7768 #(
     .SYSCLK_RATE(CFG_SYSCLK_RATE),
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_RATE(CFG_MCLK_RATE),
-    .DEBUG_ACQ("false"),
-    .DEBUG_ALIGN("false"),
-    .DEBUG_PPS("false"),
-    .DEBUG_PINS("false"),
-    .DEBUG_SKEW("false"),
+    .DEBUG_DRDY("true"),
+    .DEBUG_ALIGN("true"),
+    .DEBUG_ACQ("true"),
+    .DEBUG_PINS("true"),
     .DEBUG_SPI("false"))
   ad7768 (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_AD7768_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_CSR]),
-    .sysAuxStatus(GPIO_IN[GPIO_IDX_AD7768_AUX_STATUS]),
+    .sysDRDYstatus(GPIO_IN[GPIO_IDX_AD7768_DRDY_STATUS]),
     .sysDRDYhistory(GPIO_IN[GPIO_IDX_AD7768_DRDY_HISTORY]),
+    .sysAlignCount(GPIO_IN[GPIO_IDX_AD7768_ALIGN_COUNT]),
     .acqClk(clk125),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
@@ -592,6 +602,7 @@ ethernetRxDelay ethernetRxDelay_inst (
 bd bd_i (
     .refClk125(refClk125),
     .ext_reset_n(1'b1),
+    .CLK20_VCXO(CLK20_VCXO),
 
     .sysClk(sysClk),
     .clk125(clk125),
@@ -600,6 +611,7 @@ bd bd_i (
     .clk25p6(clk25p6),
     .clk20p48(clk20p48),
     .clk16p384(clk16p384),
+    .fixedClk200(fixedClk200),
 
     .FLASH_SPI_sclk(BOOT_SCLK),
     .FLASH_SPI_csb(BOOT_CS_B),
