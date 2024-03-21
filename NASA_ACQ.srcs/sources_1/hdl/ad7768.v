@@ -273,7 +273,7 @@ end
 // No need to stabilize them since they are should be stable when sampled.
 
 localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_RATE) / (2 * DCLK_RATE);
-localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 3;
+localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 2;
 localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
 reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
