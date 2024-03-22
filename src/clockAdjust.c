@@ -69,20 +69,13 @@ clockAdjustIsLocked(void)
 void
 clockAdjustShow(int count)
 {
-    uint32_t ocsr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+    uint32_t csr, ocsr, aux;
     if (count <= 0) count = 1;
     if (count > 30) count = 30;
-    while (count--) {
-        uint32_t csr, aux;
+    csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+    for (;;) {
         uint32_t then = microsecondsSinceBoot();
         int phaseError;
-        while ((((csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR)) ^ ocsr) &
-                                                       CSR_R_PPS_TOGGLE) == 0) {
-            if ((microsecondsSinceBoot() - then) > 1200000) {
-                break;
-            }
-        }
-        ocsr = csr;
         aux = GPIO_READ(GPIO_IDX_ACQCLK_PLL_AUX_STATUS);
         phaseError = csr & CSR_R_PHASE_ERROR_MASK;
         if (phaseError & CSR_R_PHASE_ERROR_SIGN) {
@@ -97,6 +90,14 @@ clockAdjustShow(int count)
             printf(" -- UNLOCKED!");
         }
         printf("\n");
+        if (--count <= 0) break;
+        ocsr = csr;
+        while ((((csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR)) ^ ocsr) &
+                                                       CSR_R_PPS_TOGGLE) == 0) {
+            if ((microsecondsSinceBoot() - then) > 1200000) {
+                break;
+            }
+        }
     }
     evgShow();
 }
