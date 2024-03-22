@@ -447,7 +447,9 @@ assign sysDRDYstatus = { !drdyAligned,
                          {32-1-PPS_DRDY_COUNT_WIDTH{1'b0}},
                          ppsDrdyTicks };
 
-assign sysDRDYhistory = { {32-(3*ADC_CHIP_COUNT){1'b0}}, drdySkewPattern };
+assign sysDRDYhistory = { drdyState,
+                          {32-2-(3*ADC_CHIP_COUNT){1'b0}},
+                          drdySkewPattern };
 
 assign sysAlignCount = { {32-ADC_ALIGN_COUNT_WIDTH{1'b0}}, adcAlignCount };
 
