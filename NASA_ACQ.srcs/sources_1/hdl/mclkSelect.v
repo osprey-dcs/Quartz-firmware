@@ -34,10 +34,11 @@ module mclkSelect #(
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
 
-    (*MARK_DEBUG=DEBUG*) input  wire clk32,
-    (*MARK_DEBUG=DEBUG*) input  wire clk25p6,
-    (*MARK_DEBUG=DEBUG*) input  wire clk20p48,
-    (*MARK_DEBUG=DEBUG*) input  wire clk16p384,
+    (*MARK_DEBUG=DEBUG*) input  wire clk32p768,
+    (*MARK_DEBUG=DEBUG*) input  wire clk40p96,
+    (*MARK_DEBUG=DEBUG*) input  wire clk51p2,
+    (*MARK_DEBUG=DEBUG*) input  wire clk64,
+    (*MARK_DEBUG=DEBUG*) output wire MCLK_BUFG,
     (*MARK_DEBUG=DEBUG*) output wire MCLK);
 
 localparam MUXSEL_WIDTH = 2;
@@ -49,9 +50,17 @@ always @(posedge sysClk) begin
 end
 assign sysStatus = { {32-MUXSEL_WIDTH{1'b0}}, muxSel };
 
-assign MCLK = (muxSel == 1) ? clk25p6   :
-              (muxSel == 2) ? clk20p48  :
-              (muxSel == 3) ? clk16p384 :
-                              clk32;
+reg d16p384 = 0, d20p48 = 0, d25p6 = 0, d32 = 0;
+assign MCLK = (muxSel == 1) ? d25p6   :
+              (muxSel == 2) ? d20p48  :
+              (muxSel == 3) ? d16p384 :
+                              d32;
+always @(posedge clk32p768) begin d16p384 <= !d16p384; end
+always @(posedge clk40p96 ) begin d20p48  <= !d20p48 ; end
+always @(posedge clk51p2  ) begin d25p6   <= !d25p6  ; end
+always @(posedge clk64    ) begin d32     <= !d32    ; end
+
+BUFG BUFG_MCLK (.I(MCLK), .O(MCLK_BUFG));
+
 endmodule
 `default_nettype wire

@@ -110,7 +110,7 @@ reg [DELAY_WIDTH-1:0] delay = DELAY_LOAD;
 localparam WATCHDOG_LOAD = WATCHDOG_TICKS - 1;
 localparam WATCHDOG_WIDTH = $clog2(WATCHDOG_LOAD+1) + 1;
 reg [WATCHDOG_WIDTH-1:0] watchdog = WATCHDOG_LOAD;
-(*MARK_DEBUG=DEBUG*) wire watchdogTimeout = delay[WATCHDOG_WIDTH-1];
+(*MARK_DEBUG=DEBUG*) wire watchdogTimeout = watchdog[WATCHDOG_WIDTH-1];
 
 always @(posedge evgClk) begin
     evgAcqToggle_m <= sysAcqToggle;

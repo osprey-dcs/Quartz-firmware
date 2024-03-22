@@ -4,7 +4,7 @@
     "xci_name": "bd_ospreyUDP_0_0",
     "cell_name": "ospreyUDP",
     "component_reference": "user.org:user:ospreyUDP:1.0",
-    "ip_revision": "65",
+    "ip_revision": "67",
     "gen_directory": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_ospreyUDP_0_0",
     "parameters": {
       "component_parameters": {
@@ -57,7 +57,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "65" } ],
+        "IPREVISION": [ { "value": "67" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_ospreyUDP_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],

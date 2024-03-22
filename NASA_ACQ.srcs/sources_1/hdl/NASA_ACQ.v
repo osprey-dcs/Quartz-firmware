@@ -128,9 +128,9 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire refClk125;
 wire sysClk, clk125, clk200, evrRxClk, evfRxClk, evgClk;
-wire clk32, clk25p6, clk20p48, clk16p384, mclk;
+wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk, mclk_bufg;
+wire refClk125;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
 wire gtRefClk, gtRefClkDiv2;
@@ -178,6 +178,7 @@ assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 //      Used by all nodes as reference for clock VCXO and frequency counters.
 wire evrPPSmarker;
 wire hwPPS_a, hwOrFallbackPPS_a;
+wire isEVG;
 
 hwPPSselect #(
     .CLK_RATE(CFG_SYSCLK_RATE),
@@ -220,7 +221,6 @@ localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrRxStartACQstrobe, evrRxStopACQstrobe;
-wire isEVG;
 wire [7:0] evgTxCode;
 wire       evgTxCodeValid;
 eventSystem #(
@@ -311,7 +311,7 @@ frequencyCounters #(
                       evrRxClk,
                       evgClk,
                       gtRefClkDiv2,
-                      mclk,
+                      mclk_bufg,
                       clk125,
                       sysClk }),
     .acqMarker_a(ppsMarker_a),
@@ -421,6 +421,7 @@ ad7768 #(
     .sysDRDYstatus(GPIO_IN[GPIO_IDX_AD7768_DRDY_STATUS]),
     .sysDRDYhistory(GPIO_IN[GPIO_IDX_AD7768_DRDY_HISTORY]),
     .sysAlignCount(GPIO_IN[GPIO_IDX_AD7768_ALIGN_COUNT]),
+    .clk32(clk32),
     .acqClk(clk125),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
@@ -430,7 +431,6 @@ ad7768 #(
     .adcCSn(AD7768_CS_n),
     .adcSDI(AD7768_SDI),
     .adcSDO(AD7768_SDO),
-    .adcMCLK(clk32),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
     .adcDOUT_a(AD7768_DOUT_MAPPED),
@@ -444,10 +444,11 @@ mclkSelect #(.DEBUG("false"))
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
-    .clk32(clk32),
-    .clk25p6(clk25p6),
-    .clk20p48(clk20p48),
-    .clk16p384(clk16p384),
+    .clk32p768(clk32p768),
+    .clk40p96(clk40p96),
+    .clk51p2(clk51p2),
+    .clk64(clk64),
+    .MCLK_BUFG(mclk_bufg),
     .MCLK(mclk));
 OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 
@@ -608,9 +609,10 @@ bd bd_i (
     .clk125(clk125),
     .clk200(clk200),
     .clk32(clk32),
-    .clk25p6(clk25p6),
-    .clk20p48(clk20p48),
-    .clk16p384(clk16p384),
+    .clk32p768(clk32p768),
+    .clk40p96(clk40p96),
+    .clk51p2(clk51p2),
+    .clk64(clk64),
     .fixedClk200(fixedClk200),
 
     .FLASH_SPI_sclk(BOOT_SCLK),

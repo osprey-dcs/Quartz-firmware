@@ -47,6 +47,8 @@ module ad7768 #(
     output wire [31:0] sysDRDYhistory,
     output wire [31:0] sysAlignCount,
 
+    input  wire        clk32,
+
     input  wire                                                acqClk,
     (*MARK_DEBUG=DEBUG_ALIGN*) input  wire                     acqPPSstrobe,
     (*MARK_DEBUG=DEBUG_ACQ*)   output reg                      acqStrobe=0,
@@ -60,7 +62,6 @@ module ad7768 #(
     (*MARK_DEBUG=DEBUG_SPI*) output wire                      adcSDI,
     (*MARK_DEBUG=DEBUG_SPI*) input  wire [ADC_CHIP_COUNT-1:0] adcSDO,
 
-                              input  wire                          adcMCLK,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire     [ADC_CHIP_COUNT-1:0] adcDCLK_a,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire     [ADC_CHIP_COUNT-1:0] adcDRDY_a,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire
@@ -183,7 +184,7 @@ assign sysStatus = { spiActive,
                      spiShiftReg };
 
 ///////////////////////////////////////////////////////////////////////////////
-// ADC MCLK (clk32) domain
+// ADC MCLK domain
 ///////////////////////////////////////////////////////////////////////////////
 // Fake hardware
 wire                  [ADC_CHIP_COUNT-1:0] fake_DCLK;
@@ -194,7 +195,7 @@ fakeQuartzAD7768 #(
     .ADC_PER_CHIP(ADC_PER_CHIP),
     .ADC_WIDTH(ADC_WIDTH))
   fakeQuartzAD7768 (
-    .MCLK(adcMCLK),
+    .MCLK(clk32),
     .adcDCLK(fake_DCLK),
     .adcDRDY(fake_DRDY),
     .adcDOUT(fake_DOUT));

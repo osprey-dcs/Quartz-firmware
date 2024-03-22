@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x1F6E802DB3E2068F",
+      "boundary_crc": "0x6BD85242B4F95165",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -47,8 +47,8 @@
       "clk_wiz_3": "",
       "clk_wiz_4": "",
       "marbleBootFlash": "",
-      "ospreyUDP": "",
-      "clk_wiz_5": ""
+      "clk_wiz_5": "",
+      "ospreyUDP": ""
     },
     "interface_ports": {
       "console": {
@@ -240,56 +240,6 @@
           }
         }
       },
-      "refClk125": {
-        "type": "clk",
-        "direction": "I",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "bd_refClk125",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "125000000"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
-          }
-        }
-      },
-      "clk32": {
-        "type": "clk",
-        "direction": "O",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "bd_clk_wiz_1_0_sysClk",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "32000000"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
-          }
-        }
-      },
       "sysClk": {
         "type": "clk",
         "direction": "O",
@@ -381,7 +331,7 @@
           }
         }
       },
-      "clk25p6": {
+      "clk51p2": {
         "type": "clk",
         "direction": "O",
         "parameters": {
@@ -390,7 +340,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "25600000",
+            "value": "51200000",
             "value_src": "default"
           },
           "FREQ_TOLERANCE_HZ": {
@@ -407,7 +357,7 @@
           }
         }
       },
-      "clk20p48": {
+      "clk40p96": {
         "type": "clk",
         "direction": "O",
         "parameters": {
@@ -416,7 +366,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "20480000",
+            "value": "40960000",
             "value_src": "default"
           },
           "FREQ_TOLERANCE_HZ": {
@@ -433,7 +383,7 @@
           }
         }
       },
-      "clk16p384": {
+      "clk32p768": {
         "type": "clk",
         "direction": "O",
         "parameters": {
@@ -442,7 +392,7 @@
             "value_src": "default"
           },
           "FREQ_HZ": {
-            "value": "16384000",
+            "value": "32768000",
             "value_src": "default"
           },
           "FREQ_TOLERANCE_HZ": {
@@ -493,7 +443,7 @@
         "direction": "I",
         "parameters": {
           "CLK_DOMAIN": {
-            "value": "bd_clk_in1_0",
+            "value": "bd_CLK20_VCXO",
             "value_src": "default"
           },
           "FREQ_HZ": {
@@ -524,6 +474,82 @@
           "FREQ_HZ": {
             "value": "200000000",
             "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      },
+      "clk64": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "/clk_wiz_3_clk_out1",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "64000000",
+            "value_src": "default"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      },
+      "clk32": {
+        "type": "clk",
+        "direction": "O",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "bd_clk_wiz_1_0_sysClk",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "32000000"
+          },
+          "FREQ_TOLERANCE_HZ": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "INSERT_VIP": {
+            "value": "0",
+            "value_src": "default"
+          },
+          "PHASE": {
+            "value": "0.0",
+            "value_src": "default"
+          }
+        }
+      },
+      "refClk125": {
+        "type": "clk",
+        "direction": "I",
+        "parameters": {
+          "CLK_DOMAIN": {
+            "value": "bd_clk_in1_0",
+            "value_src": "default"
+          },
+          "FREQ_HZ": {
+            "value": "125000000"
           },
           "FREQ_TOLERANCE_HZ": {
             "value": "0",
@@ -1826,7 +1852,7 @@
             "value": "125"
           },
           "PRIM_SOURCE": {
-            "value": "Single_ended_clock_capable_pin"
+            "value": "Global_buffer"
           },
           "SECONDARY_SOURCE": {
             "value": "Single_ended_clock_capable_pin"
@@ -1965,22 +1991,25 @@
         "inst_hier_path": "clk_wiz_0",
         "parameters": {
           "CLKOUT1_JITTER": {
-            "value": "353.053"
+            "value": "304.149"
           },
           "CLKOUT1_PHASE_ERROR": {
             "value": "265.359"
           },
           "CLKOUT1_REQUESTED_OUT_FREQ": {
-            "value": "25.6"
+            "value": "51.2"
           },
           "MMCM_CLKFBOUT_MULT_F": {
             "value": "32.000"
           },
           "MMCM_CLKOUT0_DIVIDE_F": {
-            "value": "31.250"
+            "value": "15.625"
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "5"
+          },
+          "PRIM_SOURCE": {
+            "value": "Global_buffer"
           },
           "USE_LOCKED": {
             "value": "false"
@@ -1997,13 +2026,13 @@
             "value": "312.5"
           },
           "CLKOUT1_JITTER": {
-            "value": "335.286"
+            "value": "258.106"
           },
           "CLKOUT1_PHASE_ERROR": {
             "value": "198.711"
           },
           "CLKOUT1_REQUESTED_OUT_FREQ": {
-            "value": "20.48"
+            "value": "40.96"
           },
           "MMCM_CLKFBOUT_MULT_F": {
             "value": "32.000"
@@ -2015,7 +2044,7 @@
             "value": "10.0"
           },
           "MMCM_CLKOUT0_DIVIDE_F": {
-            "value": "50.000"
+            "value": "25.000"
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "1"
@@ -2035,22 +2064,40 @@
         "inst_hier_path": "clk_wiz_3",
         "parameters": {
           "CLKOUT1_JITTER": {
-            "value": "369.982"
+            "value": "278.816"
           },
           "CLKOUT1_PHASE_ERROR": {
             "value": "198.711"
           },
           "CLKOUT1_REQUESTED_OUT_FREQ": {
-            "value": "16.384"
+            "value": "32.768"
+          },
+          "CLKOUT2_JITTER": {
+            "value": "225.122"
+          },
+          "CLKOUT2_PHASE_ERROR": {
+            "value": "198.711"
+          },
+          "CLKOUT2_REQUESTED_OUT_FREQ": {
+            "value": "64"
+          },
+          "CLKOUT2_USED": {
+            "value": "true"
           },
           "MMCM_CLKFBOUT_MULT_F": {
             "value": "32.000"
           },
           "MMCM_CLKOUT0_DIVIDE_F": {
-            "value": "62.500"
+            "value": "31.250"
+          },
+          "MMCM_CLKOUT1_DIVIDE": {
+            "value": "16"
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "1"
+          },
+          "NUM_OUT_CLKS": {
+            "value": "2"
           },
           "PRIM_SOURCE": {
             "value": "Global_buffer"
@@ -2075,6 +2122,9 @@
           "MMCM_CLKOUT0_DIVIDE_F": {
             "value": "8.000"
           },
+          "PRIM_SOURCE": {
+            "value": "Global_buffer"
+          },
           "USE_LOCKED": {
             "value": "false"
           }
@@ -2087,6 +2137,29 @@
         "inst_hier_path": "marbleBootFlash",
         "parameters": {
           "DEBUG": {
+            "value": "false"
+          }
+        }
+      },
+      "clk_wiz_5": {
+        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
+        "xci_name": "bd_clk_wiz_5_0",
+        "xci_path": "ip/bd_clk_wiz_5_0/bd_clk_wiz_5_0.xci",
+        "inst_hier_path": "clk_wiz_5",
+        "parameters": {
+          "CLKOUT1_JITTER": {
+            "value": "237.367"
+          },
+          "CLKOUT1_REQUESTED_OUT_FREQ": {
+            "value": "200"
+          },
+          "MMCM_CLKOUT0_DIVIDE_F": {
+            "value": "5.000"
+          },
+          "USE_LOCKED": {
+            "value": "false"
+          },
+          "USE_RESET": {
             "value": "false"
           }
         }
@@ -2111,29 +2184,6 @@
           },
           "RX_FIFO_DEPTH": {
             "value": "16384"
-          }
-        }
-      },
-      "clk_wiz_5": {
-        "vlnv": "xilinx.com:ip:clk_wiz:6.0",
-        "xci_name": "bd_clk_wiz_5_0",
-        "xci_path": "ip/bd_clk_wiz_5_0/bd_clk_wiz_5_0.xci",
-        "inst_hier_path": "clk_wiz_5",
-        "parameters": {
-          "CLKOUT1_JITTER": {
-            "value": "237.367"
-          },
-          "CLKOUT1_REQUESTED_OUT_FREQ": {
-            "value": "200"
-          },
-          "MMCM_CLKOUT0_DIVIDE_F": {
-            "value": "5.000"
-          },
-          "USE_LOCKED": {
-            "value": "false"
-          },
-          "USE_RESET": {
-            "value": "false"
           }
         }
       }
@@ -2274,32 +2324,32 @@
           "GPIO_STROBES"
         ]
       },
-      "clk_100MHz_1": {
-        "ports": [
-          "refClk125",
-          "clk_wiz_1/clk_in1",
-          "clk_wiz_0/clk_in1",
-          "clk_wiz_4/clk_in1"
-        ]
-      },
       "clk_in1_0_1": {
         "ports": [
           "CLK20_VCXO",
           "clk_wiz_5/clk_in1"
         ]
       },
+      "clk_in1_0_2": {
+        "ports": [
+          "refClk125",
+          "clk_wiz_1/clk_in1",
+          "clk_wiz_4/clk_in1",
+          "clk_wiz_0/clk_in1"
+        ]
+      },
       "clk_wiz_0_clk_out1": {
         "ports": [
           "clk_wiz_0/clk_out1",
-          "clk25p6"
+          "clk51p2"
         ]
       },
       "clk_wiz_1_clk32": {
         "ports": [
           "clk_wiz_1/clk32",
-          "clk32",
           "clk_wiz_2/clk_in1",
-          "clk_wiz_3/clk_in1"
+          "clk_wiz_3/clk_in1",
+          "clk32"
         ]
       },
       "clk_wiz_1_clk200": {
@@ -2317,13 +2367,19 @@
       "clk_wiz_2_clk_out1": {
         "ports": [
           "clk_wiz_2/clk_out1",
-          "clk20p48"
+          "clk40p96"
         ]
       },
       "clk_wiz_3_clk_out1": {
         "ports": [
           "clk_wiz_3/clk_out1",
-          "clk16p384"
+          "clk32p768"
+        ]
+      },
+      "clk_wiz_3_clk_out2": {
+        "ports": [
+          "clk_wiz_3/clk_out2",
+          "clk64"
         ]
       },
       "clk_wiz_4_clk_out1": {
