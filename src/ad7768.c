@@ -48,6 +48,10 @@
 #define DRDY_STATUS_MISALIGNED          0x80000000
 #define DRDY_STATUS_PPS_LATENCY_MASK    0xFFFFF
 
+#define DRDY_HISTORY_STATE_MASK          0xC0000000
+#define DRDY_HISTORY_STATE_SHIFT         30
+#define DRDY_HISTORY_LOGIC_MASK          0xFFF
+
 #define CSR_SPI_DATA_MASK 0xFFFF
 
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
@@ -316,12 +320,16 @@ void
 ad7768ShowAlignment(void)
 {
     int i;
-    uint32_t csr;
-    csr = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
-    printf("DRDY %sligned.  PPS Event to DRDY: %d.  DRDY History: %03X\n",
-                                   csr & DRDY_STATUS_MISALIGNED ? "Misa" : "A",
-                                   csr & DRDY_STATUS_PPS_LATENCY_MASK,
-                                   fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY));
+    uint32_t status, history;
+    status = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
+    history = fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY);
+    printf("DRDY %sligned.  PPS Event->DRDY:%d.  ",
+                                 status & DRDY_STATUS_MISALIGNED ? "Misa" : "A",
+                                 status & DRDY_STATUS_PPS_LATENCY_MASK);
+    printf("DRDY History:%03X  State:%d\n",
+                                     history & DRDY_HISTORY_LOGIC_MASK,
+                                     (history & DRDY_HISTORY_STATE_MASK) >>
+                                                      DRDY_HISTORY_STATE_SHIFT);
     printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;
