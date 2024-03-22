@@ -250,6 +250,7 @@ always @(posedge acqClk) begin
             drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
             if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
                 drdyAligned <= 1;
+                drdyState <= DRDY_STATE_AWAIT_LOW;
             end
             else begin
                 drdyState <= DRDY_STATE_SKEW_1;
@@ -260,7 +261,7 @@ always @(posedge acqClk) begin
         drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
         if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
             drdyAligned <= 1;
-            drdyState <= DRDY_STATE_AWAIT_RISING;
+            drdyState <= DRDY_STATE_AWAIT_LOW;
         end
         else begin
             drdyState <= DRDY_STATE_SKEW_2;
@@ -270,7 +271,7 @@ always @(posedge acqClk) begin
         drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
         if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
             drdyAligned <= 1;
-            drdyState <= DRDY_STATE_AWAIT_RISING;
+            drdyState <= DRDY_STATE_AWAIT_LOW;
         end
         else begin
             drdyAligned <= 0;
