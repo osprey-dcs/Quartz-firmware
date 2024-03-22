@@ -241,17 +241,17 @@ ad7768SetSamplingRate(int rate)
     static struct downSampleInfo const *dpOld;
 
     /*
-     * Reset ADC on MCLK change
+     * Reset ADC on rate change
      * Restore all gains and offsets
      */
     if (dp == NULL) return -1;
-    if ((dpOld == NULL) || (dp->mclkSelect != dpOld->mclkSelect)) {
+    if ((dpOld == NULL) || (dp->rate != dpOld->rate)) {
         CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                        OP_CHIP_PINS_ASSERT_RESET);
         GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
         microsecondSpin(10);
         CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
-        microsecondSpin(2000);
+        microsecondSpin(1500);
         for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
             ad7768SetOfst(i, RESTORE_VALUE);
             ad7768SetGain(i, RESTORE_VALUE);
