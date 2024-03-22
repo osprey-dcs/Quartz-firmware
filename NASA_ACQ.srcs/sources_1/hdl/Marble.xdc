@@ -71,7 +71,7 @@ set_property -dict {PACKAGE_PIN Y11 IOSTANDARD LVCMOS15} [get_ports WR_DAC2_SYNC
 # 125 MHz from U20
 set_property -dict {PACKAGE_PIN AC9 IOSTANDARD DIFF_SSTL15} [get_ports DDR_REF_CLK_P]
 set_property -dict {PACKAGE_PIN AD9 IOSTANDARD DIFF_SSTL15} [get_ports DDR_REF_CLK_N]
-create_clock -period 8.000 -name ddr_ref_clk [get_ports DDR_REF_CLK_P]
+#create_clock -period 8.000 -name ddr_ref_clk [get_ports DDR_REF_CLK_P]
 
 # 20 MHz from Y3
 set_property -dict {PACKAGE_PIN W11 IOSTANDARD LVCMOS15} [get_ports CLK20_VCXO]
