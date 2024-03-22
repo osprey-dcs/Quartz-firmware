@@ -80,6 +80,10 @@ localparam DCLK_RATE = MCLK_RATE / DCLK_DIV;
 ///////////////////////////////////////////////////////////////////////////////
 
 reg sysStartAlignmentToggle = 0;
+reg doneAlignmentToggle = 0; /* acqClk domain, but needed here */
+(*ASYNC_REG="true"*) reg sysDoneAlignmentToggle_m = 0;
+reg sysDoneAlignmentToggle = 0;
+
 reg sysResetADC = 0;
 reg sysUseFakeAD7768 = 0;
 assign adcRESETn = !sysResetADC;
@@ -89,6 +93,8 @@ localparam CSR_W_OP_CHIP_PINS    = 2'h1,
            CSR_W_OP_SPI_TRANSFER = 2'h2;
 
 always @(posedge sysClk) begin
+    sysDoneAlignmentToggle_m <= doneAlignmentToggle;
+    sysDoneAlignmentToggle   <= sysDoneAlignmentToggle_m;
     if (sysCsrStrobe) begin
         case (sysOpcode)
         CSR_W_OP_CHIP_PINS: begin
@@ -99,7 +105,13 @@ always @(posedge sysClk) begin
                 sysUseFakeAD7768 <= sysGPIO_OUT[2];
             end
             if (sysGPIO_OUT[8]) begin
-                sysStartAlignmentToggle <= !sysStartAlignmentToggle;
+                /*
+                 * A request can remain pending for up to a second
+                 * so just toggling sysStartAlignmentToggle here
+                 * might result in a second request cancelling
+                 * an earlier one
+                 */
+                sysStartAlignmentToggle <= !sysDoneAlignmentToggle;
             end
         end
         default: ;
@@ -165,6 +177,10 @@ assign adcSCLK = spiClk;
 assign adcCSn  = spiCSn;
 assign adcSDI = spiShiftReg[SPI_SHIFTREG_WIDTH-1];
 
+assign sysStatus = { spiActive,
+                     sysDoneAlignmentToggle ^ sysStartAlignmentToggle,
+                     {32 - 2 - SPI_SHIFTREG_WIDTH{1'b0}},
+                     spiShiftReg };
 
 ///////////////////////////////////////////////////////////////////////////////
 // ADC MCLK (clk32) domain
@@ -224,11 +240,15 @@ localparam [1:0] DRDY_STATE_AWAIT_RISING = 2'd0,
 (*MARK_DEBUG=DEBUG_DRDY*) reg [(3*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
 
 always @(posedge acqClk) begin
+    /*
+     * drdyRising is a register so the input states that
+     * caused bits in it to be set are now in drdy_d. 
+     */
     case (drdyState)
     DRDY_STATE_AWAIT_RISING: begin
         if (drdyRising) begin
-            drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
-            if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+            drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
+            if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
                 drdyAligned <= 1;
             end
             else begin
@@ -237,8 +257,8 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_SKEW_1: begin
-        drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
-        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+        drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
+        if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
             drdyAligned <= 1;
             drdyState <= DRDY_STATE_AWAIT_RISING;
         end
@@ -247,8 +267,8 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_SKEW_2: begin
-        drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
-        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
+        drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
+        if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
             drdyAligned <= 1;
             drdyState <= DRDY_STATE_AWAIT_RISING;
         end
@@ -258,7 +278,7 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_AWAIT_LOW: begin
-        if (drdy == {ADC_CHIP_COUNT{1'b0}}) begin
+        if (drdy_d == {ADC_CHIP_COUNT{1'b0}}) begin
             drdyState <= DRDY_STATE_AWAIT_RISING;
         end
     end
@@ -389,7 +409,6 @@ reg [ADC_ALIGN_STRETCH_COUNT_WIDTH-1:0] adcAlignStretch=ADC_ALIGN_STRETCH_TICKS;
 wire adcAlignDone = adcAlignStretch[ADC_ALIGN_STRETCH_COUNT_WIDTH-1];
 (*ASYNC_REG="true"*) reg startAlignmentToggle_m = 0;
 (*MARK_DEBUG=DEBUG_ALIGN*) reg startAlignmentToggle = 0;
-(*MARK_DEBUG=DEBUG_ALIGN*) reg doneAlignmentToggle = 0;
 (*MARK_DEBUG=DEBUG_ALIGN*) reg alignmentActive = 0;
 
 localparam ADC_ALIGN_COUNT_WIDTH = 20;
@@ -401,7 +420,7 @@ always @(posedge acqClk) begin
     if (alignmentActive) begin
         if (adcAlignDone) begin
             alignmentActive <= 0;
-            doneAlignmentToggle <= !doneAlignmentToggle;
+            doneAlignmentToggle <= startAlignmentToggle;
         end
         else begin
             adcAlignStretch <= adcAlignStretch - 1;
@@ -422,11 +441,6 @@ assign adcSTARTn = ~alignmentActive;
 // Pass status back to system
 // Don't worry about clock-crossing since the C code
 // knows the values may be metastable.
-
-assign sysStatus = { spiActive,
-                     doneAlignmentToggle ^ sysStartAlignmentToggle,
-                     {32 - 2 - SPI_SHIFTREG_WIDTH{1'b0}},
-                     spiShiftReg };
 
 assign sysDRDYstatus = { !drdyAligned,
                          {32-1-PPS_DRDY_COUNT_WIDTH{1'b0}},
