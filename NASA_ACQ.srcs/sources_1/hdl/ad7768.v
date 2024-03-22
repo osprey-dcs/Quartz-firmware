@@ -218,7 +218,7 @@ end
 (*MARK_DEBUG=DEBUG_DRDY*) reg drdyAligned = 0;
 localparam [1:0] DRDY_STATE_AWAIT_RISING = 2'd0,
                  DRDY_STATE_SKEW_1       = 2'd1,
-                 DRDY_STATE_SKEW_2       = 2'd1,
+                 DRDY_STATE_SKEW_2       = 2'd2,
                  DRDY_STATE_AWAIT_LOW    = 2'd3;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [1:0] drdyState = DRDY_STATE_AWAIT_RISING;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [(3*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
