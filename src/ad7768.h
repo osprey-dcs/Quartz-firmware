@@ -30,6 +30,7 @@
 #define _AD7768_H_
 
 void ad7768Init(void);
+void ad7768Reset(void);
 void ad7768DumpReg(void);
 void ad7768StartAlignment(void);
 int ad7768SetOfst(int channel, int offset);

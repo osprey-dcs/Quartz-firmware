@@ -123,6 +123,10 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
         case FPGA_IOC_CMD_DOWNSAMPLE_RATIO:
             ad7768SetSamplingRate(cmd->args[1]);
             return 0;
+
+        case FPGA_IOC_CMD_RESET_ADCS:
+            ad7768Reset();
+            return 0;
         }
         if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_ACTIVE)
          && (cmd->args[0] < (FPGA_IOC_CMD_CHAN_ACTIVE + CHANNEL_COUNT))) {

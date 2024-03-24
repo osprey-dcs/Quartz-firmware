@@ -98,6 +98,10 @@ downsampleInfo(int rate)
       {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
       {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
     };
+    static struct downSampleInfo const * dpOld;
+    if (rate <= 0) {
+        return dpOld;
+    }
     for (i = 0 ; i < (sizeof downSampleTable/sizeof downSampleTable[0]) ; i++) {
         struct downSampleInfo const * const dp = &downSampleTable[i];
         if (dp->rate == rate) {
@@ -105,10 +109,12 @@ downsampleInfo(int rate)
                 printf("Rate:%d mclkSel:%d, chanMode:%02X, MCLK_DIV:%02x\n",
                       dp->rate, dp->mclkSelect, dp->channelMode, dp->powerMode);
             }
+            dpOld = dp;
             return dp;
         }
     }
     printf("CRITICAL WARNING -- %d samples/second not supported.\n", rate);
+    dpOld = NULL;
     return NULL;
 }
 
@@ -174,6 +180,22 @@ ad7768StartAlignment(void)
 }
 
 void
+ad7768Reset(void)
+{
+    int i;
+    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
+                                                     OP_CHIP_PINS_ASSERT_RESET);
+    microsecondSpin(10);
+    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
+    microsecondSpin(1500);
+    for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
+        ad7768SetOfst(i, RESTORE_VALUE);
+        ad7768SetGain(i, RESTORE_VALUE);
+    }
+    ad7768SetSamplingRate(0);
+    return;
+}
+void
 ad7768Init(void)
 {
     int i;
@@ -181,13 +203,14 @@ ad7768Init(void)
                                     ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
                                                  OP_CHIP_PINS_ASSERT_FAKE_ADC :
                                                  0));
-    ad7768SetSamplingRate(1000);
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r = readReg(i, 0x0A);
         if (r != 0x06) {
             printf("AD7768 %d: Warning -- unexpected revision %02X.\n", i, r);
         }
     }
+    ad7768SetSamplingRate(1000);
+    ad7768Reset();
 }
 
 int
@@ -236,27 +259,13 @@ ad7768SetGain(int channel, int gain)
 int
 ad7768SetSamplingRate(int rate)
 {
-    int i;
     struct downSampleInfo const *dp = downsampleInfo(rate);
-    static struct downSampleInfo const *dpOld;
+    int i;
 
-    /*
-     * Reset ADC on rate change
-     * Restore all gains and offsets
-     */
     if (dp == NULL) return -1;
-    if ((dpOld == NULL) || (dp->rate != dpOld->rate)) {
-        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
-                                       OP_CHIP_PINS_ASSERT_RESET);
-        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
-        microsecondSpin(10);
-        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
-        microsecondSpin(1500);
-        for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
-            ad7768SetOfst(i, RESTORE_VALUE);
-            ad7768SetGain(i, RESTORE_VALUE);
-        }
-    }
+
+    // Select hardware clock
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
 
     // Mode A: Wideband, Decimate by N
     broadcastReg(0x01, dp->channelMode);
@@ -286,7 +295,6 @@ ad7768SetSamplingRate(int rate)
 
     // Align ADCs
     ad7768StartAlignment();
-    dpOld = dp;
     return 0;
 }
 
