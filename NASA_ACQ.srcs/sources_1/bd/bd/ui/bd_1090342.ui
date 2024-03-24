@@ -54,6 +54,7 @@ preplace netloc Gnd_dout 1 1 1 180J 320n
 preplace netloc axi_lite_generic_reg_0_GPIO_OUT 1 6 1 NJ 600
 preplace netloc axi_lite_generic_reg_0_GPIO_STROBES 1 6 1 NJ 580
 preplace netloc clk_in1_0_1 1 0 6 NJ 60 NJ 60 NJ 60 NJ 60 NJ 60 NJ
+preplace netloc clk_in1_0_2 1 0 6 NJ 1460 NJ 1460 NJ 1460 NJ 1460 1380 1650 NJ
 preplace netloc clk_wiz_0_clk_out1 1 6 1 NJ 1640
 preplace netloc clk_wiz_1_clk32 1 5 2 1720 240 NJ
 preplace netloc clk_wiz_1_clk200 1 5 2 1690J 1560 2130J
@@ -73,7 +74,6 @@ preplace netloc rst_clk_wiz_1_100M_bus_struct_reset 1 2 3 NJ 570 NJ 570 1360
 preplace netloc rst_clk_wiz_1_100M_mb_reset 1 2 2 580 560 870
 preplace netloc rst_clk_wiz_1_100M_peripheral_aresetn 1 2 4 570 580 NJ 580 1360 1140 1780
 preplace netloc rst_clk_wiz_1_100M_peripheral_reset 1 2 5 560J 600 NJ 600 NJ 600 1760J 1000 NJ
-preplace netloc clk_in1_0_2 1 0 6 NJ 1460 NJ 1460 NJ 1460 NJ 1460 1380 1650 NJ
 preplace netloc axi_iic_0_IIC 1 6 1 NJ 420
 preplace netloc axi_uartlite_0_UART 1 6 1 NJ 730
 preplace netloc fastTx_0_1 1 0 6 NJ 1440 NJ 1440 NJ 1440 NJ 1440 NJ 1440 NJ
