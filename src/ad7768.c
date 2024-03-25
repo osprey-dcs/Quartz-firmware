@@ -187,7 +187,7 @@ ad7768Reset(void)
                                                      OP_CHIP_PINS_ASSERT_RESET);
     microsecondSpin(10);
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
-    microsecondSpin(1500);
+    microsecondSpin(10000);
     for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
         ad7768SetOfst(i, RESTORE_VALUE);
         ad7768SetGain(i, RESTORE_VALUE);
@@ -203,13 +203,13 @@ ad7768Init(void)
                                     ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
                                                  OP_CHIP_PINS_ASSERT_FAKE_ADC :
                                                  0));
+    ad7768Reset();
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r = readReg(i, 0x0A);
         if (r != 0x06) {
             printf("AD7768 %d: Warning -- unexpected revision %02X.\n", i, r);
         }
     }
-    ad7768Reset();
 }
 
 int
@@ -259,8 +259,6 @@ int
 ad7768SetSamplingRate(int rate)
 {
     struct downSampleInfo const *dp = downsampleInfo(rate);
-    int i;
-
     if (dp == NULL) return -1;
 
     // Select hardware clock
@@ -280,14 +278,6 @@ ad7768SetSamplingRate(int rate)
 
     // All channels in Mode A
     broadcastReg(0x03, 0x00);
-
-    // Check status
-    for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-        uint8_t r = readReg(i, 0x09);
-        if (r != 0) {
-            printf("CRITICAL WARNING -- AD7768[%d] R9:%02X\n", i, r);
-        }
-    }
 
     // Align ADCs
     ad7768StartAlignment();
