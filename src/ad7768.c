@@ -98,7 +98,7 @@ downsampleInfo(int rate)
       {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
       {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
     };
-    static struct downSampleInfo const * dpOld;
+    static struct downSampleInfo const * dpOld = &downSampleTable[0];
     if (rate <= 0) {
         return dpOld;
     }
@@ -209,7 +209,6 @@ ad7768Init(void)
             printf("AD7768 %d: Warning -- unexpected revision %02X.\n", i, r);
         }
     }
-    ad7768SetSamplingRate(1000);
     ad7768Reset();
 }
 
@@ -284,12 +283,9 @@ ad7768SetSamplingRate(int rate)
 
     // Check status
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-        int c;
         uint8_t r = readReg(i, 0x09);
         if (r != 0) {
             printf("CRITICAL WARNING -- AD7768[%d] R9:%02X\n", i, r);
-        }
-        for (c = 0 ; c < CFG_AD7768_ADC_PER_CHIP ; c++) {
         }
     }
 
