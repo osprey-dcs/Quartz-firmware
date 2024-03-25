@@ -125,7 +125,7 @@ processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int
             return 0;
 
         case FPGA_IOC_CMD_RESET_ADCS:
-            ad7768Reset();
+            if (cmd->args[1] == 40) ad7768Reset();
             return 0;
         }
         if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_ACTIVE)
