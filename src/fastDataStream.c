@@ -45,16 +45,21 @@ static void
 callback(ospreyUDPendpoint endpoint,
                   uint32_t farAddress, int farPort, const char *buf, int length)
 {
+    whenSubscribed = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     static int oldFarAddress;
     static int oldFarPort;
     if ((farAddress != oldFarAddress)
      || (farPort != oldFarPort)) {
-        printf("New fast data subscription.\n");
+        printf("Fast data subscriber %d.%d.%d.%d:%d at %d.\n",
+                                                      (farAddress >> 24) & 0xFF,
+                                                      (farAddress >> 16) & 0xFF,
+                                                      (farAddress >>  8) & 0xFF,
+                                                      (farAddress      ) & 0xFF,
+                                                      farPort, whenSubscribed);
         oldFarAddress = farAddress;
         oldFarPort = farPort;
         ospreyUDPregisterFastSubscriber(farAddress, FAST_DATA_PORT, farPort);
     }
-    whenSubscribed = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     acqSubscriptionChange(1);
 }
 
