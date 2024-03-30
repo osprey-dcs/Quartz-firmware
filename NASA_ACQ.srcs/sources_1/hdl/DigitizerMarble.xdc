@@ -61,7 +61,9 @@ set_property -dict {PACKAGE_PIN K18 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT
 #set_property -dict {PACKAGE_PIN E16 IOSTANDARD LVCMOS25} [get_ports {FMC1_LA_N[14]}]
 
 # FMC1 LA15 -- FMC1 H19/H20
-set_property -dict {PACKAGE_PIN J15 IOSTANDARD LVCMOS25 PULLUP true} [get_ports {AD7768_SDO[1]}]
+set_property PACKAGE_PIN J15 [get_ports {AD7768_SDO[1]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {AD7768_SDO[1]}]
+set_property PULLUP true [get_ports {AD7768_SDO[1]}]
 set_property -dict {PACKAGE_PIN J16 IOSTANDARD LVCMOS25} [get_ports {AD7768_CS_n[1]}]
 
 # FMC1 LA16 -- FMC1 G18/G19
@@ -121,7 +123,9 @@ set_property -dict {PACKAGE_PIN H13 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT
 #set_property -dict {PACKAGE_PIN F8 IOSTANDARD LVCMOS25} [get_ports {FMC1_LA_N[29]}]
 
 # FMC1 LA30 -- FMC1 H34/H35
-set_property -dict {PACKAGE_PIN B12 IOSTANDARD LVCMOS25 PULLUP true} [get_ports {AD7768_SDO[0]}]
+set_property PACKAGE_PIN B12 [get_ports {AD7768_SDO[0]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {AD7768_SDO[0]}]
+set_property PULLUP true [get_ports {AD7768_SDO[0]}]
 set_property -dict {PACKAGE_PIN B11 IOSTANDARD LVCMOS25} [get_ports AD7768_SDI]
 
 # FMC1 LA31 -- FMC1 G33/G34
@@ -144,7 +148,9 @@ set_property -dict {PACKAGE_PIN A10 IOSTANDARD LVCMOS25} [get_ports {AD7768_DCLK
 #set_property -dict {PACKAGE_PIN AA22 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_P[0]}]
 
 # FMC2 LA01 -- FMC2 D8/D9
-set_property -dict {PACKAGE_PIN AA23 IOSTANDARD LVCMOS25 PULLUP true} [get_ports HARDWARE_PPS]
+set_property PACKAGE_PIN AA23 [get_ports HARDWARE_PPS]
+set_property IOSTANDARD LVCMOS25 [get_ports HARDWARE_PPS]
+set_property PULLUP true [get_ports HARDWARE_PPS]
 set_property -dict {PACKAGE_PIN AB24 IOSTANDARD LVCMOS25} [get_ports MCLKfanoutValid]
 
 # FMC2 LA02 -- FMC2 H7/H8
@@ -200,7 +206,9 @@ set_property -dict {PACKAGE_PIN AB25 IOSTANDARD LVCMOS25} [get_ports AMC7823_SPI
 #set_property -dict {PACKAGE_PIN U25 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_N[14]}]
 
 # FMC2 LA15 -- FMC2 H19/H20
-set_property -dict {PACKAGE_PIN U22 IOSTANDARD LVCMOS25 PULLUP true} [get_ports {AD7768_SDO[3]}]
+set_property PACKAGE_PIN U22 [get_ports {AD7768_SDO[3]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {AD7768_SDO[3]}]
+set_property PULLUP true [get_ports {AD7768_SDO[3]}]
 set_property -dict {PACKAGE_PIN V22 IOSTANDARD LVCMOS25} [get_ports {AD7768_CS_n[3]}]
 
 # FMC2 LA16 -- FMC2 G18/G19
@@ -260,7 +268,9 @@ set_property -dict {PACKAGE_PIN J26 IOSTANDARD LVCMOS25} [get_ports {AD7768_DRDY
 set_property -dict {PACKAGE_PIN H26 IOSTANDARD LVCMOS25} [get_ports {AD7768_DCLK[3]}]
 
 # FMC2 LA30 -- FMC2 H34/H35
-set_property -dict {PACKAGE_PIN D26 IOSTANDARD LVCMOS25 PULLUP true} [get_ports {AD7768_SDO[2]}]
+set_property PACKAGE_PIN D26 [get_ports {AD7768_SDO[2]}]
+set_property IOSTANDARD LVCMOS25 [get_ports {AD7768_SDO[2]}]
+set_property PULLUP true [get_ports {AD7768_SDO[2]}]
 set_property -dict {PACKAGE_PIN C26 IOSTANDARD LVCMOS25} [get_ports {AD7768_CS_n[2]}]
 
 # FMC2 LA31 -- FMC2 G33/G34
@@ -274,4 +284,5 @@ set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVDS_25} [get_ports AD7768_MCLK_N
 # FMC2 LA33 -- FMC2 G36/G37
 #set_property -dict {PACKAGE_PIN C21 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_P[33]}]
 #set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_P[33]}]
+
 

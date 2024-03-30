@@ -56,7 +56,7 @@ localparam DELAY_COUNTER_WIDTH = $clog2(DELAY_LOAD+1) + 1;
 reg [DELAY_COUNTER_WIDTH-1:0] delayCounter = DELAY_LOAD;
 wire delayCounterDone = delayCounter [DELAY_COUNTER_WIDTH-1];
 
-(*MARK_DEBUG=DEBUG*) reg [CLOCK_COUNT-1:0] activeClock = 0, newClock = 0;
+(*MARK_DEBUG=DEBUG*) reg [CLOCK_COUNT-1:0] activeClock = 1, newClock = 0;
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin

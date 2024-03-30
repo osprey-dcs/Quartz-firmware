@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x6BD85242B4F95165",
+      "boundary_crc": "0x81391C2D6C086F16",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -304,32 +304,6 @@
         "direction": "O",
         "left": "0",
         "right": "0"
-      },
-      "clk200": {
-        "type": "clk",
-        "direction": "O",
-        "parameters": {
-          "CLK_DOMAIN": {
-            "value": "bd_clk_wiz_1_0_sysClk",
-            "value_src": "default"
-          },
-          "FREQ_HZ": {
-            "value": "200000000",
-            "value_src": "default"
-          },
-          "FREQ_TOLERANCE_HZ": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "INSERT_VIP": {
-            "value": "0",
-            "value_src": "default"
-          },
-          "PHASE": {
-            "value": "0.0",
-            "value_src": "default"
-          }
-        }
       },
       "clk51p2": {
         "type": "clk",
@@ -1801,7 +1775,7 @@
             "value": "200"
           },
           "CLKOUT3_USED": {
-            "value": "true"
+            "value": "false"
           },
           "CLKOUT4_DRIVES": {
             "value": "BUFG"
@@ -1840,13 +1814,13 @@
             "value": "25"
           },
           "MMCM_CLKOUT2_DIVIDE": {
-            "value": "4"
+            "value": "1"
           },
           "MMCM_DIVCLK_DIVIDE": {
             "value": "5"
           },
           "NUM_OUT_CLKS": {
-            "value": "3"
+            "value": "2"
           },
           "PRIM_IN_FREQ": {
             "value": "125"
@@ -2350,12 +2324,6 @@
           "clk_wiz_2/clk_in1",
           "clk_wiz_3/clk_in1",
           "clk32"
-        ]
-      },
-      "clk_wiz_1_clk200": {
-        "ports": [
-          "clk_wiz_1/clk200",
-          "clk200"
         ]
       },
       "clk_wiz_1_locked": {

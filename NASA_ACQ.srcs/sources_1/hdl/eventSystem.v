@@ -55,6 +55,7 @@ module eventSystem #(
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
 
+    (*MARK_DEBUG=DEBUG*) input  wire                       ppsValid,
     (*MARK_DEBUG=DEBUG*) input  wire                       hwPPSmarker_a,
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
                          output reg                        isEVG = 0,
@@ -184,18 +185,8 @@ mgtWrapper #(
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event generator
 // Heartbeat and PPS events only.
-localparam EVG_PPS_TOOSLOW_RELOAD = ((EVG_CLK_RATE / 100) * 101) - 2;
-localparam EVG_PPS_TOOFAST_RELOAD = ((EVG_CLK_RATE / 100) * 99) - 2;
-localparam EVG_PPS_COUNTER_WIDTH = $clog2(EVG_PPS_TOOSLOW_RELOAD+1) + 1;
-(*MARK_DEBUG=DEBUG_EVG*)
-reg [EVG_PPS_COUNTER_WIDTH-1:0] ppsTooSlowCounter = EVG_PPS_TOOSLOW_RELOAD;
-wire ppsTooSlow = ppsTooSlowCounter[EVG_PPS_COUNTER_WIDTH-1];
-(*MARK_DEBUG=DEBUG_EVG*)
-reg [EVG_PPS_COUNTER_WIDTH-1:0] ppsTooFastCounter = EVG_PPS_TOOFAST_RELOAD;
-wire ppsTooFast = !ppsTooFastCounter[EVG_PPS_COUNTER_WIDTH-1];
-(*MARK_DEBUG=DEBUG_EVG*) reg ppsValid = 0, secondsValid = 0;
-
 reg sysEVG_PPStoggle = 0;
+reg secondsValid = 0;
 assign sysEVGstatus = {sysEVG_PPStoggle, {28{1'b0}},
                        isEVG, secondsValid, ppsValid};
 localparam HEARTBEAT_INTERVAL= 124800000;
@@ -241,25 +232,6 @@ always @(posedge mgtTxClk) begin
     evgPPSmarker_d <= evgPPSmarker;
     if (evgPPSmarker && !evgPPSmarker_d) begin
         sysEVG_PPStoggle <= !sysEVG_PPStoggle;
-        if (!ppsTooFast && !ppsTooSlow) begin
-            ppsValid <= 1;
-        end
-        else begin
-            ppsValid <= 0;
-        end
-        ppsTooSlowCounter <= EVG_PPS_TOOSLOW_RELOAD;
-        ppsTooFastCounter <= EVG_PPS_TOOFAST_RELOAD;
-    end
-    else begin
-        if (ppsTooFast) begin
-            ppsTooFastCounter <= ppsTooFastCounter - 1;
-        end
-        if (ppsTooSlow) begin
-            ppsValid <= 0;
-        end
-        else begin
-            ppsTooSlowCounter <= ppsTooSlowCounter - 1;
-        end
     end
 end
 wire [MGT_DATA_WIDTH-1:0] evgTxChars;

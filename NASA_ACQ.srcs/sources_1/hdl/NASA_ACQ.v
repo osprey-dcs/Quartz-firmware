@@ -128,7 +128,7 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, clk200, evrRxClk, evfRxClk, evgClk;
+wire sysClk, clk125, fixedClk200, evrRxClk, evfRxClk, evgClk;
 wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk, mclk_bufg;
 wire refClk125;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
@@ -158,54 +158,6 @@ endgenerate
 assign GPIO_IN[GPIO_IDX_FIRMWARE_DATE] = FIRMWARE_BUILD_DATE;
 
 ///////////////////////////////////////////////////////////////////////////////
-// Use appropriate PPS signal
-// In addition to the two hardware input ports there are 3 'PPS' nets:
-//   hwPPS_a
-//      If there is a valid PPS signal on one of the hardware input ports
-//      this net tracks it.  If a valid signal is present at both, the
-//      signal from the Quartz is used.  If there is not a valid PPS signal
-//      on either hardware input port, this net remains low.
-//      Used by event generator only.  Produces ppsMarker_a.
-//                                     Used to measure event latency.
-//   hwOrFallbackPPS_a
-//      Like hwPPS_a, but with an internally generated PPS signal if neither
-//      hardware input is valie.
-//      Used event generator only.  Allows development to proceed without
-//                                  needing a real hardware PPS source.
-//  ppsMarker_a
-//      If the unit is the event generator, this is the hwPPS_a signal,
-//      otherwise it is the PPS event from the event receiver.
-//      Used by all nodes as reference for clock VCXO and frequency counters.
-wire evrPPSmarker;
-wire hwPPS_a, hwOrFallbackPPS_a;
-wire isEVG;
-
-hwPPSselect #(
-    .CLK_RATE(CFG_SYSCLK_RATE),
-    .DEBOUNCE_NS(5000),
-    .DEBUG("false"))
-  hwPPSselect (
-    .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_PPS_STATUS]),
-    .sysGPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_PPS_STATUS]),
-    .pmodPPS_a(PMOD2_3),
-    .quartzPPS_a(HARDWARE_PPS),
-    .hwPPS_a(hwPPS_a),
-    .hwOrFallbackPPS_a(hwOrFallbackPPS_a));
-
-wire ppsMarker_a = isEVG ? hwPPS_a : evrPPSmarker;
-
-///////////////////////////////////////////////////////////////////////////////
-// Monitor hardware PPS interval
-wire fixedClk200;
-ppsMonitor #(.DEBOUNCE_NS(5000))
-  ppsMonitor_i (
-    .fixedClk200(fixedClk200),
-    .pps_a(hwPPS_a),
-    .status(GPIO_IN[GPIO_IDX_PPS_INTERVAL]));
-
-///////////////////////////////////////////////////////////////////////////////
 // Keep track of elapsed time
 wire microsecondStrobe;
 sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
@@ -214,6 +166,37 @@ sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
     .usecStrobe(microsecondStrobe),
     .microsecondsSinceBoot(GPIO_IN[GPIO_IDX_MICROSECONDS_SINCE_BOOT]),
     .secondsSinceBoot(GPIO_IN[GPIO_IDX_SECONDS_SINCE_BOOT]));
+
+///////////////////////////////////////////////////////////////////////////////
+// Lock clock to PPS marker
+// DAC1 adjusts the 125 MHz MGT reference, DDR reference, and system clocks.
+// DAC2 adjusts the 20 MHz system clock.
+// If event generator sync to hardware PPS marker, otherwise the event.
+wire isEVG, hwPPSvalid, ppsMarker, evrPPSmarker;
+marbleClockSync #(
+    .CLK_RATE(CFG_ACQCLK_RATE),
+    .DAC_COUNTS_PER_HZ(CFG_MARBLE_VCXO_COUNTS_PER_HZ),
+    .DEBUG("false"))
+  marbleClockSync (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ACQCLK_PLL_CSR]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
+    .sysAuxStatus(GPIO_IN[GPIO_IDX_ACQCLK_PLL_AUX_STATUS]),
+    .sysHwInterval(GPIO_IN[GPIO_IDX_ACQCLK_HW_INTERVAL]),
+    .sysPPSjitter(GPIO_IN[GPIO_IDX_ACQCLK_HW_JITTER]),
+    .stableClk200(fixedClk200),
+    .clk(clk125),
+    .ppsPrimary_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
+    .ppsSecondary_a(isEVG ? PMOD2_3 : 1'b0),
+    .isOffsetBinary(1'b0),
+    .hwPPSvalid(hwPPSvalid),
+    .ppsStrobe(),
+    .ppsMarker(ppsMarker),
+    .ppsToggle(),
+    .SPI_CLK(WR_DAC_SCLK_T),
+    .SPI_SYNCn(WR_DAC1_SYNC_Tn),
+    .SPI_SDI(WR_DAC_DIN_T));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Basic MRF-comptatible event receiver, generator, and fanout
@@ -247,7 +230,8 @@ eventSystem #(
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
     .evrRxStopACQstrobe(evrRxStopACQstrobe),
     .evfRxClk(evfRxClk),
-    .hwPPSmarker_a(hwOrFallbackPPS_a),
+    .ppsValid(hwPPSvalid),
+    .hwPPSmarker_a(ppsMarker),
     .evrPPSmarker(evrPPSmarker),
     .isEVG(isEVG),
     .mgtTxClk(evgClk),
@@ -272,30 +256,8 @@ ppsLatencyCheck #(.CLK_RATE(CFG_SYSCLK_RATE))
   ppsLatencyCheck (
     .clk(sysClk),
     .latency(GPIO_IN[GPIO_IDX_PPS_LATENCY]),
-    .hwPPS_a(hwPPS_a),
+    .hwPPS_a(ppsMarker),
     .evrPPSmarker_a(evrPPSmarker));
-
-///////////////////////////////////////////////////////////////////////////////
-// Lock clock to PPS marker
-// DAC1 adjusts the 125 MHz MGT reference, DDR reference, and system clocks.
-// DAC2 adjusts the 20 MHz system clock.
-marbleClockSync #(
-    .CLK_RATE(CFG_ACQCLK_RATE),
-    .DAC_COUNTS_PER_HZ(CFG_MARBLE_VCXO_COUNTS_PER_HZ),
-    .DEBUG("false"))
-  marbleClockSync (
-    .sysClk(sysClk),
-    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_ACQCLK_PLL_CSR]),
-    .sysGPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR]),
-    .sysAuxStatus(GPIO_IN[GPIO_IDX_ACQCLK_PLL_AUX_STATUS]),
-    .clk(clk125),
-    .ppsMarker_a(ppsMarker_a),
-    .isOffsetBinary(1'b0),
-    .ppsStrobe(),
-    .SPI_CLK(WR_DAC_SCLK_T),
-    .SPI_SYNCn(WR_DAC1_SYNC_Tn),
-    .SPI_SDI(WR_DAC_DIN_T));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Measure clocks
@@ -314,7 +276,7 @@ frequencyCounters #(
                       mclk_bufg,
                       clk125,
                       sysClk }),
-    .acqMarker_a(ppsMarker_a),
+    .acqMarker_a(hwPPSvalid && ppsMarker),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
     .channelSelect(frequencyChannelSelect),
     .frequency(measuredFrequency));
@@ -408,10 +370,10 @@ ad7768 #(
     .SYSCLK_RATE(CFG_SYSCLK_RATE),
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_RATE(CFG_MCLK_RATE),
-    .DEBUG_DRDY("true"),
-    .DEBUG_ALIGN("true"),
-    .DEBUG_ACQ("true"),
-    .DEBUG_PINS("true"),
+    .DEBUG_DRDY("false"),
+    .DEBUG_ALIGN("false"),
+    .DEBUG_ACQ("false"),
+    .DEBUG_PINS("false"),
     .DEBUG_SPI("false"))
   ad7768 (
     .sysClk(sysClk),
@@ -593,7 +555,7 @@ evrAcqControl #(.DEBUG("false"))
 wire [3:0] rgmiiDataDelayed;
 wire       rgmiiCtrlDelayed;
 ethernetRxDelay ethernetRxDelay_inst (
-    .refClk200(clk200),
+    .refClk200(fixedClk200),
     .rst(!RGMII_PHY_RESET_n),
     .phyDataIn({RGMII_RX_CTRL, RGMII_RXD}),
     .phyDataOut({rgmiiCtrlDelayed, rgmiiDataDelayed}));
@@ -607,13 +569,12 @@ bd bd_i (
 
     .sysClk(sysClk),
     .clk125(clk125),
-    .clk200(clk200),
+    .fixedClk200(fixedClk200),
     .clk32(clk32),
     .clk32p768(clk32p768),
     .clk40p96(clk40p96),
     .clk51p2(clk51p2),
     .clk64(clk64),
-    .fixedClk200(fixedClk200),
 
     .FLASH_SPI_sclk(BOOT_SCLK),
     .FLASH_SPI_csb(BOOT_CS_B),
