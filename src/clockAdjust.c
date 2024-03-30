@@ -63,7 +63,6 @@ clockAdjustInit(void)
 {
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC | 0);
     microsecondSpin(100);
-printf("CLOCK ADJUST INIT\n"); microsecondSpin(10000000);
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
 }
 
@@ -97,14 +96,15 @@ clockAdjustReport(uint32_t csr)
         if (phaseError & CSR_R_PHASE_ERROR_SIGN) {
             phaseError -= CSR_R_PHASE_ERROR_SIGN << 1;
         }
-        printf("%slocked. Phase diff:%d", (csr & CSR_R_LOCKED) ? "" : "un",
-                                                                    phaseError);
+        printf("%slocked. State:%X Phase diff:%d",
+                                  (csr & CSR_R_LOCKED) ? "" : "un",
+                                  (aux & AUX_R_STATE_MASK) >> AUX_R_STATE_SHIFT,
+                                  phaseError);
     }
     else {
         printf("disabled.");
     }
-    printf(" State:%X DAC:%d PPS ", (aux & AUX_R_STATE_MASK)>>AUX_R_STATE_SHIFT,
-                                               (int16_t)(aux & AUX_R_DAC_MASK));
+    printf(" DAC:%d PPS ", (int16_t)(aux & AUX_R_DAC_MASK));
     if (hwPPS & HW_INTERVAL_R_PPS_VALID) {
         printf("Jitter:%dns VXCO:%d", ppsJitter_ns,
                                            hwPPS & HW_INTERVAL_R_INTERVAL_MASK);
@@ -124,11 +124,9 @@ clockAdjustCrank(void)
         firstTime = 0;
     }
     else if (((csr ^ ocsr) & CSR_R_PPS_TOGGLE) != 0) {
-        microsecondSpin(5);
-        if (csr & CSR_R_PPS_ENABLED) {
-            if (debugFlags & DEBUGFLAG_CLOCKADJUST_SHOW)  {
-                clockAdjustReport(csr);
-            }
+        if (debugFlags & DEBUGFLAG_CLOCKADJUST_SHOW)  {
+            microsecondSpin(10);
+            clockAdjustReport(csr);
         }
     }
     ocsr = csr;
