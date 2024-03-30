@@ -171,6 +171,6 @@ clockAdjustShow(void)
 {
     uint32_t hwPPS = fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL);
     ppsPresenceReport("Primary", hwPPS & HW_INTERVAL_R_PRIMARY_VALID, "  ");
-    ppsPresenceReport("Primary", hwPPS & HW_INTERVAL_R_SECONDARY_VALID, "\n");
+    ppsPresenceReport("Secondary", hwPPS & HW_INTERVAL_R_SECONDARY_VALID, "\n");
     clockAdjustReport(fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR));
 }
