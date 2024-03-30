@@ -51,9 +51,6 @@ static int
 sysmon(uint32_t *buf)
 {
     uint32_t *base = buf;
-    uint32_t reg;
-
-
     *buf++ = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     buf = xadcFetchSysmon(buf);
     buf = iicFPGAfetchSysmon(buf);
@@ -61,13 +58,6 @@ sysmon(uint32_t *buf)
     buf = acqFetchSysmon(buf);
     buf = clockAdjustFetchSysmon(buf);
     buf = ad7768FetchSysmon(buf);
-    /*
-     * Merge HW->EVR latency and PPS source info
-     */
-    reg = GPIO_READ(GPIO_IDX_PPS_LATENCY);
-    if (reg & 0x80000000) reg = 0xFFFF;
-    reg &= 0xFFFF;
-    *buf++ = (reg << 16) | (GPIO_READ(GPIO_IDX_PPS_STATUS) & 0xFFFF);
     return buf - base;
 }
 

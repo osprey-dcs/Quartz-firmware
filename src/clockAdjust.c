@@ -28,35 +28,53 @@
 #include "gpio.h"
 #include "util.h"
 
+/*
+ * PLL jitter thresholds
+ */
+#define JITTER_HI   50
+#define JITTER_LO   30
+
+/*
+ * Low pass filter time constant(seconds): (1 << FILTER_SHIFT) 
+ */
+#define FILTER_SHIFT 5
+
 #define CSR_W_ENABLE            0x80000000
 #define CSR_W_SET_DAC           0x40000000
 #define CSR_W_DAC_MASK          0xFFFF
 #define CSR_R_LOCKED            0x80000000
 #define CSR_R_PPS_TOGGLE        0x40000000
 #define CSR_R_PPS_ENABLED       0x20000000
-#define CSR_R_PHASE_ERROR_MASK  0xFFFFFFF
-#define CSR_R_PHASE_ERROR_SIGN  0x8000000
+#define CSR_R_PHASE_ERROR_MASK  0xFFFFFF
+#define CSR_R_PHASE_ERROR_SIGN  0x800000
 
-#define AUX_R_STATE_MASK        0xF0000
+#define AUX_R_STATE_MASK        0x70000
 #define AUX_R_STATE_SHIFT       16
 #define AUX_R_DAC_MASK          0xFFFF
+
+#define HW_INTERVAL_R_PPS_VALID         0x80000000
+#define HW_INTERVAL_R_PPS_TOGGLE        0x40000000
+#define HW_INTERVAL_R_SECONDARY_VALID   0x20000000
+#define HW_INTERVAL_R_PRIMARY_VALID     0x10000000
+#define HW_INTERVAL_R_INTERVAL_MASK     0x0FFFFFFF
 
 void
 clockAdjustInit(void)
 {
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC | 0);
-    microsecondSpin(10);
+    microsecondSpin(100);
+printf("CLOCK ADJUST INIT\n"); microsecondSpin(10000000);
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
-    if (debugFlags & DEBUGFLAG_CLOCKADJUST_STEP) {
-        clockAdjustShow(30);
-        debugFlags &= ~DEBUGFLAG_CLOCKADJUST_STEP;
-    }
 }
 
 uint32_t *
 clockAdjustFetchSysmon(uint32_t *buf)
 {
-    *buf++ = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+    *buf++ = fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR);
+    *buf++ = (fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL) &
+                                                  ~HW_INTERVAL_R_INTERVAL_MASK)
+           | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
+                                                 & HW_INTERVAL_R_INTERVAL_MASK);
     return buf;
 }
 
@@ -65,41 +83,55 @@ clockAdjustIsLocked(void)
 {
     return ((GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR) & CSR_R_LOCKED) != 0);
 }
-    
-void
-clockAdjustShow(int count)
+
+static void
+clockAdjustReport(uint32_t csr)
 {
-    uint32_t csr, ocsr, aux;
-    if (count <= 0) count = 1;
-    if (count > 30) count = 30;
-    csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
-    for (;;) {
-        uint32_t then = microsecondsSinceBoot();
+    uint32_t aux = fetchRegister(GPIO_IDX_ACQCLK_PLL_AUX_STATUS);
+    uint32_t hwPPS = fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL);
+    uint32_t ppsJitter_ns = fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5 / 8;
+    printf("PLL ");
+    if (csr & CSR_R_PPS_ENABLED) {
         int phaseError;
-        aux = GPIO_READ(GPIO_IDX_ACQCLK_PLL_AUX_STATUS);
         phaseError = csr & CSR_R_PHASE_ERROR_MASK;
         if (phaseError & CSR_R_PHASE_ERROR_SIGN) {
             phaseError -= CSR_R_PHASE_ERROR_SIGN << 1;
         }
-        printf("Clock adjustment %sabled  State:%X  DAC:%d  Phase error:%d",
-                                  csr & CSR_R_PPS_ENABLED ? "en" : "dis",
-                                  (aux & AUX_R_STATE_MASK) >> AUX_R_STATE_SHIFT,
-                                  (int16_t)(aux & AUX_R_DAC_MASK),
-                                  phaseError);
-        if (!(csr & CSR_R_LOCKED)){
-            printf(" -- UNLOCKED!");
-        }
-        printf("\n");
-        if (--count <= 0) break;
-        ocsr = csr;
-        while ((((csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR)) ^ ocsr) &
-                                                       CSR_R_PPS_TOGGLE) == 0) {
-            if ((microsecondsSinceBoot() - then) > 1200000) {
-                break;
+        printf("%slocked. Phase diff:%d", (csr & CSR_R_LOCKED) ? "" : "un",
+                                                                    phaseError);
+    }
+    else {
+        printf("disabled.");
+    }
+    printf(" State:%X DAC:%d PPS ", (aux & AUX_R_STATE_MASK)>>AUX_R_STATE_SHIFT,
+                                               (int16_t)(aux & AUX_R_DAC_MASK));
+    if (hwPPS & HW_INTERVAL_R_PPS_VALID) {
+        printf("Jitter:%dns VXCO:%d", ppsJitter_ns,
+                                           hwPPS & HW_INTERVAL_R_INTERVAL_MASK);
+    }
+    else {
+        print("Invalid");
+    }
+    printf("\n");
+}
+
+void
+clockAdjustCrank(void)
+{
+    uint32_t csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+    static uint32_t ocsr, firstTime = 1;
+    if (firstTime) {
+        firstTime = 0;
+    }
+    else if (((csr ^ ocsr) & CSR_R_PPS_TOGGLE) != 0) {
+        microsecondSpin(5);
+        if (csr & CSR_R_PPS_ENABLED) {
+            if (debugFlags & DEBUGFLAG_CLOCKADJUST_SHOW)  {
+                clockAdjustReport(csr);
             }
         }
     }
-    evgShow();
+    ocsr = csr;
 }
 
 void
@@ -128,6 +160,19 @@ clockAdjustStep(void)
         GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
         break;
     }
-    microsecondSpin(2);
-    clockAdjustShow(0);
+}
+
+static void
+ppsPresenceReport(const char *type, int present, const char *end)
+{
+    printf("%s PPS %ssent.%s", type, present ? "pre" : "ab", end);
+}
+
+void
+clockAdjustShow(void)
+{
+    uint32_t hwPPS = fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL);
+    ppsPresenceReport("Primary", hwPPS & HW_INTERVAL_R_PRIMARY_VALID, "  ");
+    ppsPresenceReport("Primary", hwPPS & HW_INTERVAL_R_SECONDARY_VALID, "\n");
+    clockAdjustReport(fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR));
 }

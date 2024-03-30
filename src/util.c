@@ -37,6 +37,24 @@ microsecondSpin(int microseconds)
     while ((microsecondsSinceBoot() - then) <= microseconds) continue;
 }
 
+/*
+ * Fetch register from some other clock domain
+ */
+uint32_t
+fetchRegister(int idx)
+{
+    uint32_t ocsr, csr;
+    int passesLeft = 10;
+    ocsr = GPIO_READ(idx);
+    for (;;) {
+        csr = GPIO_READ(idx);
+        if ((csr == ocsr) || (--passesLeft == 0)) {
+            return csr;
+        }
+        ocsr = csr;
+    }
+}
+
 void
 showIPv4address(const char *name, uint32_t address)
 {

@@ -284,24 +284,6 @@ ad7768SetSamplingRate(int rate)
     return 0;
 }
 
-/*
- * Fetch register from some other clock domain
- */
-static uint32_t
-fetchRegister(int idx)
-{
-    uint32_t ocsr, csr;
-    int passesLeft = 10;
-    ocsr = GPIO_READ(idx);
-    for (;;) {
-        csr = GPIO_READ(idx);
-        if ((csr == ocsr) || (--passesLeft == 0)) {
-            return csr;
-        }
-        ocsr = csr;
-    }
-}
-
 uint32_t *
 ad7768FetchSysmon(uint32_t *buf)
 {

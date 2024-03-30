@@ -35,6 +35,7 @@
 #define DEBUGFLAG_TFTP                  0x2
 #define DEBUGFLAG_MGT                   0x4
 #define DEBUGFLAG_EVG                   0x8
+#define DEBUGFLAG_CLOCKADJUST_SHOW      0x10
 #define DEBUGFLAG_ACQ                   0x20
 #define DEBUGFLAG_INPUT_COUPLING        0x40
 #define DEBUGFLAG_NO_RELAY_EXERCISE     0x80
@@ -54,6 +55,7 @@ extern int debugFlags;
 #define htons(x) __builtin_bswap16(x)
 
 void microsecondSpin(int microseconds);
+uint32_t fetchRegister(int idx);
 void showIPv4address(const char *name, uint32_t address);
 void resetFPGA(int bootAlternateImage);
 

@@ -192,25 +192,16 @@ evgInit(void)
     GPIO_WRITE(GPIO_IDX_EVG_CSR, 0);
 
     /*
-     * See if HW PPS marker is present
+     * Report missing HW PPS marker
      */
     then = microsecondsSinceBoot();
     for (;;) {
-        uint32_t csr = GPIO_READ(GPIO_IDX_PPS_STATUS);
-        if ((csr & (PPS_CSR_USE_PMOD | PPS_CSR_USE_QUARTZ)) != 0) {
-            break;
-        }
+        if (GPIO_READ(GPIO_IDX_EVG_CSR) & CSR_R_PPS_VALID) break;
         if ((microsecondsSinceBoot() - then) > 4000000) {
             printf("CRITICAL WARNING -- NO HARDWARE PPS.\n");
             break;
         }
     }
-
-    /*
-     * Clear change-of-state status
-     */
-    GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_QUARTZ_COS | PPS_CSR_PMOD_COS);
-    evgShow();
 }
 
 void
@@ -327,41 +318,5 @@ evgCrank(void)
     csrOld = csr;
     if ((debugFlags & DEBUGFLAG_EVG) && (evgState != oldState)) {
         printf("EVG State %d\n", evgState);
-    }
-}
-
-void
-evgShow(void)
-{
-    uint32_t csr = GPIO_READ(GPIO_IDX_PPS_STATUS);
-    uint32_t ocsr;
-    if (csr & PPS_CSR_QUARTZ_VALID) printf("Quartz PPS present. ");
-    if (csr & PPS_CSR_USE_QUARTZ)   printf("Use Quartz PPS. ");
-    if (csr & PPS_CSR_PMOD_VALID)   printf("PMOD PPS present. ");
-    if (csr & PPS_CSR_USE_PMOD)     printf("Use PMOD PPS. ");
-    if (csr & (PPS_CSR_USE_PMOD   |
-               PPS_CSR_PMOD_VALID |
-               PPS_CSR_USE_QUARTZ |
-               PPS_CSR_QUARTZ_VALID)) printf("\n");
-    if (csr & PPS_CSR_QUARTZ_COS) {
-        printf("Quartz PPS present change-of-state.\n");
-        GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_QUARTZ_COS);
-    }
-    if (csr & PPS_CSR_PMOD_COS) {
-        printf("PMOD PPS present change-of-state.\n");
-        GPIO_WRITE(GPIO_IDX_PPS_STATUS, PPS_CSR_PMOD_COS);
-    }
-    /*
-     * Value in other clock domain, may be metastable
-     */
-    ocsr = GPIO_READ(GPIO_IDX_PPS_JITTER);
-    for (;;) {
-        csr = GPIO_READ(GPIO_IDX_PPS_JITTER);
-        if (csr == ocsr) {
-            csr = (csr * 50) >> 6;
-            printf("PPS jitter %d.%d ns.\n", csr / 10, csr % 10);
-            break;
-        }
-        ocsr = csr;
     }
 }

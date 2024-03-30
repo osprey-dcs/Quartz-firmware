@@ -29,11 +29,11 @@
 #ifndef _CLOCK_ADJUST_H_
 #define _CLOCK_ADJUST_H_
 
-
 void clockAdjustInit(void);
 uint32_t *clockAdjustFetchSysmon(uint32_t *buf);
 int clockAdjustIsLocked(void);
-void clockAdjustShow(int count);
+void clockAdjustCrank(void);
 void clockAdjustStep(void);
+void clockAdjustShow(void);
 
 #endif /* _CLOCK_ADJUST_H_ */
