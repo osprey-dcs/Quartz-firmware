@@ -29,12 +29,6 @@
 #include "util.h"
 
 /*
- * PLL jitter thresholds
- */
-#define JITTER_HI   50
-#define JITTER_LO   30
-
-/*
  * Low pass filter time constant(seconds): (1 << FILTER_SHIFT) 
  */
 #define FILTER_SHIFT 5
