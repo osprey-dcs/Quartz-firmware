@@ -280,10 +280,6 @@ cmdDEBUG(int argc, char **argv)
         ad7768DumpReg();
         debugFlags &= ~DEBUGFLAG_DUMP_AD7768_REG;
     }
-    if (debugFlags & DEBUGFLAG_CLOCKADJUST_STEP) {
-        clockAdjustStep();
-        debugFlags &= ~DEBUGFLAG_CLOCKADJUST_STEP;
-    }
     if (debugFlags & DEBUGFLAG_START_AD7768_ALIGN) {
         ad7768StartAlignment();
         debugFlags &= ~DEBUGFLAG_START_AD7768_ALIGN;

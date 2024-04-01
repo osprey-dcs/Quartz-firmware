@@ -46,7 +46,6 @@
 #define DEBUGFLAG_USE_FAKE_AD7768       0x8000
 #define DEBUGFLAG_MGTCLKSWITCHSHOW      0x20000
 #define DEBUGFLAG_START_AD7768_ALIGN    0x40000
-#define DEBUGFLAG_CLOCKADJUST_STEP      0x80000
 extern int debugFlags;
 
 #define ntohl(x) __builtin_bswap32(x)

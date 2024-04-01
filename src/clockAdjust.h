@@ -33,7 +33,7 @@ void clockAdjustInit(void);
 uint32_t *clockAdjustFetchSysmon(uint32_t *buf);
 int clockAdjustIsLocked(void);
 void clockAdjustCrank(void);
-void clockAdjustStep(void);
+void clockAdjustSet(int dacValue);
 void clockAdjustShow(void);
 
 #endif /* _CLOCK_ADJUST_H_ */

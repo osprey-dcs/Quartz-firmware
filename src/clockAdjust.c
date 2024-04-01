@@ -52,6 +52,8 @@
 #define HW_INTERVAL_R_PRIMARY_VALID     0x10000000
 #define HW_INTERVAL_R_INTERVAL_MASK     0x0FFFFFFF
 
+static uint32_t whenOpened;
+
 void
 clockAdjustInit(void)
 {
@@ -100,7 +102,7 @@ clockAdjustReport(uint32_t csr)
     }
     printf(" DAC:%d PPS ", (int16_t)(aux & AUX_R_DAC_MASK));
     if (hwPPS & HW_INTERVAL_R_PPS_VALID) {
-        printf("Jitter:%dns VXCO:%d", ppsJitter_ns,
+        printf("Jitter:%dns HW:%d", ppsJitter_ns,
                                            hwPPS & HW_INTERVAL_R_INTERVAL_MASK);
     }
     else {
@@ -124,33 +126,31 @@ clockAdjustCrank(void)
         }
     }
     ocsr = csr;
+    if (whenOpened != 0) {
+        uint32_t now = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
+        if ((now - whenOpened) >= 1200) {
+            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
+            whenOpened = 0;
+        }
+    }
 }
 
 void
-clockAdjustStep(void)
+clockAdjustSet(int dacValue)
 {
-    static const int16_t dac[] = {-24576, -5000, 0, 5000, 24576, 0};
-    static int idx;
-    switch (idx) {
-    case 0:
-        /*
-         * Put VCXO into open-loop control
-         */
-        GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, 0);
-        while((GPIO_READ(GPIO_IDX_ACQCLK_PLL_AUX_STATUS)&AUX_R_STATE_MASK)!=0) {
-            continue;
-        }
-        /* Fall through to default case */
-    default:
-        GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC |
-                                                   (dac[idx] & CSR_W_DAC_MASK));
-        idx++;
-        break;
-
-    case sizeof dac / sizeof dac[0]:
-        idx = 0;
+    if (dacValue == 0) {
         GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
-        break;
+        whenOpened = 0;
+    }
+    else {
+        uint32_t csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
+        if (csr & CSR_R_PPS_ENABLED) {
+            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, 0);
+            microsecondSpin(30);
+        }
+        GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC |
+                                                   (dacValue & CSR_W_DAC_MASK));
+        whenOpened = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     }
 }
 
