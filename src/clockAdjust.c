@@ -34,12 +34,15 @@
 #define FILTER_SHIFT 5
 
 #define CSR_W_ENABLE            0x80000000
-#define CSR_W_SET_DAC           0x40000000
-#define CSR_RW_ENABLE_JITTER    0x10000000
+#define CSR_W_DISABLE           0x40000000
+#define CSR_W_SET_DAC           0x20000000
+#define CSR_W_ENABLE_JITTER     0x10000000
+#define CSR_W_DISABLE_JITTER    0x08000000
 #define CSR_W_DAC_MASK          0xFFFF
 #define CSR_R_LOCKED            0x80000000
 #define CSR_R_PPS_TOGGLE        0x40000000
 #define CSR_R_PPS_ENABLED       0x20000000
+#define CSR_R_JITTER_ENABLED    0x10000000
 #define CSR_R_PHASE_ERROR_MASK  0xFFFFFF
 #define CSR_R_PHASE_ERROR_SIGN  0x800000
 
@@ -121,11 +124,15 @@ clockAdjustCrank(void)
         firstTime = 0;
     }
     else if (((csr ^ ocsr) & CSR_R_PPS_TOGGLE) != 0) {
-        uint32_t jitterEn = (debugFlags & DEBUGFLAG_ENABLE_PPS_JITTER) ?
-                                                       CSR_RW_ENABLE_JITTER : 0;
-        if (((csr & CSR_RW_ENABLE_JITTER) ^ jitterEn) != 0) {
-            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, ((csr & CSR_R_PPS_ENABLED) ?
-                                                  CSR_W_ENABLE : 0) | jitterEn);
+        if (debugFlags & DEBUGFLAG_ENABLE_PPS_JITTER) {
+            if (!(csr & CSR_R_JITTER_ENABLED)) {
+                GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE_JITTER);
+            }
+        }
+        else {
+            if (csr & CSR_R_JITTER_ENABLED) {
+                GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_DISABLE_JITTER);
+            }
         }
         if (debugFlags & DEBUGFLAG_CLOCKADJUST_SHOW)  {
             microsecondSpin(10);
@@ -152,7 +159,7 @@ clockAdjustSet(int dacValue)
     else {
         uint32_t csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
         if (csr & CSR_R_PPS_ENABLED) {
-            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, 0);
+            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_DISABLE);
             microsecondSpin(30);
         }
         GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC |
