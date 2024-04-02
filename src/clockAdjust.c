@@ -35,6 +35,7 @@
 
 #define CSR_W_ENABLE            0x80000000
 #define CSR_W_SET_DAC           0x40000000
+#define CSR_RW_ENABLE_JITTER    0x10000000
 #define CSR_W_DAC_MASK          0xFFFF
 #define CSR_R_LOCKED            0x80000000
 #define CSR_R_PPS_TOGGLE        0x40000000
@@ -120,6 +121,12 @@ clockAdjustCrank(void)
         firstTime = 0;
     }
     else if (((csr ^ ocsr) & CSR_R_PPS_TOGGLE) != 0) {
+        uint32_t jitterEn = (debugFlags & DEBUGFLAG_ENABLE_PPS_JITTER) ?
+                                                       CSR_RW_ENABLE_JITTER : 0;
+        if (((csr & CSR_RW_ENABLE_JITTER) ^ jitterEn) != 0) {
+            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, ((csr & CSR_R_PPS_ENABLED) ?
+                                                  CSR_W_ENABLE : 0) | jitterEn);
+        }
         if (debugFlags & DEBUGFLAG_CLOCKADJUST_SHOW)  {
             microsecondSpin(10);
             clockAdjustReport(csr);
