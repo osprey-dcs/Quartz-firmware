@@ -47,7 +47,7 @@
 #define GPIO_IDX_ACQCLK_PLL_CSR            11 // VCXO clock adjust status
 #define GPIO_IDX_ACQCLK_PLL_AUX_STATUS     12 // More VCXO clock adjust status
 #define GPIO_IDX_ACQCLK_HW_INTERVAL        13 // VCXO clocks between HW strobes
-#define GPIO_IDX_ACQCLK_HW_JITTER          14 // HW_INTERVAL regisster jitter
+#define GPIO_IDX_ACQCLK_HW_JITTER          14 // HW_INTERVAL jitter
 #define GPIO_IDX_AD7768_CSR                15 // AD7768 ADC control/status
 #define GPIO_IDX_AD7768_DRDY_STATUS        16 // AD7768 DRDY alignment status
 #define GPIO_IDX_AD7768_DRDY_HISTORY       17 // AD7768 DRDY logic analyzer
