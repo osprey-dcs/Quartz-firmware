@@ -56,8 +56,6 @@
 #define HW_INTERVAL_R_PRIMARY_VALID     0x10000000
 #define HW_INTERVAL_R_INTERVAL_MASK     0x0FFFFFFF
 
-static uint32_t whenOpened;
-
 void
 clockAdjustInit(void)
 {
@@ -140,13 +138,6 @@ clockAdjustCrank(void)
         }
     }
     ocsr = csr;
-    if (whenOpened != 0) {
-        uint32_t now = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
-        if ((now - whenOpened) >= 1200) {
-            GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
-            whenOpened = 0;
-        }
-    }
 }
 
 void
@@ -154,7 +145,6 @@ clockAdjustSet(int dacValue)
 {
     if (dacValue == 0) {
         GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
-        whenOpened = 0;
     }
     else {
         uint32_t csr = GPIO_READ(GPIO_IDX_ACQCLK_PLL_CSR);
@@ -164,7 +154,6 @@ clockAdjustSet(int dacValue)
         }
         GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_SET_DAC |
                                                    (dacValue & CSR_W_DAC_MASK));
-        whenOpened = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     }
 }
 
