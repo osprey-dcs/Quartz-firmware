@@ -83,30 +83,43 @@ amc7823Init(void)
     amc7823WriteReg(0x10D, 0xFFA0); /* Power-up all but current source */
 }
 
-uint32_t *
-amc7823FetchSysmon(uint32_t *buf)
+uint32_t
+amc7823FetchSysmon(int index)
 {
-    int i;
-    /* Request registers 0 through 8, inclusive */
-    uint32_t w = ((1 << 15) | (0 << 6) | 8) << 16;
-    CSR_WRITE(CSR_W_ASSERT_CS_N);
-    for (i = 0 ; i < 5 ; i++) {
-        uint32_t csr;
-        CSR_WRITE(w);
-        w = 0;
-        while ((csr = CSR_READ()) & CSR_R_BUSY) continue;
-        /*
-         * The first time through the least signficant 16 bits contain
-         * the contents of register 0.  The second time through the most
-         * significant 16 bits contain the contents of register 1, and the
-         * least significant 16 bits the contents of register 2, and so on.
-         * 12 bits per value, so the BUSY bit doesn't conflict with data.
-         */
-        if (i != 0) {
-            *buf++ = (csr >> 16) & CSR_R_ADC_DATA_MASK;
+    uint32_t now = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
+    static uint32_t whenScanned;
+    static uint16_t sysmonBuf[9];
+
+    /*
+     * Update at most every five seconds
+     */
+    if ((now - whenScanned) >= 5) {
+        int i;
+        uint16_t *sp = sysmonBuf;
+        whenScanned = now;
+
+        /* Request registers 0 through 8, inclusive */
+        uint32_t w = ((1 << 15) | (0 << 6) | 8) << 16;
+        CSR_WRITE(CSR_W_ASSERT_CS_N);
+        for (i = 0 ; i < 5 ; i++) {
+            uint32_t csr;
+            CSR_WRITE(w);
+            w = 0;
+            while ((csr = CSR_READ()) & CSR_R_BUSY) continue;
+            /*
+             * The first time through the least signficant 16 bits contain
+             * the contents of register 0.  The second time through the most
+             * significant 16 bits contain the contents of register 1, and the
+             * least significant 16 bits the contents of register 2, and so on.
+             * 12 bits per value, so the BUSY bit doesn't conflict with data.
+             */
+            if (i != 0) {
+                *sp++ = (csr >> 16) & CSR_R_ADC_DATA_MASK;
+            }
+            *sp++ = csr & CSR_R_ADC_DATA_MASK;
         }
-        *buf++ = csr & CSR_R_ADC_DATA_MASK;
+        CSR_WRITE(CSR_W_DEASSERT_CS_N);
     }
-    CSR_WRITE(CSR_W_DEASSERT_CS_N);
-    return buf;
+    if ((index >= 0) && (index <= 8)) return sysmonBuf[index];
+    return 0;
 }

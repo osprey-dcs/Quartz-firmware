@@ -30,9 +30,9 @@
 #define _CLOCK_ADJUST_H_
 
 void clockAdjustInit(void);
-uint32_t *clockAdjustFetchSysmon(uint32_t *buf);
-int clockAdjustIsLocked(void);
 void clockAdjustCrank(void);
+uint32_t clockAdjustFetchSysmon(int index);
+int clockAdjustIsLocked(void);
 void clockAdjustSet(int dacValue);
 void clockAdjustShow(void);
 

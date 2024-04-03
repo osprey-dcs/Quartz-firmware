@@ -29,6 +29,11 @@
 #include "iicFPGA.h"
 #include "util.h"
 
+/*
+ * 2 values per INA219, 2 values per QSFP, 1 value per QSFP channel
+ */
+#define SYSMON_BUF_CAPACITY ((2*3) + (2*2) + (1*4*2))
+
 #define IIC_MUX_ADDRESS 0x70
 
 /*
@@ -317,59 +322,73 @@ int iicFPGAeepromWrite(int idx, uint32_t address, uint32_t length,
     return length;
 }
 
-uint32_t *
-iicFPGAfetchSysmon(uint32_t *ap)
+uint32_t
+iicFPGAfetchSysmon(int index)
 {
-    int i;
-    unsigned char cbuf[8];
+    uint32_t now = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
+    static uint32_t whenScanned;
+    static uint16_t sysmonBuf[SYSMON_BUF_CAPACITY];
 
     /*
-     * INA219 power monitors
+     * Update at most every five seconds
      */
-    for (i = IIC_FPGA_IDX_INA219_0 ; i <= IIC_FPGA_IDX_INA219_2 ; i++) {
-        int vBus = 0, vShunt = 0;
-        if (iicFPGAread(i, 0x02, cbuf, 2) == 2) {
-            vBus = (cbuf[0] << 5) | (cbuf[1] >> 3);
-        }
-        if (iicFPGAread(i, 0x01, cbuf, 2) == 2) {
-            vShunt = (int16_t)((cbuf[0] << 8) | cbuf[1]);
-        }
-        *ap++ = vShunt;
-        *ap++ = vBus;
-    }
+    if ((now - whenScanned) >= 5) {
+        int i;
+        uint16_t *sp = sysmonBuf;
+        unsigned char cbuf[8];
+        whenScanned = now;
 
-    /*
-     * QSFP
-     */
-    for (i = IIC_FPGA_IDX_QSFP1 ; i <= IIC_FPGA_IDX_QSFP2 ; i++) {
-        int r;
-        uint16_t temp = 0;
-        uint16_t vcc = 0;
-        uint16_t rxPower[4] = {0, 0, 0, 0};
-        if (iicMap[i].address7) {
-            if (iicFPGAread(i, 22, cbuf, 6) == 6) {
-                temp = (cbuf[0] << 8) | cbuf[1];
-                vcc  = (cbuf[4] << 8) | cbuf[5];
+        /*
+         * INA219 power monitors
+         */
+        for (i = IIC_FPGA_IDX_INA219_0 ; i <= IIC_FPGA_IDX_INA219_2 ; i++) {
+            int vBus = 0, vShunt = 0;
+            if (iicFPGAread(i, 0x02, cbuf, 2) == 2) {
+                vBus = (cbuf[0] << 5) | (cbuf[1] >> 3);
             }
-            if (iicFPGAread(i, 34, cbuf, 8) == 8) {
-                for (r = 0 ; r < 4 ; r++) {
-                    rxPower[r] = (cbuf[(2*r)+0] << 8) | cbuf[(2*r)+1];
+            if (iicFPGAread(i, 0x01, cbuf, 2) == 2) {
+                vShunt = (int16_t)((cbuf[0] << 8) | cbuf[1]);
+            }
+            *sp++ = vShunt;
+            *sp++ = vBus;
+        }
+
+        /*
+         * QSFP
+         */
+        for (i = IIC_FPGA_IDX_QSFP1 ; i <= IIC_FPGA_IDX_QSFP2 ; i++) {
+            int r;
+            uint16_t temp = 0;
+            uint16_t vcc = 0;
+            uint16_t rxPower[4] = {0, 0, 0, 0};
+            if (iicMap[i].address7) {
+                if (iicFPGAread(i, 22, cbuf, 6) == 6) {
+                    temp = (cbuf[0] << 8) | cbuf[1];
+                    vcc  = (cbuf[4] << 8) | cbuf[5];
+                }
+                if (iicFPGAread(i, 34, cbuf, 8) == 8) {
+                    for (r = 0 ; r < 4 ; r++) {
+                        rxPower[r] = (cbuf[(2*r)+0] << 8) | cbuf[(2*r)+1];
+                    }
                 }
             }
-        }
-        else {
-            temp = vcc = 0;
+            else {
+                temp = vcc = 0;
+                for (r = 0 ; r < 4 ; r++) {
+                    rxPower[r] = 0;
+                }
+            }
+            *sp++ = temp;
+            *sp++ = vcc;
             for (r = 0 ; r < 4 ; r++) {
-                rxPower[r] = 0;
+                *sp++ = rxPower[r];
             }
         }
-        *ap++ = temp;
-        *ap++ = vcc;
-        for (r = 0 ; r < 4 ; r++) {
-            *ap++ = rxPower[r];
-        }
     }
-    return ap;
+    if ((index >= 0) && (index < SYSMON_BUF_CAPACITY)) {
+        return sysmonBuf[index];
+    }
+    return 0;
 }
 
 /*

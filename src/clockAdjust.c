@@ -64,15 +64,17 @@ clockAdjustInit(void)
     GPIO_WRITE(GPIO_IDX_ACQCLK_PLL_CSR, CSR_W_ENABLE);
 }
 
-uint32_t *
-clockAdjustFetchSysmon(uint32_t *buf)
+uint32_t
+clockAdjustFetchSysmon(int index)
 {
-    *buf++ = fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR);
-    *buf++ = (fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL) &
+    switch (index) {
+    case 0: return fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR);
+    case 1: return (fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL) &
                                                   ~HW_INTERVAL_R_INTERVAL_MASK)
-           | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
+               | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
                                                  & HW_INTERVAL_R_INTERVAL_MASK);
-    return buf;
+    }
+    return 0;
 }
 
 int

@@ -204,10 +204,12 @@ mmcMailboxInit(void)
     fetchNetworkConfig();
 }
 
-uint32_t *
-mmcMailboxFetchSysmon(uint32_t *ap)
+uint32_t
+mmcMailboxFetchSysmon(int index)
 {
-    *ap++ = (mmcMailboxRead16(MADDR_U29_TEMP) << 16) |
-            (mmcMailboxRead16(MADDR_U28_TEMP) & 0xFFFF);
-    return ap;
+    switch (index) {
+    case 0: return mmcMailboxRead16(MADDR_U29_TEMP) << 16;
+    case 1: return mmcMailboxRead16(MADDR_U28_TEMP) & 0xFFFF;
+    }
+    return 0;
 }

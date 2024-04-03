@@ -1,9 +1,19 @@
-softwareBuildDate.h: acq.c \
+all: softwareBuildDate.h
+
+
+JSONrom.h: nasaAcq.json
+	 PYTHONPATH="../bedrock" python ../bedrock/build_rom.py -d NASA_ACQ \
+                                                    -j nasaAcq.json -c JSONrom.h
+
+softwareBuildDate.h: JSONrom.h \
+                     acq.c \
                      acq.h \
                      ad7768.c \
                      ad7768.h \
                      amc7823.c \
                      amc7823.h \
+                     calibration.c \
+                     calibration.h \
                      clockAdjust.c \
                      clockAdjust.h \
                      config.h \
@@ -22,13 +32,11 @@ softwareBuildDate.h: acq.c \
                      gpio.h \
                      iicFPGA.c \
                      iicFPGA.h \
-                     iocFPGAprotocol.h \
                      main.c \
                      mgt.c \
                      mgt.h \
                      mmcMailbox.c \
                      mmcMailbox.h \
-                     nasaAcqProtocol.h \
                      platform.c \
                      platform.h \
                      platform_config.h \

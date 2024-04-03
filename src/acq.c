@@ -102,12 +102,12 @@ acqInit(void)
     acqSetActiveChannels();
 }
 
-int
+void
 acqSetActive(int channel, int active)
 {
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
-        return -1;
+        return;
     }
     if (active) {
         activeChannels |= (1UL << channel);
@@ -116,16 +116,25 @@ acqSetActive(int channel, int active)
         activeChannels &= ~(1UL << channel);
     }
     acqSetActiveChannels();
-    return 0;
 }
 
 int
+acqGetActive(int channel)
+{
+    if ((channel < 0)
+     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
+        return -1;
+    }
+    return ((activeChannels & (1UL << channel)) != 0);
+}
+
+void
 acqSetCoupling(int channel, int dcCoupled)
 {
     uint32_t csr, b;
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
-        return -1;
+        return;
     }
     b = 1UL << channel;
     csr = GPIO_READ(GPIO_IDX_INPUT_COUPLING_CSR);
@@ -137,7 +146,16 @@ acqSetCoupling(int channel, int dcCoupled)
     }
     GPIO_WRITE(GPIO_IDX_INPUT_COUPLING_CSR, csr);
     inputCouplingSet(channel, dcCoupled);
-    return 0;
+}
+
+int
+acqGetCoupling(int channel)
+{
+    if ((channel < 0)
+     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
+        return -1;
+    }
+    return ((GPIO_READ(GPIO_IDX_INPUT_COUPLING_CSR) & (1UL << channel)) != 0);
 }
 
 void
@@ -148,11 +166,13 @@ acqSubscriptionChange(int subscriberPresent)
                                                 BYTECOUNT_W_SUBSCRIBER_ABSENT);
 }
 
-uint32_t *
-acqFetchSysmon(uint32_t *buf)
+uint32_t
+acqFetchSysmon(int offset)
 {
-    *buf++ = GPIO_READ(GPIO_IDX_BUILD_PACKET_STATUS);
-    *buf++ = GPIO_READ(GPIO_IDX_BUILD_PACKET_BITMAP);
-    *buf++ = GPIO_READ(GPIO_IDX_INPUT_COUPLING_CSR);
-    return buf;
+    switch (offset) {
+    case 0: return GPIO_READ(GPIO_IDX_BUILD_PACKET_STATUS);
+    case 1: return GPIO_READ(GPIO_IDX_BUILD_PACKET_BITMAP);
+    case 2: return GPIO_READ(GPIO_IDX_INPUT_COUPLING_CSR);
+    default: return 0;
+    }
 }

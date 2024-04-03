@@ -10,6 +10,6 @@
 void mmcMailboxInit(void);
 void mmcMailboxWrite(unsigned int address, int valud);
 int mmcMailboxRead(unsigned int address);
-uint32_t *mmcMailboxFetchSysmon(uint32_t *ap);
+uint32_t mmcMailboxFetchSysmon(int index);
 
 #endif /* _MMC_MAILBOX_H_ */

@@ -31,6 +31,6 @@
 #define _AMC7823_H_
 
 void amc7823Init(void);
-uint32_t *amc7823FetchSysmon(uint32_t *buf);
+uint32_t amc7823FetchSysmon(int index);
 
 #endif /* _AMC7823_H_ */

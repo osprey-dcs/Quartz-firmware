@@ -29,9 +29,11 @@
 #define _ACQ_H_
 
 void acqInit(void);
-int acqSetActive(int channel, int active);
-int acqSetCoupling(int channel, int dcCoupled);
+void acqSetActive(int channel, int active);
+int acqGetActive(int channel);
+void acqSetCoupling(int channel, int dcCoupled);
+int acqGetCoupling(int channel);
 void acqSubscriptionChange(int subscriberPresent);
-uint32_t *acqFetchSysmon(uint32_t *buf);
+uint32_t acqFetchSysmon(int offset);
 
 #endif /* _ACQ_H_ */

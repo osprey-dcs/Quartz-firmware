@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <xparameters.h>
 #include "ad7768.h"
+#include "calibration.h"
 #include "clockAdjust.h"
 #include "gpio.h"
 #include "util.h"
@@ -57,7 +58,7 @@
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
 #define CSR_READ()   GPIO_READ(GPIO_IDX_AD7768_CSR)
 
-#define RESTORE_VALUE 0x70000000
+#define CHANNEL_RESTORE -1000
 
 #define MCLK_CSR_W_32p000   0x0
 #define MCLK_CSR_W_25p600   0x1
@@ -182,15 +183,18 @@ ad7768StartAlignment(void)
 void
 ad7768Reset(void)
 {
-    int i;
+    static int firstTime = 1;
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
     microsecondSpin(10);
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
     microsecondSpin(10000);
-    for (i = 0 ; i<(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
-        ad7768SetOfst(i, RESTORE_VALUE);
-        ad7768SetGain(i, RESTORE_VALUE);
+    if (firstTime) {
+        calibrationUpdate();
+    }
+    else {
+        ad7768SetOfst(CHANNEL_RESTORE, 0);
+        ad7768SetGain(CHANNEL_RESTORE, 0);
     }
     ad7768SetSamplingRate(0);
     return;
@@ -217,11 +221,19 @@ ad7768SetOfst(int channel, int offset)
 {
     int i, chip, reg;
     static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
+    if (channel == CHANNEL_RESTORE) {
+        for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
+            ad7768SetOfst(i, offsets[i]);
+        }
+        return 0;
+    }
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
     }
-    if (offset == RESTORE_VALUE) offset = offsets[channel];
+    if (debugFlags & DEBUGFLAG_CALIBRATION) {
+        printf("AD7768[%d] offset %d\n", channel, offset);
+    }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x20;
     for (i = 0 ; i < 3 ; i++) {
@@ -237,12 +249,20 @@ int
 ad7768SetGain(int channel, int gain)
 {
     int i, chip, reg;
+    static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
+    if (channel == CHANNEL_RESTORE) {
+        for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
+            ad7768SetGain(i, gains[i]);
+        }
+        return 0;
+    }
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
     }
-    static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
-    if (gain == RESTORE_VALUE) gain = gains[channel];
+    if (debugFlags & DEBUGFLAG_CALIBRATION) {
+        printf("AD7768[%d] gain %d\n", channel, gain);
+    }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x338;
     gain += 0x555555;
@@ -255,11 +275,11 @@ ad7768SetGain(int channel, int gain)
     return 0;
 }
 
-int
+void
 ad7768SetSamplingRate(int rate)
 {
     struct downSampleInfo const *dp = downsampleInfo(rate);
-    if (dp == NULL) return -1;
+    if (dp == NULL) return;
 
     // Select hardware clock
     GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
@@ -281,15 +301,16 @@ ad7768SetSamplingRate(int rate)
 
     // Align ADCs
     ad7768StartAlignment();
-    return 0;
 }
 
-uint32_t *
-ad7768FetchSysmon(uint32_t *buf)
+uint32_t
+ad7768FetchSysmon(int index)
 {
-    *buf++ = fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
-    *buf++ = fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
-    return buf;
+    switch (index) {
+    case 0: return fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
+    case 1: return fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
+    }
+    return 0;
 }
 
 void

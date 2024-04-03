@@ -23,145 +23,149 @@
  */
 
 /*
- * Communicate with EPICS IOC
+ * Communicate with EPICS IOC using LBNL FEED protocol
  */
 #include <stdio.h>
 #include <ospreyUDP.h>
 #include "acq.h"
 #include "ad7768.h"
 #include "amc7823.h"
+#include "calibration.h"
 #include "clockAdjust.h"
 #include "epics.h"
 #include "evg.h"
 #include "gpio.h"
 #include "iicFPGA.h"
-#include "iocFPGAprotocol.h"
-#include "nasaAcqProtocol.h"
+#include "mmcMailbox.h"
 #include "softwareBuildDate.h"
 #include "systemParameters.h"
 #include "util.h"
 #include "xadc.h"
 
+#define LEEP_UDP_PORT 54399
+#define ETHERNET_UDP_PAYLOAD_CAPACITY   1472
+#define LEEP_BYTES_TO_REG(b) (((b) - 8) / 8)
+#define LEEP_REG_TO_BYTES(r) (((r) * 8) + 8)
+#define LEEP_REG_CAPACITY LEEP_BYTES_TO_REG(ETHERNET_UDP_PAYLOAD_CAPACITY)
+#define LEEP_BITS_READ      0x01000000
+#define LEEP_ADDRESS_MASK   0xFFFFFF
+
+struct LEEPheader{
+    char headerChars[8];
+};
+union LEEPunion {
+    char     u_c[4];
+    uint32_t u_l;
+};
+struct LEEPreg {
+    uint32_t bits_addr;
+    uint32_t value;
+};
+struct LEEPpacket {
+    struct LEEPheader header;
+    struct LEEPreg    regs[LEEP_REG_CAPACITY];
+};
+
 #define CHANNEL_COUNT ((CFG_AD7768_CHIP_COUNT) * (CFG_AD7768_ADC_PER_CHIP))
+#define REG_POWERUP_STATE           10
+#define REG_FIRMWARE_BUILD_DATE     20
+#define REG_SOFTWARE_BUILD_DATE     21
+#define REG_CALIBRATION_DATE        22
+#define REG_CALIBRATION_STATUS      23
+#define REG_FPGA_REBOOT             30
+#define REG_SECONDS_SINCE_BOOT      40
+#define REG_ACQ_ENABLE              80
+#define REG_SAMPLING_RATE           81
+#define REG_RESET_ADCS              82
+#define REG_SET_VCXO_DAC            83
+#define REG_SYSMON_BASE             100
+#define REG_ACQ_CHAN_ACTIVE_BASE    400
+#define REG_ACQ_CHAN_COUPLING_BASE  500
+#define REG_JSON_ROM_BASE           0x800
 
-/*
- * Read system monitors from all subsystems
- */
-static int
-sysmon(uint32_t *buf)
-{
-    uint32_t *base = buf;
-    *buf++ = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
-    buf = xadcFetchSysmon(buf);
-    buf = iicFPGAfetchSysmon(buf);
-    buf = amc7823FetchSysmon(buf);
-    buf = acqFetchSysmon(buf);
-    buf = clockAdjustFetchSysmon(buf);
-    buf = ad7768FetchSysmon(buf);
-    return buf - base;
-}
+static int powerUpFlag = 1;
 
-/*
- * Crank the reboot state machine
- */
 static void
-crankReboot(int value)
+writeReg(int address, uint32_t value)
 {
-    static int match = 1;
-    if (value == match) {
-        if (match == 10000) {
-            resetFPGA(0);
-        }
-        match *= 100;
+    switch(address) {
+    case REG_POWERUP_STATE:     if (value == 0)   powerUpFlag = 0;       return;
+    case REG_FPGA_REBOOT:       if (value == 100) resetFPGA(0);          return;
+    case REG_ACQ_ENABLE:        if (isEVG())      evgAcqControl(value);  return;
+    case REG_SAMPLING_RATE:     ad7768SetSamplingRate(value);            return;
+    case REG_RESET_ADCS:        if (value == 40)  ad7768Reset();         return;
+    case REG_SET_VCXO_DAC:      clockAdjustSet(value);                   return;
     }
-    else if (value == 1) {
-        match = 100;
+    if ((address >= REG_ACQ_CHAN_ACTIVE_BASE)
+     && (address < (REG_ACQ_CHAN_ACTIVE_BASE + CHANNEL_COUNT))) {
+        acqSetActive(address - REG_ACQ_CHAN_ACTIVE_BASE, value);
+        return;
     }
-    else {
-        match = 1;
+    if ((address >= REG_ACQ_CHAN_COUPLING_BASE)
+     && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
+        acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
+        return;
     }
 }
 
-/*
- * Process a command from the IOC
- * Return value is reply argument count, or -1 if no reply is to be sent
- */
-static int
-processCommand(const struct fpgaIOCpacket *cmd, struct fpgaIOCpacket *reply, int argc)
+static uint32_t
+readReg(int address)
 {
-    static int isPowerup = 1;
-    switch (cmd->msgID) {
-    case FPGA_IOC_MSGID_GENERIC:
-        if (argc != 2) {
-            return -1;
-        }
-        switch(cmd->args[0]) {
-        case FPGA_IOC_CMD_REBOOT:
-            crankReboot(cmd->args[1]);
-            return 0;
-
-        case FPGA_IOC_CMD_CLR_POWERUP:
-            isPowerup = 0;
-            return 0;
-
-        case FPGA_IOC_CMD_ACQ_ENABLE:
-            if (isEVG()) {
-                evgAcqControl(cmd->args[1]);
-                return 0;
-            } return -1;
-
-        case FPGA_IOC_CMD_DOWNSAMPLE_RATIO:
-            ad7768SetSamplingRate(cmd->args[1]);
-            return 0;
-
-        case FPGA_IOC_CMD_RESET_ADCS:
-            if (cmd->args[1] == 40) ad7768Reset();
-            return 0;
-
-        case FPGA_IOC_CMD_SET_VCXO_DAC:
-            clockAdjustSet(cmd->args[1]);
-            return 0;
-        }
-        if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_ACTIVE)
-         && (cmd->args[0] < (FPGA_IOC_CMD_CHAN_ACTIVE + CHANNEL_COUNT))) {
-            acqSetActive(cmd->args[0]-FPGA_IOC_CMD_CHAN_ACTIVE, cmd->args[1]);
-            return 0;
-        }
-        if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_COUPLING)
-         && (cmd->args[0] < (FPGA_IOC_CMD_CHAN_COUPLING + CHANNEL_COUNT))) {
-            acqSetCoupling(cmd->args[0]-FPGA_IOC_CMD_CHAN_COUPLING,
-                                                                  cmd->args[1]);
-            return 0;
-        }
-        if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_CALIB_OFST)
-         && (cmd->args[0] < (FPGA_IOC_CMD_CHAN_CALIB_OFST + CHANNEL_COUNT))) {
-            ad7768SetOfst(cmd->args[0]-FPGA_IOC_CMD_CHAN_CALIB_OFST,
-                                                                  cmd->args[1]);
-            return 0;
-        }
-        if ((cmd->args[0] >= FPGA_IOC_CMD_CHAN_CALIB_GAIN)
-         && (cmd->args[0] < (FPGA_IOC_CMD_CHAN_CALIB_GAIN + CHANNEL_COUNT))) {
-            ad7768SetGain(cmd->args[0]-FPGA_IOC_CMD_CHAN_CALIB_GAIN,
-                                                                  cmd->args[1]);
-            return 0;
+    /*
+     * Generic LEEP registers
+     */
+    static const union LEEPunion reg0 = { .u_c = "Hell" };
+    static const union LEEPunion reg1 = { .u_c = "o Wo" };
+    static const union LEEPunion reg2 = { .u_c = "rld!" };
+    static const union LEEPunion reg3 = { .u_c = "\r\n\r\n" };
+#      include "JSONrom.h"
+    switch(address) {
+    case 0: return reg0.u_l;
+    case 1: return reg1.u_l;
+    case 2: return reg2.u_l;
+    case 3: return reg3.u_l;
+    default:
+        if ((address >= REG_JSON_ROM_BASE)
+         && (address < (REG_JSON_ROM_BASE + ((sizeof config_romx / 2))))) {
+            return config_romx[address];
         }
         break;
-
-    case FPGA_IOC_MSGID_READ_SYSMON:
-        reply->args[0] = isPowerup;
-        return sysmon(&reply->args[1]) + 1;
-
-    case FPGA_IOC_MSGID_GET_BUILD_DATES:
-        /*
-         * Provide dummy 'nsec' values
-         */
-        reply->args[0] = GPIO_READ(GPIO_IDX_FIRMWARE_DATE);
-        reply->args[1] = 0;
-        reply->args[2] = SOFTWARE_BUILD_DATE;
-        reply->args[3] = 0;
-        return 4;
     }
-    return -1;
+
+    /*
+     * Application-specific registers
+     */
+    switch(address) {
+    case REG_POWERUP_STATE:       return powerUpFlag;
+    case REG_FIRMWARE_BUILD_DATE: return GPIO_READ(GPIO_IDX_FIRMWARE_DATE);
+    case REG_SOFTWARE_BUILD_DATE: return SOFTWARE_BUILD_DATE;
+    case REG_CALIBRATION_DATE:    return calibrationDate();
+    case REG_CALIBRATION_STATUS:  return calibrationStatus();
+    }
+    if ((address >= REG_SYSMON_BASE) && (address < (REG_SYSMON_BASE + 99))) {
+        int offset = address - REG_SYSMON_BASE;
+        int bank = offset & 0xE0;
+        int index = offset & 0x1F;
+        switch (bank) {
+        case 0x00:  return xadcFetchSysmon(index);
+        case 0x20:  return mmcMailboxFetchSysmon(index);
+        case 0x40:  return iicFPGAfetchSysmon(index);
+        case 0x60:  return amc7823FetchSysmon(index);
+        case 0x80:  return acqFetchSysmon(index);
+        case 0xA0:  return clockAdjustFetchSysmon(index);
+        case 0xC0:  return ad7768FetchSysmon(index);
+        }
+        return 0;
+    }
+    if ((address >= REG_ACQ_CHAN_ACTIVE_BASE)
+     && (address < (REG_ACQ_CHAN_ACTIVE_BASE + CHANNEL_COUNT))) {
+        return acqGetActive(address - REG_ACQ_CHAN_ACTIVE_BASE);
+    }
+    if ((address >= REG_ACQ_CHAN_COUPLING_BASE)
+     && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
+        return acqGetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE);
+    }
+    return 0;
 }
 
 /*
@@ -171,68 +175,53 @@ static void
 epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
                                                     const char *buf, int length)
 {
-    int replyArgc = -1;
-    int i, n;
-    uint32_t *argp;
-    struct fpgaIOCpacket *cmdp = (struct fpgaIOCpacket *)buf;
-    static struct fpgaIOCpacket reply = { .P='P', .S='S' };
+    int i, regCount;
+    struct LEEPpacket const *cmdp = (struct LEEPpacket const *)buf;
+    struct LEEPreg const *cmdReg = &cmdp->regs[0];
+    static struct LEEPpacket reply;
+    struct LEEPreg *replyReg = &reply.regs[0];
 
     if (debugFlags & DEBUGFLAG_EPICS) {
-        printf("EPICS %d from %u.%u.%u.%u:%d", length,
-                                               (farAddress >> 24) & 0xFF,
-                                               (farAddress >> 16) & 0xFF,
-                                               (farAddress >>  8) & 0xFF,
-                                               (farAddress      ) & 0xFF,
-                                               farPort);
+        printf("LEEP %d from %d.%d.%d.%d:%d", length, (farAddress >> 24) & 0xFF,
+                                                      (farAddress >> 16) & 0xFF,
+                                                      (farAddress >>  8) & 0xFF,
+                                                      (farAddress      ) & 0xFF,
+                                                      farPort);
     }
 
     /*
      * Ignore packets that are clearly invalid
      */
-    if ((length >= FPGA_IOC_ARGC_TO_PACKET_SIZE(0))
-     && (length <= FPGA_IOC_ARGC_TO_PACKET_SIZE(FPGA_IOC_ARG_CAPACITY))
-     && (cmdp->P == 'P')
-     && (cmdp->S == 'S')) {
-        n = FPGA_IOC_PACKET_SIZE_TO_ARGC(length);
-        cmdp->length = ntohl(cmdp->length);
-        if (cmdp->length == FPGA_IOC_ARGC_TO_LENGTH(n)) {
-            cmdp->msgID = ntohs(cmdp->msgID);
-            for (i = 0, argp = &cmdp->args[0] ; i < n ; i++, argp++) {
-                *argp = ntohl(*argp);
-            }
-            if (debugFlags & DEBUGFLAG_EPICS) {
-                int m = (n <= 4) ? n : 4;
-                printf(" MSGID:%d", cmdp->msgID);
-                for (i = 0 ; i < m ; i++) {
-                    printf(" %d", cmdp->args[i]);
-                }
-            }
-            replyArgc = processCommand(cmdp, &reply, n);
+    if ((length < LEEP_REG_TO_BYTES(1))
+     || (length > LEEP_REG_TO_BYTES(LEEP_REG_CAPACITY))
+     || (length != LEEP_REG_TO_BYTES((regCount = LEEP_BYTES_TO_REG(length))))) {
+        return;
+    }
+    reply.header = cmdp->header;
+
+    /*
+     * Process each register in turn
+     */
+    for (i = 0 ; i < regCount ; i++, cmdReg++, replyReg++) {
+        uint32_t bits_addr = ntohl(replyReg->bits_addr);
+        uint32_t r;
+        replyReg->bits_addr = cmdReg->bits_addr;
+        if (bits_addr & LEEP_BITS_READ) {
+            r = readReg(bits_addr & LEEP_ADDRESS_MASK);
+            replyReg->value = htonl(r);
+        }
+        else {
+            r = ntohl(cmdReg->value);
+            writeReg(bits_addr & LEEP_ADDRESS_MASK, r);
+            replyReg->value = cmdReg->value;
         }
     }
 
     /*
-     * Send reply if required
+     * Send the reply
      */
-    if (replyArgc >= 0) {
-        if (debugFlags & DEBUGFLAG_EPICS) {
-            int m = (replyArgc <= 4) ? replyArgc : 4;
-            printf(" ->");
-            for (i = 0 ; i < m ; i++) {
-                printf(" %d", reply.args[i]);
-            }
-        }
-        reply.msgID = htons(cmdp->msgID);
-        reply.length = htonl(FPGA_IOC_ARGC_TO_LENGTH(replyArgc));
-        for (i = 0, argp = &reply.args[0] ; i < replyArgc ; i++, argp++) {
-            *argp = htonl(*argp);
-        }
-        ospreyUDPsendto(endpoint, farAddress, farPort, (char *)&reply,
-                                      FPGA_IOC_ARGC_TO_PACKET_SIZE(replyArgc));
-    }
-    if (debugFlags & DEBUGFLAG_EPICS) {
-        printf("\n");
-    }
+    ospreyUDPsendto(endpoint, farAddress, farPort, (char *)&reply,
+                                                   LEEP_REG_TO_BYTES(regCount));
 }
 
 /*
@@ -241,7 +230,7 @@ epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
 void
 epicsInit(void)
 {
-    if (ospreyUDPregisterEndpoint(NASA_ACQ_UDP_PORT, epicsHandler) == NULL) {
+    if (ospreyUDPregisterEndpoint(LEEP_UDP_PORT, epicsHandler) == NULL) {
         printf("Can't register EPICS I/O UDP endpoint!\n");
     }
 }

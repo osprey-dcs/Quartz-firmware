@@ -30,7 +30,7 @@
 #define _XADC_H_
 
 void xadcInit(void);
-uint32_t *xadcFetchSysmon(uint32_t *buf);
+uint32_t xadcFetchSysmon(int index);
 int xadcGetFPGAtemp(void);
 
 #endif /* _XADC_H_ */

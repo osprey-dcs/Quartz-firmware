@@ -28,14 +28,13 @@
 #include "acq.h"
 #include "fastDataStream.h"
 #include "gpio.h"
-#include "nasaAcqProtocol.h"
 #include "ospreyUDP.h"
 #include "util.h"
 
 /*
  * Fast data source
  */
-#define FAST_DATA_PORT (NASA_ACQ_UDP_PORT+1)
+#define FAST_DATA_PORT 55010
 
 /*
  * Create server

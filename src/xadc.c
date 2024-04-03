@@ -57,14 +57,16 @@ xadcInit(void)
     microsecondSpin(20000);
 }
 
-uint32_t *
-xadcFetchSysmon(uint32_t *buf)
+uint32_t
+xadcFetchSysmon(int index)
 {
-    *buf++ = In32(R_TEMP);
-    *buf++ = In32(R_VCCINT);
-    *buf++ = In32(R_VCCAUX);
-    *buf++ = In32(R_VBRAM);
-    return buf;
+    switch(index) {
+    case 0: In32(R_TEMP);
+    case 1: In32(R_VCCINT);
+    case 2: In32(R_VCCAUX);
+    case 3: In32(R_VBRAM);
+    }
+    return 0;
 }
 
 /*
