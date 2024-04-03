@@ -47,8 +47,8 @@
 #define LEEP_BYTES_TO_REG(b) (((b) - 8) / 8)
 #define LEEP_REG_TO_BYTES(r) (((r) * 8) + 8)
 #define LEEP_REG_CAPACITY LEEP_BYTES_TO_REG(ETHERNET_UDP_PAYLOAD_CAPACITY)
-#define LEEP_BITS_READ      0x01000000
-#define LEEP_ADDRESS_MASK   0xFFFFFF
+#define LEEP_BITS_READ      0x10000000
+#define LEEP_ADDRESS_MASK   0x00FFFFFF
 
 struct LEEPheader{
     char headerChars[8];
