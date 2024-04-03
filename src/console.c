@@ -34,6 +34,7 @@
 #include <ospreyUDP.h>
 #include "ad7768.h"
 #include "bootFlash.h"
+#include "calibration.h"
 #include "clockAdjust.h"
 #include "console.h"
 #include "eyescan.h"
@@ -205,6 +206,29 @@ cmdBOOT(int argc, char **argv)
     }
     printf("Reboot%s? ", useAlternate ? " Alternate" : "");
     modalHandler = cmdBOOT;
+}
+
+static void
+cmdCALIB(int argc, char **argv)
+{
+    if (modalHandler) {
+        int y = yesOrNo(argc, argv);
+        if (y < 0) {
+            return;
+        }
+        if (y) {
+            calibrationUpdate();
+            return;
+        }
+        modalHandler = NULL;
+        return;
+    }
+    if (argc > 1) {
+        printf("Bad argument.\n");
+        return;
+    }
+    printf("Read and apply Calibration.csv? ");
+    modalHandler = cmdCALIB;
 }
 
 static void
@@ -520,6 +544,7 @@ findCommand(int argc, char **argv)
         const char *const description;
     } cmdTable[] = {
         { "boot",  cmdBOOT,   "Reboot FPGA"                           },
+        { "calib", cmdCALIB,  "Read and apply Calibration.csv"       },
         { "debug", cmdDEBUG,  "Set/show debugging flags"              },
         { "eye",   eyescanCommand, "Scan MGT and produce eye diagram" },
         { "fmon",  cmdFMON,   "Show frequency counters",              },
