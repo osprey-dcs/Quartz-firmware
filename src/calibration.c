@@ -204,7 +204,7 @@ calibrationUpdate(void)
     }
     ffsUnmount();
     if (debugFlags & DEBUGFLAG_CALIBRATION) {
-        printf("Calibration update status %d\n", status);
+        printf("Calibration update status %d.\n", status);
     }
 }
 
