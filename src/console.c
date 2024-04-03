@@ -187,7 +187,6 @@ cmdBOOT(int argc, char **argv)
         if (y) {
             resetFPGA(useAlternate);
             printf("Reset failed!\n");
-            return;
         }
         modalHandler = NULL;
         return;
@@ -218,7 +217,6 @@ cmdCALIB(int argc, char **argv)
         }
         if (y) {
             calibrationUpdate();
-            return;
         }
         modalHandler = NULL;
         return;
