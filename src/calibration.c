@@ -155,7 +155,7 @@ calibrationUpdate(void)
                 }
                 if (c == '\n') {
                     if (row == (1 + ADC_COUNT)) {
-                        error(STATUS_VALID);
+                        status = STATUS_VALID;
                         break;
                     }
                     lineNumber++;
