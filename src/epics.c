@@ -42,7 +42,7 @@
 #include "util.h"
 #include "xadc.h"
 
-#define LEEP_UDP_PORT 54399
+#define LEEP_UDP_PORT 50006
 #define ETHERNET_UDP_PAYLOAD_CAPACITY   1472
 #define LEEP_BYTES_TO_REG(b) (((b) - 8) / 8)
 #define LEEP_REG_TO_BYTES(r) (((r) * 8) + 8)
@@ -52,10 +52,6 @@
 
 struct LEEPheader{
     char headerChars[8];
-};
-union LEEPunion {
-    char     u_c[4];
-    uint32_t u_l;
 };
 struct LEEPreg {
     uint32_t bits_addr;
@@ -113,21 +109,20 @@ readReg(int address)
 {
     /*
      * Generic LEEP registers
+     * The baseRegs initializer puts the string in network byte order.
      */
-    static const union LEEPunion reg0 = { .u_c = "Hell" };
-    static const union LEEPunion reg1 = { .u_c = "o Wo" };
-    static const union LEEPunion reg2 = { .u_c = "rld!" };
-    static const union LEEPunion reg3 = { .u_c = "\r\n\r\n" };
-#      include "JSONrom.h"
+    union LEEPbaseRegs { char u_c[16]; uint32_t u_l[4]; };
+    static const union LEEPbaseRegs baseRegs = {.u_c = "Hello World!\r\n\r\n"};
+#   include "JSONrom.h"
     switch(address) {
-    case 0: return reg0.u_l;
-    case 1: return reg1.u_l;
-    case 2: return reg2.u_l;
-    case 3: return reg3.u_l;
+    case 0: return ntohl(baseRegs.u_l[0]);
+    case 1: return ntohl(baseRegs.u_l[1]);
+    case 2: return ntohl(baseRegs.u_l[2]);
+    case 3: return ntohl(baseRegs.u_l[3]);
     default:
         if ((address >= REG_JSON_ROM_BASE)
          && (address < (REG_JSON_ROM_BASE + ((sizeof config_romx / 2))))) {
-            return config_romx[address];
+            return config_romx[address-REG_JSON_ROM_BASE];
         }
         break;
     }
@@ -195,6 +190,9 @@ epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
     if ((length < LEEP_REG_TO_BYTES(1))
      || (length > LEEP_REG_TO_BYTES(LEEP_REG_CAPACITY))
      || (length != LEEP_REG_TO_BYTES((regCount = LEEP_BYTES_TO_REG(length))))) {
+        if (debugFlags & DEBUGFLAG_EPICS) {
+            printf("\n");
+        }
         return;
     }
     reply.header = cmdp->header;
@@ -203,25 +201,33 @@ epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
      * Process each register in turn
      */
     for (i = 0 ; i < regCount ; i++, cmdReg++, replyReg++) {
-        uint32_t bits_addr = ntohl(replyReg->bits_addr);
+        uint32_t bits_addr = ntohl(cmdReg->bits_addr);
         uint32_t r;
         replyReg->bits_addr = cmdReg->bits_addr;
         if (bits_addr & LEEP_BITS_READ) {
             r = readReg(bits_addr & LEEP_ADDRESS_MASK);
             replyReg->value = htonl(r);
+            if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
+                printf(" [%d]:%08Xr%08X", i, bits_addr, r);
+            }
         }
         else {
             r = ntohl(cmdReg->value);
+            if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
+                printf(" [%d]:%08Xw%08X", i, bits_addr, r);
+            }
             writeReg(bits_addr & LEEP_ADDRESS_MASK, r);
             replyReg->value = cmdReg->value;
         }
+    }
+    if (debugFlags & DEBUGFLAG_EPICS) {
+        printf("\n");
     }
 
     /*
      * Send the reply
      */
-    ospreyUDPsendto(endpoint, farAddress, farPort, (char *)&reply,
-                                                   LEEP_REG_TO_BYTES(regCount));
+    ospreyUDPsendto(endpoint, farAddress, farPort, (char *)&reply, length);
 }
 
 /*
