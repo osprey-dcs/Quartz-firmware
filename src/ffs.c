@@ -41,7 +41,8 @@
 #define KiB(x) ((x)*1024)
 #define IS_EEPROM   0x80000000
 #define IS_READONLY 0x40000000
-#define DEVICE_MASK 0x3FFFFFFF
+#define IS_ASCII    0x20000000
+#define BASE_MASK   0x1FFFFFFF
 
 struct fileInfo {
     const char *name;
@@ -50,17 +51,15 @@ struct fileInfo {
 };
 /* Assume that largest sector in flash is no larger than 64 KiB. */
 static const struct fileInfo fileTable[] = {
-    { "BOOT.bin",         0,                                MiB(6), },
-    { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,        MiB(6), },
-    { "SYSPARAM.dat",     MiB(15),                          KiB(4), },
-    { "Calibration.csv",  MiB(15)+KiB(64),                  KiB(4), },
-    { "FullFlash.bin",    0,                               MiB(16), },
-    { "QSFP1_EEPROM.bin", IS_EEPROM|IS_READONLY|
-                                      IIC_FPGA_IDX_QSFP1,      256, },
-    { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|
-                                      IIC_FPGA_IDX_QSFP2,      256, },
-    { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,  256, },
-    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,  256, } };
+    { "BOOT.bin",         0,                                          MiB(6), },
+    { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,                  MiB(6), },
+    { "SYSPARAM.dat",     MiB(15),                                    KiB(4), },
+    { "Calibration.csv",  IS_ASCII|(MiB(15)+KiB(64)),                 KiB(4), },
+    { "FullFlash.bin",    0,                                         MiB(16), },
+    { "QSFP1_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP1,      256, },
+    { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP2,      256, },
+    { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,            256, },
+    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256, } };
 
 static uint32_t offset = UINT32_MAX;
 static int activeMode;
@@ -95,7 +94,7 @@ FRESULT
 f_read(FIL *fp, void *cbuf, unsigned int n, unsigned int *nread)
 {
     const struct fileInfo *f;
-    unsigned int nleft;
+    unsigned int nleft, l;
     if ((offset == UINT32_MAX) || (activeMode != FA_READ)) {
         return FR_ERR;
     }
@@ -106,19 +105,26 @@ f_read(FIL *fp, void *cbuf, unsigned int n, unsigned int *nread)
     }
     if (n != 0) {
         if (f->base & IS_EEPROM) {
-            unsigned int device = f->base & DEVICE_MASK;
+            unsigned int device = f->base & BASE_MASK;
             if (iicFPGAeepromRead(device, offset, n, cbuf) != n) {
                 return FR_ERR;
             }
         }
         else {
-            if (bootFlashRead(f->base + offset, n, cbuf) != n) {
+            if (bootFlashRead((f->base + offset) & BASE_MASK, n, cbuf) != n) {
                 return FR_ERR;
             }
         }
     }
-    *nread = n;
-    offset += n;
+    if ((f->base & IS_ASCII)
+     && ((l = strnlen(cbuf, n)) < n)) {
+        *nread = l;
+        offset = f->length;
+    }
+    else {
+        *nread = n;
+        offset += n;
+    }
     return FR_OK;
 }
 
@@ -138,13 +144,13 @@ f_write(FIL *fp, const void *cbuf, unsigned int n, unsigned int *nwritten)
     }
     if (n != 0) {
         if (f->base & IS_EEPROM) {
-            unsigned int device = f->base & DEVICE_MASK;
+            unsigned int device = f->base & BASE_MASK;
             if (iicFPGAeepromWrite(device, offset, n, cbuf) != n) {
                 return FR_ERR;
             }
         }
         else {
-            if (bootFlashWrite(f->base + offset, n, cbuf) != n) {
+            if (bootFlashWrite((f->base + offset) & BASE_MASK, n, cbuf) != n) {
                 return FR_ERR;
             }
         }
@@ -157,8 +163,14 @@ f_write(FIL *fp, const void *cbuf, unsigned int n, unsigned int *nwritten)
 FRESULT
 f_close(FIL *fp)
 {
+    const struct fileInfo *f;
     if (offset == UINT32_MAX) {
         return FR_ERR;
+    }
+    f = *fp;
+    if (f->base & IS_ASCII) {
+        unsigned int nw;
+        f_write(fp, "", 1, &nw);
     }
     offset = UINT32_MAX;
     return FR_OK;
