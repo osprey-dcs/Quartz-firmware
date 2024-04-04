@@ -87,6 +87,7 @@ calibrationUpdate(void)
         uint32_t number = 0;
         int neg = 0;
         int row = 1, col = 1;
+        int awaitEOL = 0;
         lineNumber = 1;
         columnNumber = 0;
         for (;;) {
@@ -109,48 +110,48 @@ calibrationUpdate(void)
                 continue;
             }
             if ((c == '\n') || (c == ',')) {
-                if (needNumber) {
-                    error(STATUS_CONTENTS_GARBLED);
-                    break;
-                }
-                if (row == 1) {
-                    if ((col > 1) || neg) {
+                if (!awaitEOL) {
+                    if (needNumber) {
                         error(STATUS_CONTENTS_GARBLED);
                         break;
                     }
-                    date = number;
-                }
-                else {
-                    if (col == 1) {
-                        if (number > 1000000) {
-                            number = 1000000;
+                    if (row == 1) {
+                        if (neg) {
+                            error(STATUS_CONTENTS_GARBLED);
+                            break;
                         }
-                        ad7768SetOfst((row-2), neg ? -number : number);
-                    }
-                    else if (col == 2) {
-                        int gain;
-                        /*
-                         * Scale from parts-per-million to ADC gain counts
-                         *
-                         *   PPM     Gain Counts
-                         * ------- = -----------
-                         * 1000000   (2^24) / 12
-                         *
-                         * Allow this to be done with 32-bit arithmentic
-                         * by removing as many powers of 2 as possible
-                         * and limiting range to 16 bits.
-                         *     (5^6) = 15625
-                         */
-                        if (number > 50000) {
-                            number = 50000;
-                        }
-                        gain = (uint32_t)((number << 16) + ((3*15625)/2)) /
-                                                                      (3*15625);
-                        ad7768SetGain((row-2), neg ? -gain : gain);
+                        date = number;
+                        awaitEOL = 1;
                     }
                     else {
-                        error(STATUS_CONTENTS_GARBLED);
-                        break;
+                        if (col == 1) {
+                            if (number > 1000000) {
+                                number = 1000000;
+                            }
+                            ad7768SetOfst((row-2), neg ? -number : number);
+                        }
+                        else {
+                            int gain;
+                            /*
+                             * Scale from parts-per-million to ADC gain counts
+                             *
+                             *   PPM     Gain Counts
+                             * ------- = -----------
+                             * 1000000   (2^24) / 12
+                             *
+                             * Allow this to be done with 32-bit arithmentic
+                             * by removing as many powers of 2 as possible
+                             * and limiting range to 16 bits.
+                             *     (5^6) = 15625
+                             */
+                            if (number > 50000) {
+                                number = 50000;
+                            }
+                            gain = (uint32_t)((number << 16) + ((3*15625)/2)) /
+                                                                      (3*15625);
+                            ad7768SetGain((row-2), neg ? -gain : gain);
+                            awaitEOL = 1;
+                        }
                     }
                 }
                 if (c == '\n') {
@@ -162,14 +163,20 @@ calibrationUpdate(void)
                     row++;
                     col = 1;
                     columnNumber = 0;
+                    awaitEOL = 0;
                 }
                 else {
                     col++;
                 }
-                needNumber = 1;
-                inNumber = 0;
-                number = 0;
-                neg = 0;
+                if (!awaitEOL) {
+                    needNumber = 1;
+                    inNumber = 0;
+                    number = 0;
+                    neg = 0;
+                    continue;
+                }
+            }
+            if (awaitEOL) {
                 continue;
             }
             if (c == '-') {
@@ -203,7 +210,7 @@ calibrationUpdate(void)
         error(STATUS_OPEN_FAILED);
     }
     ffsUnmount();
-    if ((status != STATUS_VALID) || (debugFlags & DEBUGFLAG_CALIBRATION)) {
+    if (debugFlags & DEBUGFLAG_CALIBRATION) {
         printf("Calibration update status %d.\n", status);
     }
 }
