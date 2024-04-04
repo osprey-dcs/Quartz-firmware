@@ -139,7 +139,7 @@ calibrationUpdate(void)
                              * ------- = -----------
                              * 1000000   (2^24) / 12
                              *
-                             * Allow this to be done with 32-bit arithmentic
+                             * Allow this to be done with 32-bit arithmetic
                              * by removing as many powers of 2 as possible
                              * and limiting range to 16 bits.
                              *     (5^6) = 15625
