@@ -43,6 +43,7 @@ enum statusCode { STATUS_VALID = 0,
                   STATUS_MOUNT_FAILED,
                   STATUS_OPEN_FAILED,
                   STATUS_READ_FAILED,
+                  STATUS_EOF,
                   STATUS_CONTENTS_GARBLED,
                   STATUS_BAD_CHARACTER,
                   STATUS_BAD_NUMBER };
@@ -59,6 +60,7 @@ error(int code)
     case STATUS_MOUNT_FAILED:       msg = "Mount failed";           break;
     case STATUS_OPEN_FAILED:        msg = "Open failed";            break;
     case STATUS_READ_FAILED:        msg = "Read failed";            break;
+    case STATUS_EOF:                msg = "Unexpected end of file"; break;
     case STATUS_CONTENTS_GARBLED:   msg = "Syntax error";           break;
     case STATUS_BAD_CHARACTER:      msg = "Bad character";          break;
     case STATUS_BAD_NUMBER:         msg = "Bad number";             break;
@@ -92,6 +94,10 @@ calibrationUpdate(void)
             if (cIndex >= nBuf) {
                 if (f_read(&fil, cbuf, sizeof cbuf, &nBuf) != FR_OK) {
                     error(STATUS_READ_FAILED);
+                    break;
+                }
+                if (nBuf == 0) {
+                    error(STATUS_EOF);
                     break;
                 }
                 cIndex = 0;
