@@ -208,13 +208,13 @@ epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
             r = readReg(bits_addr & LEEP_ADDRESS_MASK);
             replyReg->value = htonl(r);
             if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
-                printf(" [%d]:%08Xr%08X", i, bits_addr, r);
+                printf(" %d:%08X->%08X", i, bits_addr, r);
             }
         }
         else {
             r = ntohl(cmdReg->value);
             if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
-                printf(" [%d]:%08Xw%08X", i, bits_addr, r);
+                printf(" %d:%08X<-%08X", i, bits_addr, r);
             }
             writeReg(bits_addr & LEEP_ADDRESS_MASK, r);
             replyReg->value = cmdReg->value;
