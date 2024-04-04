@@ -1,373 +1,373 @@
 {
-    "FPGA:powerUp_": {
-        "access": "rw",
-        "addr_width": 0,
-        "base_addr": 10,
-        "data_width": 1,
-        "sign": "unsigned"
-    },
-    "firmwareBuildDate": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 20,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "softwareBuildDate": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 21,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "calibrationDate": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 22,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "calibrationStatus": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 23,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "FPGA:reboot": {
-        "access": "w",
-        "addr_width": 0,
-        "base_addr": 30,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "FPGA:uptime": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 40,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ACQ:enable": {
-        "access": "w",
-        "addr_width": 0,
-        "base_addr": 80,
-        "data_width": 1,
-        "sign": "unsigned",
-    },
-    "ACQ:rate": {
-        "access": "w",
-        "addr_width": 0,
-        "base_addr": 81,
-        "data_width": 1,
-        "sign": "unsigned",
-    },
-    "ADC:reset": {
-        "access": "w",
-        "addr_width": 0,
-        "base_addr": 82,
-        "data_width": 1,
-        "sign": "unsigned",
-    },
-    "PLL:VCXO_DAC": {
-        "access": "w",
-        "addr_width": 0,
-        "base_addr": 83,
-        "data_width": 16,
-        "sign": "unsigned",
-    },
-    "FPGA:Temperature": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 100,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "FPGA:VccINT": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 101,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "FPGA:VccAUX": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 102,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "FPGA:VBRAM": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 103,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Marble:U29": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 132,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Marble:U28": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 133,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:FMC1:P12I": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 164,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:FMC1:P12V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 165,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:FMC2:P12I": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 166,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:FMC2:P12V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 167,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:P12I": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 168,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "MARBLE:P12V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 169,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:Temperature": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 170,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:Vcc": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 171,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:RxPower1": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 172,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:RxPower2": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 173,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:RxPower3": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 174,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP1:RxPower4": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 175,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:Temperature": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 176,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:Vcc": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 177,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:RxPower1": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 178,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:RxPower2": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 179,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:RxPower3": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 17,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "QSFP2:RxPower4": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 181,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:N15V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 196,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:P15V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 197,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:P5V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 198,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:P12V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 199,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:3P3V": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 200,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:2P5V1": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 201,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:2P5V2": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 202,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:P12I": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 203,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "Quartz:Temp": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 204,
-        "data_width": 16,
-        "sign": "unsigned"
-    },
-    "ACQ:status": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 228,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ACQ:active": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 229,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ACQ:DCcoupled": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 230,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ACQ:clkPLL": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 260,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "PPS:status": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 261,
-        "data_width": 32,
-        "sign": "unsigned"
-    }
-    "DRDY:status": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 292,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ADC:aligns": {
-        "access": "r",
-        "addr_width": 0,
-        "base_addr": 293,
-        "data_width": 32,
-        "sign": "unsigned"
-    },
-    "ACQ:enable:XX": {
-        "access": "rw",
-        "addr_width": 5,
-        "base_addr": 400,
-        "data_width": 16,
-        "sign": "unsigned",
-    },
-    "ACQ:coupling:XX": {
-        "access": "rw",
-        "addr_width": 5,
-        "base_addr": 500,
-        "data_width": 16,
-        "sign": "unsigned",
-    },
+  "FPGA:powerUp_": {
+    "access": "rw",
+    "addr_width": 0,
+    "base_addr": 10,
+    "data_width": 1,
+    "sign": "unsigned"
+  },
+  "firmwareBuildDate": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 20,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "softwareBuildDate": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 21,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "calibrationDate": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 22,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "calibrationStatus": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 23,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "FPGA:reboot": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 30,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "FPGA:uptime": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 40,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:enable": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 80,
+    "data_width": 1,
+    "sign": "unsigned"
+  },
+  "ACQ:rate": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 81,
+    "data_width": 1,
+    "sign": "unsigned"
+  },
+  "ADC:reset": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 82,
+    "data_width": 1,
+    "sign": "unsigned"
+  },
+  "PLL:VCXO_DAC": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 83,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "FPGA:Temperature": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 100,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "FPGA:VccINT": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 101,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "FPGA:VccAUX": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 102,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "FPGA:VBRAM": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 103,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Marble:U29": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 132,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Marble:U28": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 133,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:FMC1:P12I": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 164,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:FMC1:P12V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 165,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:FMC2:P12I": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 166,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:FMC2:P12V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 167,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:P12I": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 168,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "MARBLE:P12V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 169,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:Temperature": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 170,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:Vcc": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 171,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:RxPower1": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 172,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:RxPower2": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 173,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:RxPower3": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 174,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP1:RxPower4": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 175,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:Temperature": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 176,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:Vcc": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 177,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:RxPower1": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 178,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:RxPower2": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 179,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:RxPower3": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 17,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "QSFP2:RxPower4": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 181,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:N15V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 196,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:P15V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 197,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:P5V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 198,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:P12V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 199,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:3P3V": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 200,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:2P5V1": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 201,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:2P5V2": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 202,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:P12I": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 203,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "Quartz:Temp": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 204,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "ACQ:status": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 228,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:active": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 229,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:DCcoupled": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 230,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:clkPLL": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 260,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "PPS:status": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 261,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "DRDY:status": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 292,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ADC:aligns": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 293,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:enable:XX": {
+    "access": "rw",
+    "addr_width": 5,
+    "base_addr": 400,
+    "data_width": 16,
+    "sign": "unsigned"
+  },
+  "ACQ:coupling:XX": {
+    "access": "rw",
+    "addr_width": 5,
+    "base_addr": 500,
+    "data_width": 16,
+    "sign": "unsigned"
+  }
 }
