@@ -203,7 +203,7 @@ calibrationUpdate(void)
         error(STATUS_OPEN_FAILED);
     }
     ffsUnmount();
-    if (debugFlags & DEBUGFLAG_CALIBRATION) {
+    if ((status != STATUS_VALID) || (debugFlags & DEBUGFLAG_CALIBRATION)) {
         printf("Calibration update status %d.\n", status);
     }
 }
