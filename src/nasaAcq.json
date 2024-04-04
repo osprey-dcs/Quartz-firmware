@@ -59,7 +59,7 @@
     "access": "w",
     "addr_width": 0,
     "base_addr": 81,
-    "data_width": 1,
+    "data_width": 32,
     "sign": "unsigned"
   },
   "ADC:reset": {
