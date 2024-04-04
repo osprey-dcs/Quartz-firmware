@@ -75,6 +75,7 @@ struct LEEPpacket {
 #define REG_RESET_ADCS              82
 #define REG_SET_VCXO_DAC            83
 #define REG_SYSMON_BASE             100
+#define SYSMON_SIZE                 300
 #define REG_ACQ_CHAN_ACTIVE_BASE    400
 #define REG_ACQ_CHAN_COUPLING_BASE  500
 #define REG_JSON_ROM_BASE           0x800
@@ -136,8 +137,10 @@ readReg(int address)
     case REG_SOFTWARE_BUILD_DATE: return SOFTWARE_BUILD_DATE;
     case REG_CALIBRATION_DATE:    return calibrationDate();
     case REG_CALIBRATION_STATUS:  return calibrationStatus();
+    case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     }
-    if ((address >= REG_SYSMON_BASE) && (address < (REG_SYSMON_BASE + 99))) {
+    if ((address >= REG_SYSMON_BASE)
+     && (address < (REG_SYSMON_BASE + SYSMON_SIZE))) {
         int offset = address - REG_SYSMON_BASE;
         int bank = offset & 0xE0;
         int index = offset & 0x1F;
