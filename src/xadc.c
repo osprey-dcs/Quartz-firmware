@@ -61,10 +61,10 @@ uint32_t
 xadcFetchSysmon(int index)
 {
     switch(index) {
-    case 0: In32(R_TEMP);
-    case 1: In32(R_VCCINT);
-    case 2: In32(R_VCCAUX);
-    case 3: In32(R_VBRAM);
+    case 0: return In32(R_TEMP);
+    case 1: return In32(R_VCCINT);
+    case 2: return In32(R_VCCAUX);
+    case 3: return In32(R_VBRAM);
     }
     return 0;
 }
