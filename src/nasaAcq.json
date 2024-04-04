@@ -233,7 +233,7 @@
   "QSFP2:RxPower3": {
     "access": "r",
     "addr_width": 0,
-    "base_addr": 17,
+    "base_addr": 180,
     "data_width": 16,
     "sign": "unsigned"
   },
