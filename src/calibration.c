@@ -92,6 +92,7 @@ calibrationUpdate(void)
         columnNumber = 0;
         for (;;) {
             char c;
+            columnNumber++;
             if (cIndex >= nBuf) {
                 if (f_read(&fil, cbuf, sizeof cbuf, &nBuf) != FR_OK) {
                     error(STATUS_READ_FAILED);
@@ -104,11 +105,6 @@ calibrationUpdate(void)
                 cIndex = 0;
             }
             c = cbuf[cIndex++];
-            columnNumber++;
-            if ((c == ' ') || (c == '\t')) {
-                inNumber = 0;
-                continue;
-            }
             if ((c == '\n') || (c == ',')) {
                 if (!awaitEOL) {
                     if (needNumber) {
@@ -177,6 +173,10 @@ calibrationUpdate(void)
                 }
             }
             if (awaitEOL) {
+                continue;
+            }
+            if ((c == ' ') || (c == '\t') || (c == '\r')) {
+                inNumber = 0;
                 continue;
             }
             if (c == '-') {
