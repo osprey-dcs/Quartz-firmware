@@ -60,7 +60,6 @@ module buildPacket #(
 localparam BYTES_PER_ADC = (ADC_WIDTH + 7) / 8;
 
 localparam ADC_COUNT = ADC_CHIP_COUNT * ADC_PER_CHIP;
-localparam ADCS_PER_SAMPLE_WIDTH = $clog2(ADC_COUNT+1);
 localparam ADC_SHIFT_COUNT = ADC_COUNT * BYTES_PER_ADC;
 localparam ADC_SHIFT_COUNTER_LOAD = ADC_SHIFT_COUNT - 1;
 localparam ADC_SHIFT_COUNTER_WIDTH = $clog2(ADC_SHIFT_COUNTER_LOAD+1) + 1;
