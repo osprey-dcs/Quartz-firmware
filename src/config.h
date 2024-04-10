@@ -58,7 +58,7 @@
 /*
  * AD7768 master clock
  */
-#define CFG_MCLK_RATE   32000000
+#define CFG_MCLK_MAX_RATE   32000000
 
 /*
  * FMC AD7768 ADCs

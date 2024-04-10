@@ -34,7 +34,7 @@
 /*
  * Fast data source
  */
-#define FAST_DATA_PORT 55010
+#define FAST_DATA_PORT 54399
 
 /*
  * Create server

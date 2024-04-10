@@ -35,5 +35,10 @@ void acqSetCoupling(int channel, int dcCoupled);
 int acqGetCoupling(int channel);
 void acqSubscriptionChange(int subscriberPresent);
 uint32_t acqFetchSysmon(int offset);
+void acqSetLOLOthreshold(int channel, int threshold);
+void acqSetLOthreshold(int channel, int threshold);
+void acqSetHIthreshold(int channel, int threshold);
+void acqSetHIHIthreshold(int channel, int threshold);
+uint32_t acqGetLimitExcursions(int type);
 
 #endif /* _ACQ_H_ */

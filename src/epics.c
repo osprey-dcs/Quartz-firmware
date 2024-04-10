@@ -74,10 +74,18 @@ struct LEEPpacket {
 #define REG_SAMPLING_RATE           81
 #define REG_RESET_ADCS              82
 #define REG_SET_VCXO_DAC            83
+#define REG_GET_LOLO                90
+#define REG_GET_LO                  91
+#define REG_GET_HI                  92
+#define REG_GET_HIHI                93
 #define REG_SYSMON_BASE             100
 #define SYSMON_SIZE                 300
 #define REG_ACQ_CHAN_ACTIVE_BASE    400
 #define REG_ACQ_CHAN_COUPLING_BASE  500
+#define REG_SET_LOLO_BASE           1000
+#define REG_SET_LO_BASE             1032
+#define REG_SET_HI_BASE             1064
+#define REG_SET_HIHI_BASE           1096
 #define REG_JSON_ROM_BASE           0x800
 
 static int powerUpFlag = 1;
@@ -101,6 +109,26 @@ writeReg(int address, uint32_t value)
     if ((address >= REG_ACQ_CHAN_COUPLING_BASE)
      && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
         acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
+        return;
+    }
+    if ((address >= REG_SET_LOLO_BASE)
+     && (address < (REG_SET_LOLO_BASE + CHANNEL_COUNT))) {
+        acqSetLOLOthreshold(address - REG_SET_LOLO_BASE, value);
+        return;
+    }
+    if ((address >= REG_SET_LO_BASE)
+     && (address < (REG_SET_LO_BASE + CHANNEL_COUNT))) {
+        acqSetLOthreshold(address - REG_SET_LO_BASE, value);
+        return;
+    }
+    if ((address >= REG_SET_HI_BASE)
+     && (address < (REG_SET_HI_BASE + CHANNEL_COUNT))) {
+        acqSetHIthreshold(address - REG_SET_HI_BASE, value);
+        return;
+    }
+    if ((address >= REG_SET_HIHI_BASE)
+     && (address < (REG_SET_HIHI_BASE + CHANNEL_COUNT))) {
+        acqSetHIHIthreshold(address - REG_SET_HIHI_BASE, value);
         return;
     }
 }
@@ -163,6 +191,10 @@ readReg(int address)
      && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
         return acqGetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE);
     }
+    if ((address >= REG_GET_LOLO)
+     && (address <= REG_GET_HIHI)) {
+        return acqGetLimitExcursions(address - REG_GET_LOLO);
+    }
     return 0;
 }
 
@@ -211,13 +243,13 @@ epicsHandler(ospreyUDPendpoint endpoint, uint32_t farAddress, int farPort,
             r = readReg(bits_addr & LEEP_ADDRESS_MASK);
             replyReg->value = htonl(r);
             if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
-                printf(" %d:%08X->%08X", i, bits_addr, r);
+                printf(" %d:%08Xr%08X", i, bits_addr, r);
             }
         }
         else {
             r = ntohl(cmdReg->value);
             if ((debugFlags & DEBUGFLAG_EPICS) && (i < 2)) {
-                printf(" %d:%08X<-%08X", i, bits_addr, r);
+                printf(" %d:%08Xw%08X", i, bits_addr, r);
             }
             writeReg(bits_addr & LEEP_ADDRESS_MASK, r);
             replyReg->value = cmdReg->value;

@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Osprey DCS
+ * Copyright (c) 2024 Osprey DCS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -48,6 +48,12 @@
 #define BYTECOUNT_W_SUBSCRIBER_ABSENT   0x40000000
 #define BYTECOUNT_W_SET_BYTECOUNT       0x10000
 
+#define THRESHOLD_CSR_SELECT_LOLO   0x00000000
+#define THRESHOLD_CSR_SELECT_LO     0x40000000
+#define THRESHOLD_CSR_SELECT_HI     0x80000000
+#define THRESHOLD_CSR_SELECT_HIHI   0xC0000000
+#define THRESHOLD_CSR_VALUE_MASK    0xFFFFFF
+
 #if ((CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) > 32)
 # error "Code needs some rework to handle that many ADC channels"
 #endif
@@ -61,6 +67,7 @@ struct pkHeader {
     uint32_t    seqLo;
     uint32_t    seconds;
     uint32_t    ticks;
+    uint32_t    limitExcursions[4];
 };
 
 static uint32_t activeChannels = 0xFF;
@@ -99,6 +106,15 @@ acqSetActiveChannels(void)
 void
 acqInit(void)
 {
+    int i;
+    int hihi = (1 << (CFG_AD7768_WIDTH - 1)) - 1;
+    int hi = (((1 << 23) - 1) * 9) / 10;
+    for (i = 0 ; (i < CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) ; i++) {
+        acqSetLOLOthreshold(i, -hihi);
+        acqSetLOthreshold  (i, -hi);
+        acqSetHIthreshold  (i, hi);
+        acqSetHIHIthreshold(i, hihi);
+    }
     acqSetActiveChannels();
 }
 
@@ -175,4 +191,47 @@ acqFetchSysmon(int offset)
     case 2: return GPIO_READ(GPIO_IDX_INPUT_COUPLING_CSR);
     default: return 0;
     }
+}
+
+static void
+setThreshold(uint32_t select, int channel, int threshold)
+{
+    if ((channel < 0)
+     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
+        return;
+    }
+    GPIO_WRITE(GPIO_IDX_ADC_THRESHOLDS, select | (channel << 24) |
+                                        (threshold & THRESHOLD_CSR_VALUE_MASK));
+}
+
+void
+acqSetLOLOthreshold(int channel, int threshold)
+{
+    setThreshold(THRESHOLD_CSR_SELECT_LOLO, channel, threshold);
+}
+
+void
+acqSetLOthreshold(int channel, int threshold)
+{
+    setThreshold(THRESHOLD_CSR_SELECT_LO, channel, threshold);
+}
+
+void
+acqSetHIthreshold(int channel, int threshold)
+{
+    setThreshold(THRESHOLD_CSR_SELECT_HI, channel, threshold);
+}
+
+void
+acqSetHIHIthreshold(int channel, int threshold)
+{
+    setThreshold(THRESHOLD_CSR_SELECT_HIHI, channel, threshold);
+}
+
+uint32_t
+acqGetLimitExcursions(int type)
+{
+    GPIO_WRITE(GPIO_IDX_ADC_EXCURSIONS, type);
+    microsecondSpin(1);
+    return GPIO_READ(GPIO_IDX_ADC_EXCURSIONS);
 }

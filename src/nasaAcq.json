@@ -125,7 +125,7 @@
     "data_width": 32,
     "sign": "unsigned"
   },
-  "ACQ:HIstatus": {
+  "ACQ:HIHIstatus": {
     "access": "r",
     "addr_width": 0,
     "base_addr": 93,
