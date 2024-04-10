@@ -76,6 +76,62 @@
     "data_width": 16,
     "sign": "unsigned"
   },
+  "ACQ:LOLOlimXX": {
+    "access": "w",
+    "addr_width": 5,
+    "base_addr":  1000,
+    "data_width": 32,
+    "sign": "signed"
+  },
+  "ACQ:LOlimXX": {
+    "access": "w",
+    "addr_width": 5,
+    "base_addr": 1032,
+    "data_width": 32,
+    "sign": "signed"
+  },
+  "ACQ:HIlimXX": {
+    "access": "w",
+    "addr_width": 5,
+    "base_addr": 1064,
+    "data_width": 32,
+    "sign": "signed"
+  },
+  "ACQ:HIHIlimXX": {
+    "access": "w",
+    "addr_width": 5,
+    "base_addr": 1096,
+    "data_width": 32,
+    "sign": "signed"
+  },
+  "ACQ:LOLOstatus": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 90,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:LOstatus": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 91,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:HIstatus": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 92,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ACQ:HIstatus": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 93,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "FPGA:Temperature": {
     "access": "r",
     "addr_width": 0,
@@ -360,14 +416,14 @@
     "access": "rw",
     "addr_width": 5,
     "base_addr": 400,
-    "data_width": 16,
+    "data_width": 1,
     "sign": "unsigned"
   },
   "ACQ:coupling:XX": {
     "access": "rw",
     "addr_width": 5,
     "base_addr": 500,
-    "data_width": 16,
+    "data_width": 1,
     "sign": "unsigned"
   }
 }
