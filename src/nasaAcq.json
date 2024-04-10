@@ -179,7 +179,7 @@
     "addr_width": 0,
     "base_addr": 164,
     "data_width": 16,
-    "sign": "signed"
+    "sign": "unsigned"
   },
   "MARBLE:FMC1:P12V": {
     "access": "r",
@@ -207,7 +207,7 @@
     "addr_width": 0,
     "base_addr": 168,
     "data_width": 16,
-    "sign": "unsigned"
+    "sign": "signed"
   },
   "MARBLE:P12V": {
     "access": "r",
