@@ -32,7 +32,7 @@ module ad7768 #(
     parameter ADC_WIDTH      = 24,
     parameter SYSCLK_RATE    = 100000000,
     parameter ACQ_CLK_RATE   = 125000000,
-    parameter MCLK_RATE      = 32000000,
+    parameter MCLK_MAX_RATE  = 32000000,
     parameter DEBUG_DRDY     = "false",
     parameter DEBUG_ALIGN    = "false",
     parameter DEBUG_ACQ      = "false",
@@ -74,7 +74,7 @@ localparam SKEW_LIMIT_ACQ_TICKS =  (((ACQ_CLK_RATE / 1000) * SKEW_LIMIT_NS) +
                                                               999999) / 1000000;
 localparam HEADER_WIDTH = 8;
 localparam DCLK_DIV = 4;
-localparam DCLK_RATE = MCLK_RATE / DCLK_DIV;
+localparam DCLK_MAX_RATE = MCLK_MAX_RATE / DCLK_DIV;
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock (sysClk) domain
@@ -180,32 +180,34 @@ assign adcSDI = spiShiftReg[SPI_SHIFTREG_WIDTH-1];
 
 assign sysStatus = { spiActive,
                      sysDoneAlignmentToggle ^ sysStartAlignmentToggle,
-                     {32 - 2 - SPI_SHIFTREG_WIDTH{1'b0}},
+                     sysUseFakeAD7768,
+                     sysResetADC,
+                     {32 - 4 - SPI_SHIFTREG_WIDTH{1'b0}},
                      spiShiftReg };
 
 ///////////////////////////////////////////////////////////////////////////////
 // ADC MCLK domain
 ///////////////////////////////////////////////////////////////////////////////
 // Fake hardware
-wire                  [ADC_CHIP_COUNT-1:0] fake_DCLK;
-wire                  [ADC_CHIP_COUNT-1:0] fake_DRDY;
-wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] fake_DOUT;
+wire                  [ADC_CHIP_COUNT-1:0] fakeDCLK;
+wire                  [ADC_CHIP_COUNT-1:0] fakeDRDY;
+wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] fakeDOUT;
 fakeQuartzAD7768 #(
     .ADC_CHIP_COUNT(ADC_CHIP_COUNT),
     .ADC_PER_CHIP(ADC_PER_CHIP),
     .ADC_WIDTH(ADC_WIDTH))
   fakeQuartzAD7768 (
     .MCLK(clk32),
-    .adcDCLK(fake_DCLK),
-    .adcDRDY(fake_DRDY),
-    .adcDOUT(fake_DOUT));
-wire                  [ADC_CHIP_COUNT-1:0] muxDCLK_a;
-wire                  [ADC_CHIP_COUNT-1:0] muxDRDY_a;
-wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] muxDOUT_a;
+    .adcDCLK(fakeDCLK),
+    .adcDRDY(fakeDRDY),
+    .adcDOUT(fakeDOUT));
+(*MARK_DEBUG=DEBUG_ACQ*) wire                  [ADC_CHIP_COUNT-1:0] muxDCLK_a;
+(*MARK_DEBUG=DEBUG_ACQ*) wire                  [ADC_CHIP_COUNT-1:0] muxDRDY_a;
+(*MARK_DEBUG=DEBUG_ACQ*) wire [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] muxDOUT_a;
 
-assign muxDCLK_a = sysUseFakeAD7768 ? fake_DCLK : adcDCLK_a;
-assign muxDRDY_a = sysUseFakeAD7768 ? fake_DRDY : adcDRDY_a;
-assign muxDOUT_a = sysUseFakeAD7768 ? fake_DOUT : adcDOUT_a;
+assign muxDCLK_a = sysUseFakeAD7768 ? fakeDCLK : adcDCLK_a;
+assign muxDRDY_a = sysUseFakeAD7768 ? fakeDRDY : adcDRDY_a;
+assign muxDOUT_a = sysUseFakeAD7768 ? fakeDOUT : adcDOUT_a;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock (acqClk) domain
@@ -294,7 +296,8 @@ end
 // The offset applied to SAMPLE_DELAY_LOAD was obtained emperically and
 // accounts for the latency in latching the DCLK lines.
 
-localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_RATE) / (2 * DCLK_RATE);
+localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_MAX_RATE) /
+                                                            (2 * DCLK_MAX_RATE);
 localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 5;
 localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
 reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
@@ -305,7 +308,7 @@ localparam ADC_BITCOUNT_LOAD = HEADER_WIDTH + ADC_WIDTH - 2;
 localparam ADC_BITCOUNT_WIDTH = $clog2(ADC_BITCOUNT_LOAD+1)+1;
 reg [ADC_BITCOUNT_WIDTH-1:0] adcBitCount = ADC_BITCOUNT_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) wire adcBitCountDone=adcBitCount[ADC_BITCOUNT_WIDTH-1];
-reg acqActive = 0;
+(*MARK_DEBUG=DEBUG_ACQ*) reg acqActive = 0;
 
 always @(posedge acqClk) begin
     // Assert sampleFlag near center of shortest DCLK cycle
@@ -356,9 +359,9 @@ end
 genvar i;
 generate
 for (i = 0 ; i < ADC_CHIP_COUNT * ADC_PER_CHIP ; i = i + 1) begin : adcDOUT
-  reg  [HEADER_WIDTH+ADC_WIDTH-1:0] shiftReg;
-  (*MARK_DEBUG=DEBUG_ACQ*)wire [HEADER_WIDTH+ADC_WIDTH-1:0] shiftNext = {
-                            shiftReg[HEADER_WIDTH+ADC_WIDTH-2:0], muxDOUT_a[i]};
+  (*MARK_DEBUG=DEBUG_ACQ*) reg [HEADER_WIDTH+ADC_WIDTH-1:0] shiftReg;
+  wire [HEADER_WIDTH+ADC_WIDTH-1:0] shiftNext = {
+                           shiftReg[0+:HEADER_WIDTH+ADC_WIDTH-1], muxDOUT_a[i]};
   assign acqData[i*ADC_WIDTH+:ADC_WIDTH] = shiftReg[0+:ADC_WIDTH];
   assign acqHeaders[i*HEADER_WIDTH+:HEADER_WIDTH] =
                                            shiftReg[ADC_WIDTH+:HEADER_WIDTH];

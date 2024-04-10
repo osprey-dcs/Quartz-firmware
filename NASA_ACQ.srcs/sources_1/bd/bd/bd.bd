@@ -2147,6 +2147,9 @@
           "DEBUG_RX_MAC": {
             "value": "false"
           },
+          "DEBUG_TX_FAST": {
+            "value": "false"
+          },
           "DEBUG_TX_MAC": {
             "value": "false"
           },

@@ -22,7 +22,7 @@
         "C_S_AXI_DATA_WIDTH": [ { "value": "32", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "ENABLE_ICMP_ECHO": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "DEBUG_ICMP": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
-        "DEBUG_TX_FAST": [ { "value": "false", "resolve_type": "user", "format": "bool", "usage": "all" } ],
+        "DEBUG_TX_FAST": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "DEBUG_RX_MAC": [ { "value": "false", "value_src": "user", "resolve_type": "user", "format": "bool", "usage": "all" } ],
         "RX_FIFO_DEPTH": [ { "value": "16384", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ]
       },

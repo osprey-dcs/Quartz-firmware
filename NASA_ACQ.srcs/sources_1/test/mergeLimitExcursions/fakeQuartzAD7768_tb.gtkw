@@ -1,0 +1,51 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Feb 23 18:56:22 2024
+[*]
+[dumpfile] "fakeQuartzAD7768_tb.fst"
+[dumpfile_mtime] "Fri Feb 23 18:55:51 2024"
+[dumpfile_size] 1344
+[savefile] "fakeQuartzAD7768_tb.gtkw"
+[timestart] 0
+[size] 1792 635
+[pos] 1889 23
+*-22.057100 -1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] fakeQuartzAD7768_tb.
+[sst_width] 253
+[signals_width] 144
+[sst_expanded] 1
+[sst_vpaned_height] 171
+@28
+fakeQuartzAD7768_tb.MCLK
+fakeQuartzAD7768_tb.adcDCLK
+fakeQuartzAD7768_tb.adcDRDY
+@22
+fakeQuartzAD7768_tb.adcDOUT[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
