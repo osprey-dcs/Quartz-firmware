@@ -203,6 +203,7 @@ reg [FORWARD_DATA_WIDTH-1:0] sysForwardData, acqForwardData;
 reg [ADC_COUNT-1:0] sysActiveChannels = ~0;
 reg [BYTECOUNT_WIDTH-1:0] sysByteCount = 1400;
 reg sysSubscriberPresent = 0;
+reg sysIsCalibrated = 0;
 
 wire [ADC_SEL_WIDTH-1:0] sysADCsel = sysGPIO_OUT[ADC_WIDTH+:ADC_SEL_WIDTH];
 reg signed [ADC_WIDTH-1:0] sysThresholdLOLO [0:ADC_COUNT-1];
@@ -216,6 +217,12 @@ always @(posedge sysClk) begin
     end
     if (sysByteCountStrobe) begin
         if (sysGPIO_OUT[16]) sysByteCount <= sysGPIO_OUT[0+:BYTECOUNT_WIDTH];
+        if (sysGPIO_OUT[24]) begin
+            sysIsCalibrated <= 0;
+        end
+        else if (sysGPIO_OUT[25]) begin
+            sysIsCalibrated <= 1;
+        end
         if (sysGPIO_OUT[30]) begin
             sysSubscriberPresent <= 0;
         end
@@ -248,7 +255,8 @@ end
 assign sysStatus = { acqEnableAcquisition,
                      acquisitionActive,
                      sysSubscriberPresent,
-                     25'b0,
+                     sysIsCalibrated,
+                     24'b0,
                      sendOverrun, adcOverrun, !sysTimeValid, !acqClkLocked };
 assign sysActiveRbk = sysActiveChannels;
 assign sysByteCountRbk = { {32-BYTECOUNT_WIDTH{1'b0}}, sysByteCount};
@@ -369,7 +377,8 @@ always @(posedge acqClk) begin
                     headerShiftReg <= {
                           "P", "S", "N", "B",
                           pscdrvByteCount,
-                          { {28{1'b0}},
+                          { {27{1'b0}},
+                            !sysIsCalibrated,
                             sendOverrun, adcOverrun,
                             !acqTimeValid, !acqClkLocked },
                           acqActiveChannels,
