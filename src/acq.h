@@ -39,6 +39,7 @@ void acqSetLOLOthreshold(int channel, int threshold);
 void acqSetLOthreshold(int channel, int threshold);
 void acqSetHIthreshold(int channel, int threshold);
 void acqSetHIHIthreshold(int channel, int threshold);
+void acqSetCalibrationValidity(int isCalibrated);
 uint32_t acqGetLimitExcursions(int type);
 
 #endif /* _ACQ_H_ */

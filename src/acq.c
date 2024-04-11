@@ -46,6 +46,8 @@
 
 #define BYTECOUNT_W_SUBSCRIBER_PRESENT  0x80000000
 #define BYTECOUNT_W_SUBSCRIBER_ABSENT   0x40000000
+#define BYTECOUNT_W_CALIBRATION_VALID   0x2000000
+#define BYTECOUNT_W_CALIBRATION_INVALID 0x1000000
 #define BYTECOUNT_W_SET_BYTECOUNT       0x10000
 
 #define THRESHOLD_CSR_SELECT_LOLO   0x00000000
@@ -180,6 +182,14 @@ acqSubscriptionChange(int subscriberPresent)
     GPIO_WRITE(GPIO_IDX_BUILD_PACKET_BYTECOUNT, subscriberPresent ?
                                                 BYTECOUNT_W_SUBSCRIBER_PRESENT :
                                                 BYTECOUNT_W_SUBSCRIBER_ABSENT);
+}
+
+void
+acqSetCalibrationValidity(int isCalibrated)
+{
+    GPIO_WRITE(GPIO_IDX_BUILD_PACKET_BYTECOUNT, isCalibrated ?
+                                               BYTECOUNT_W_CALIBRATION_VALID :
+                                               BYTECOUNT_W_CALIBRATION_INVALID);
 }
 
 uint32_t

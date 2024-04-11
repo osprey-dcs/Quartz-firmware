@@ -218,6 +218,18 @@ ad7768Init(void)
     }
 }
 
+/*
+ * There is not a 1:1 mapping of input channel number to ADC channel number.
+ * Untangle the mapping here
+ */
+static int
+mapChannel(int inputChannel)
+{
+    static const uint8_t chipChannel[CFG_AD7768_ADC_PER_CHIP] = { 
+                                                       3, 2, 1, 0, 4, 5, 6, 7 };
+    return chipChannel[inputChannel % CFG_AD7768_ADC_PER_CHIP];
+}
+
 int
 ad7768SetOfst(int channel, int offset)
 {
@@ -237,7 +249,7 @@ ad7768SetOfst(int channel, int offset)
         printf("AD7768[%d] offset %d\n", channel, offset);
     }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
-    reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x20;
+    reg  = (mapChannel(channel) * 3) + 0x20;
     for (i = 0 ; i < 3 ; i++) {
         writeReg(chip, reg, offset & 0xFF);
         offset >>= 8;
@@ -266,7 +278,7 @@ ad7768SetGain(int channel, int gain)
         printf("AD7768[%d] gain %d\n", channel, gain);
     }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
-    reg  = ((channel % CFG_AD7768_ADC_PER_CHIP) * 3) + 0x338;
+    reg  = (mapChannel(channel) * 3) + 0x338;
     gain += 0x555555;
     for (i = 0 ; i < 3 ; i++) {
         writeReg(chip, reg, gain & 0xFF);

@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include "ad7768.h"
+#include "acq.h"
 #include "config.h"
 #include "ffs.h"
 #include "calibration.h"
@@ -213,6 +214,7 @@ calibrationUpdate(void)
     if (debugFlags & DEBUGFLAG_CALIBRATION) {
         printf("Calibration update status %d.\n", status);
     }
+    acqSetCalibrationValidity(status == 0);
 }
 
 uint32_t
