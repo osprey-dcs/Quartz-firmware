@@ -46,7 +46,11 @@ reg dclk = 0;
 
 localparam HEADER_WIDTH = 8;
 localparam SHIFTREG_WIDTH = HEADER_WIDTH + ADC_WIDTH;
-reg [SHIFTREG_WIDTH-1:0] shiftReg = 0;
+reg [SHIFTREG_WIDTH-1:0] shiftReg0 = 0;
+wire dout = shiftReg0[SHIFTREG_WIDTH-1];
+reg shiftReg1Neg = 0;
+reg [SHIFTREG_WIDTH-1:0] shiftReg1 = 4096;
+wire dout1 = shiftReg1[SHIFTREG_WIDTH-1];
 
 localparam BITCOUNTER_LOAD = HEADER_WIDTH + ADC_WIDTH - 2; 
 localparam BITCOUNTER_WIDTH = $clog2(BITCOUNTER_LOAD+1) + 1;
@@ -62,12 +66,15 @@ always @(posedge MCLK) begin
         if (dclk == 0) begin
             if (bitCounterDone) begin
                 bitCounter <= BITCOUNTER_LOAD;
-                shiftReg <= { {HEADER_WIDTH{1'b0}}, adcVal };
+                shiftReg0 <= { {HEADER_WIDTH{1'b0}}, adcVal };
+                shiftReg1 <= shiftReg1Neg ? -4096 : 4096;
                 adcVal <= adcVal + 1;
             end
             else begin
                 bitCounter <= bitCounter - 1;
-                shiftReg <= {shiftReg[0+:SHIFTREG_WIDTH-1], 1'b0};
+                shiftReg0 <= {shiftReg0[0+:SHIFTREG_WIDTH-1], 1'b0};
+                shiftReg1 <= {shiftReg1[0+:SHIFTREG_WIDTH-1], 1'b0};
+                shiftReg1Neg <= !shiftReg1Neg;
             end
         end
     end
@@ -76,9 +83,15 @@ always @(posedge MCLK) begin
     end
 end
 
+
 assign adcDCLK = {ADC_CHIP_COUNT{dclk}};
 assign adcDRDY = {ADC_CHIP_COUNT{bitCounterDone}};
-assign adcDOUT = {ADC_CHIP_COUNT*ADC_PER_CHIP{shiftReg[SHIFTREG_WIDTH-1]}};
+genvar i;
+generate
+  for (i = 0 ; i < (ADC_CHIP_COUNT*ADC_PER_CHIP) ; i = i + 1) begin
+    assign adcDOUT[i] = (i == 1) ? dout1 : dout;
+  end
+endgenerate
 
 endmodule
 `default_nettype wire
