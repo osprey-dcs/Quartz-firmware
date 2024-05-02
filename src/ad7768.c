@@ -230,11 +230,11 @@ mapChannel(int inputChannel)
     return chipChannel[inputChannel % CFG_AD7768_ADC_PER_CHIP];
 }
 
+static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 int
 ad7768SetOfst(int channel, int offset)
 {
     int i, chip, reg;
-    static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
     if (channel == CHANNEL_RESTORE) {
         for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
             ad7768SetOfst(i, offsets[i]);
@@ -248,6 +248,7 @@ ad7768SetOfst(int channel, int offset)
     if (debugFlags & DEBUGFLAG_CALIBRATION) {
         printf("AD7768[%d] offset %d\n", channel, offset);
     }
+    offsets[channel] = offset;
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = (mapChannel(channel) * 3) + 0x20;
     for (i = 0 ; i < 3 ; i++) {
@@ -255,15 +256,14 @@ ad7768SetOfst(int channel, int offset)
         offset >>= 8;
         reg--;
     }
-    offsets[channel] = offset;
     return 0;
 }
 
+static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 int
 ad7768SetGain(int channel, int gain)
 {
     int i, chip, reg;
-    static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
     if (channel == CHANNEL_RESTORE) {
         for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
             ad7768SetGain(i, gains[i]);
@@ -279,14 +279,33 @@ ad7768SetGain(int channel, int gain)
     }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = (mapChannel(channel) * 3) + 0x338;
-    gain += 0x555555;
+    gains[channel] = gain;
+    gain+= 0x555555;
     for (i = 0 ; i < 3 ; i++) {
         writeReg(chip, reg, gain & 0xFF);
         gain >>= 8;
         reg--;
     }
-    gains[channel] = gain;
     return 0;
+}
+int
+ad7768GetOfst(int channel)
+{
+    if ((channel < 0)
+     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
+        return -1;
+    }
+    return offsets[channel] ;
+}
+
+int
+ad7768GetGain(int channel)
+{
+    if ((channel < 0)
+     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
+        return -1;
+    }
+    return gains[channel];
 }
 
 void

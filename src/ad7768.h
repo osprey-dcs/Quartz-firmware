@@ -35,6 +35,8 @@ void ad7768DumpReg(void);
 void ad7768StartAlignment(void);
 int ad7768SetOfst(int channel, int offset);
 int ad7768SetGain(int channel, int gain);
+int ad7768GetOfst(int channel);
+int ad7768GetGain(int channel);
 void ad7768SetSamplingRate(int rate);
 
 uint32_t ad7768FetchSysmon(int index);

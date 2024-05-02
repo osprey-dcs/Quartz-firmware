@@ -82,6 +82,8 @@ struct LEEPpacket {
 #define SYSMON_SIZE                 300
 #define REG_ACQ_CHAN_ACTIVE_BASE    400
 #define REG_ACQ_CHAN_COUPLING_BASE  500
+#define REG_CALIB_CHAN_OFFSET_BASE  800
+#define REG_CALIB_CHAN_GAIN_BASE    900
 #define REG_SET_LOLO_BASE           1000
 #define REG_SET_LO_BASE             1032
 #define REG_SET_HI_BASE             1064
@@ -195,6 +197,16 @@ readReg(int address)
      && (address <= REG_GET_HIHI)) {
         return acqGetLimitExcursions(address - REG_GET_LOLO);
     }
+if (address < REG_JSON_ROM_BASE)printf("address: %d\n", address);
+    if ((address >= REG_CALIB_CHAN_OFFSET_BASE)
+     && (address < (REG_CALIB_CHAN_OFFSET_BASE + CHANNEL_COUNT))) {
+        return ad7768GetOfst(address - REG_CALIB_CHAN_OFFSET_BASE);
+    }
+    if ((address >= REG_CALIB_CHAN_GAIN_BASE)
+     && (address < (REG_CALIB_CHAN_GAIN_BASE + CHANNEL_COUNT))) {
+        return ad7768GetGain(address - REG_CALIB_CHAN_GAIN_BASE);
+    }
+if (address < REG_JSON_ROM_BASE)printf("NOPE\n");
     return 0;
 }
 
