@@ -85,7 +85,7 @@ for (i = 0 ; i < CHANNEL_COUNT ; i = i + 1) begin : inputCoupler
 
     iirHighpass #(
         .TDATA_WIDTH(DATA_WIDTH),
-        .LOG2_ALPHA(18))
+        .LOG2_ALPHA(15))
       iirHigPass_i (
         .clk(clk),
         .S_TDATA(inData),
