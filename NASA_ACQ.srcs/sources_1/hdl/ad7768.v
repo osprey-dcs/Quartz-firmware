@@ -249,9 +249,10 @@ always @(posedge acqClk) begin
      */
     case (drdyState)
     DRDY_STATE_AWAIT_RISING: begin
-        if (drdyRising) begin
+        if (drdyRising != 0) begin
             drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
             if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+                // Aligned within about 8 ns
                 drdyAligned <= 1;
                 drdyState <= DRDY_STATE_AWAIT_LOW;
             end
@@ -263,6 +264,7 @@ always @(posedge acqClk) begin
     DRDY_STATE_SKEW_1: begin
         drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
         if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+            // Aligned within about 16 ns
             drdyAligned <= 1;
             drdyState <= DRDY_STATE_AWAIT_LOW;
         end
@@ -273,6 +275,7 @@ always @(posedge acqClk) begin
     DRDY_STATE_SKEW_2: begin
         drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
         if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+            // Aligned within between about 8 and about 24 ns
             drdyAligned <= 1;
             drdyState <= DRDY_STATE_AWAIT_LOW;
         end
