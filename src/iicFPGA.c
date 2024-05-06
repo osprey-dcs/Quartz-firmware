@@ -100,6 +100,75 @@ isPresent(int muxVal, int addr7)
     return 1;
 }
 
+static int serialNumber[2];
+static void
+showIPMI(int device)
+{
+    uint8_t cbuf[128];
+    int i, field;
+    int offset, length, number;
+    int index = device - IIC_FPGA_IDX_FMC1_EEPROM;
+    uint8_t sum;
+    if (iicFPGAeepromRead(device, 0, sizeof cbuf, cbuf) != sizeof cbuf) {
+        printf("WARNING -- Can't read FMC EEPROM.\n");
+        return;
+    }
+    for (i = 0, sum = 0 ; i < 8 ; i++) {
+        sum += cbuf[i];
+    }
+    if (sum != 0) {
+        printf("WARNING -- FMC EEPROM checksum fault.\n");
+        return;
+    }
+    if (cbuf[3] == 0) {
+        printf("WARNING -- FMC EEPROM has no board information.\n");
+        return;
+    }
+    offset = cbuf[3] * 8;
+    if ((cbuf[offset] != 0x01)
+     || ((length = cbuf[offset+1] * 8) == 0)
+     || ((offset + length) > sizeof cbuf)) {
+        printf("WARNING -- FMC EEPROM has bad board information.\n");
+        return;
+    }
+    offset += 6;    /* Skip over language and date/time */
+    for (field = 0 ; field < 3 ; field++) {
+        uint8_t type_length = cbuf[offset];
+        int fieldLength;
+        const char *cp;
+        if (((type_length & 0xC0) != 0xC0)
+         || (((fieldLength = (type_length & 0x3F)) + offset) > length)) {
+            printf("WARNING -- FMC EEPROM has bad board information.\n");
+            return;
+        }
+        switch (field) {
+        case 0: cp = "Manufacturer";        break;
+        case 1: cp = "Name";                break;
+        case 2: cp = "Serial Number";       break;
+        }
+        printf("%15s: ", cp);
+        number = 0;
+        offset++;
+        while (fieldLength--) {
+            char c = cbuf[offset++];
+            printf("%c", c);
+            number = (number * 10) + (c - '0');
+        }
+        printf("\n");
+    }
+    if ((index >= 0) || (index <= 1)) {
+        serialNumber[index] = number;
+    }
+}
+int
+iicFPGAgetSerialNumber(int index)
+{
+    if ((index < 0) || (index > 1)) {
+        return -1;
+    }
+    return serialNumber[index];
+}
+
 void
 iicFPGAinit(void)
 {
@@ -163,7 +232,8 @@ iicFPGAinit(void)
         for (a = 0x50 ; a <= 0x57 ; a++) {
             if (isPresent(iicMap[IIC_FPGA_IDX_FMC1_EEPROM+i].muxValue, a)) {
                 iicMap[IIC_FPGA_IDX_FMC1_EEPROM+i].address7 = a;
-                printf("FMC%d EEPROM at 0x%2x\n", i + 1, a);
+                printf("FMC%d EEPROM at 0x%2x:\n", i + 1, a);
+                showIPMI(i);
                 break;
             }
         }
@@ -179,7 +249,6 @@ iicFPGAinit(void)
         printf("Boot flash write %sed.\n", (cbuf[0]&0x80)?"enabl":"protect");
     }
 }
-
 
 static int
 muxForIDX(unsigned int idx)

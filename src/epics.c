@@ -70,6 +70,8 @@ struct LEEPpacket {
 #define REG_CALIBRATION_STATUS      23
 #define REG_FPGA_REBOOT             30
 #define REG_SECONDS_SINCE_BOOT      40
+#define REG_FMC1_SERIAL_NUMBER      50
+#define REG_FMC2_SERIAL_NUMBER      51
 #define REG_ACQ_ENABLE              80
 #define REG_SAMPLING_RATE           81
 #define REG_RESET_ADCS              82
@@ -168,6 +170,8 @@ readReg(int address)
     case REG_CALIBRATION_DATE:    return calibrationDate();
     case REG_CALIBRATION_STATUS:  return calibrationStatus();
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
+    case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
+    case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
     }
     if ((address >= REG_SYSMON_BASE)
      && (address < (REG_SYSMON_BASE + SYSMON_SIZE))) {

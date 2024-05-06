@@ -363,6 +363,13 @@
     "data_width": 16,
     "sign": "unsigned"
   },
+  "FMC1:SerialNumber": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 50,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "ACQ:status": {
     "access": "r",
     "addr_width": 0,
