@@ -214,12 +214,12 @@ assign muxDOUT_a = sysUseFakeAD7768 ? fakeDOUT : adcDOUT_a;
 ///////////////////////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////////////////////
-// Get asynchronous DCLK and DRDY from into acquisition clock domain.
+// Get asynchronous DCLK and DRDY into acquisition clock domain.
 // Use delayed synchronized value to sample first DRDY and all data lines.
 (*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] dclk_m = 0, drdy_m = 0;
 reg [ADC_CHIP_COUNT-1:0] dclk = 0, dclk_d = 0, dclkRising = 0;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [ADC_CHIP_COUNT-1:0] drdy = 0;
-reg [ADC_CHIP_COUNT-1:0] drdy_d = 0, drdyRising = 0;
+reg drdyRising = 0;
 
 always @(posedge acqClk) begin
     dclk_m <= muxDCLK_a;
@@ -228,30 +228,30 @@ always @(posedge acqClk) begin
     dclkRising <= dclk & ~dclk_d;
     drdy_m <= muxDRDY_a;
     drdy   <= drdy_m;
-    drdy_d <= drdy;
-    drdyRising <= drdy & ~drdy_d;
 end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Check DRDY alignment
 (*MARK_DEBUG=DEBUG_DRDY*) reg drdyAligned = 0;
-localparam [1:0] DRDY_STATE_AWAIT_RISING = 2'd0,
-                 DRDY_STATE_SKEW_1       = 2'd1,
-                 DRDY_STATE_SKEW_2       = 2'd2,
-                 DRDY_STATE_AWAIT_LOW    = 2'd3;
-(*MARK_DEBUG=DEBUG_DRDY*) reg [1:0] drdyState = DRDY_STATE_AWAIT_RISING;
+localparam [1:0] DRDY_STATE_AWAIT_LOW    = 2'd0,
+                 DRDY_STATE_AWAIT_RISING = 2'd1,
+                 DRDY_STATE_SKEW_1       = 2'd2,
+                 DRDY_STATE_SKEW_2       = 2'd3;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [1:0] drdyState = DRDY_STATE_AWAIT_LOW;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [(3*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
 
 always @(posedge acqClk) begin
-    /*
-     * drdyRising is a register so the input states that
-     * caused bits in it to be set are now in drdy_d. 
-     */
     case (drdyState)
+    DRDY_STATE_AWAIT_LOW: begin
+        if (drdy == 0) begin
+            drdyState <= DRDY_STATE_AWAIT_RISING;
+        end
+    end
     DRDY_STATE_AWAIT_RISING: begin
-        if (drdyRising != 0) begin
-            drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
-            if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+        if (drdy != 0) begin
+            drdyRising <= 1;
+            drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+            if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
                 // Aligned within about 8 ns
                 drdyAligned <= 1;
                 drdyState <= DRDY_STATE_AWAIT_LOW;
@@ -262,8 +262,9 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_SKEW_1: begin
-        drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
-        if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+        drdyRising <= 0;
+        drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
             // Aligned within about 16 ns
             drdyAligned <= 1;
             drdyState <= DRDY_STATE_AWAIT_LOW;
@@ -273,21 +274,15 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_SKEW_2: begin
-        drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy_d;
-        if (drdy_d == {ADC_CHIP_COUNT{1'b1}}) begin
+        drdySkewPattern[2*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
+        if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
             // Aligned within between about 8 and about 24 ns
             drdyAligned <= 1;
-            drdyState <= DRDY_STATE_AWAIT_LOW;
         end
         else begin
             drdyAligned <= 0;
-            drdyState <= DRDY_STATE_AWAIT_LOW;
         end
-    end
-    DRDY_STATE_AWAIT_LOW: begin
-        if (drdy_d == {ADC_CHIP_COUNT{1'b0}}) begin
-            drdyState <= DRDY_STATE_AWAIT_RISING;
-        end
+        drdyState <= DRDY_STATE_AWAIT_LOW;
     end
     default: drdyState <= DRDY_STATE_AWAIT_LOW;
     endcase
@@ -387,7 +382,7 @@ wire ppsDrdyOverflow = ppsDrdyCount[PPS_DRDY_COUNT_WIDTH-1];
 reg ppsDrdyActive = 0;
 always @(posedge acqClk) begin
     if (ppsDrdyActive) begin
-        if (drdyRising[0]) begin
+        if (drdyRising) begin
             ppsDrdyTicks <= ppsDrdyCount;
             ppsDrdyActive <= 0;
         end
