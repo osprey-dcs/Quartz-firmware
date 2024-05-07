@@ -58,6 +58,9 @@ static struct iicMap {
     { 0x40, 0x77 }, // SI570 clock generator
 };
 
+#define FMC_COUNT 2
+static uint32_t serialNumber[FMC_COUNT];
+
 static int
 setMux(unsigned char c)
 {
@@ -100,13 +103,13 @@ isPresent(int muxVal, int addr7)
     return 1;
 }
 
-static int serialNumber[2];
 static void
 showIPMI(int device)
 {
     uint8_t cbuf[128];
     int i, field;
-    int offset, length, number;
+    int offset, length;
+    uint32_t number;
     int index = device - IIC_FPGA_IDX_FMC1_EEPROM;
     uint8_t sum;
     if (iicFPGAeepromRead(device, 0, sizeof cbuf, cbuf) != sizeof cbuf) {
@@ -156,14 +159,15 @@ showIPMI(int device)
         }
         printf("\n");
     }
-    if ((index >= 0) || (index <= 1)) {
+    if ((index >= 0) && (index < FMC_COUNT)) {
         serialNumber[index] = number;
     }
 }
-int
+
+uint32_t
 iicFPGAgetSerialNumber(int index)
 {
-    if ((index < 0) || (index > 1)) {
+    if ((index < 0) || (index >= FMC_COUNT)) {
         return -1;
     }
     return serialNumber[index];
@@ -226,7 +230,7 @@ iicFPGAinit(void)
      * Find FMC EEPROMs
      * The address can vary which is why the iicMap table can't be 'const'.
      */
-    for (i = 0 ; i <= 1 ; i++) {
+    for (i = 0 ; i < FMC_COUNT ; i++) {
         int a;
         iicMap[IIC_FPGA_IDX_FMC1_EEPROM+i].address7 = 0;
         for (a = 0x50 ; a <= 0x57 ; a++) {
