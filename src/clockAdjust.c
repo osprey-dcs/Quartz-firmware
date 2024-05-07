@@ -26,6 +26,7 @@
 #include "clockAdjust.h"
 #include "evg.h"
 #include "gpio.h"
+#include "systemParameters.h"
 #include "util.h"
 
 /*
@@ -55,7 +56,9 @@
 #define HW_INTERVAL_R_PPS_TOGGLE        0x40000000
 #define HW_INTERVAL_R_SECONDARY_VALID   0x20000000
 #define HW_INTERVAL_R_PRIMARY_VALID     0x10000000
-#define HW_INTERVAL_R_INTERVAL_MASK     0x0FFFFFFF
+#define HW_INTERVAL_STATUS_MASK         0xF0000000
+#define HW_INTERVAL_IS_EVG              0x08000000
+#define HW_INTERVAL_R_INTERVAL_MASK     0x000FFFFF
 
 void
 clockAdjustInit(void)
@@ -71,7 +74,8 @@ clockAdjustFetchSysmon(int index)
     switch (index) {
     case 0: return fetchRegister(GPIO_IDX_ACQCLK_PLL_CSR);
     case 1: return (fetchRegister(GPIO_IDX_ACQCLK_HW_INTERVAL) &
-                                                  ~HW_INTERVAL_R_INTERVAL_MASK)
+                                                        HW_INTERVAL_STATUS_MASK)
+               | (isEVG() ? HW_INTERVAL_IS_EVG : 0)
                | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
                                                  & HW_INTERVAL_R_INTERVAL_MASK);
     }
