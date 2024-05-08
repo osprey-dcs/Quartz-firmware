@@ -412,10 +412,17 @@
     "data_width": 32,
     "sign": "unsigned"
   },
-  "ADC:aligns": {
+  "DRDY:history": {
     "access": "r",
     "addr_width": 0,
     "base_addr": 293,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "ADC:aligns": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 294,
     "data_width": 32,
     "sign": "unsigned"
   },

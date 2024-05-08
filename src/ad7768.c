@@ -341,7 +341,8 @@ ad7768FetchSysmon(int index)
 {
     switch (index) {
     case 0: return fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
-    case 1: return fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
+    case 1: return fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY);
+    case 2: return fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
     }
     return 0;
 }
