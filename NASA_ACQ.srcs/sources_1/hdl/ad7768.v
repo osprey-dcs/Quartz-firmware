@@ -233,12 +233,13 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // Check DRDY alignment
 (*MARK_DEBUG=DEBUG_DRDY*) reg drdyAligned = 0;
-localparam [1:0] DRDY_STATE_AWAIT_LOW    = 2'd0,
-                 DRDY_STATE_AWAIT_RISING = 2'd1,
-                 DRDY_STATE_SKEW_1       = 2'd2,
-                 DRDY_STATE_SKEW_2       = 2'd3;
-(*MARK_DEBUG=DEBUG_DRDY*) reg [1:0] drdyState = DRDY_STATE_AWAIT_LOW;
-(*MARK_DEBUG=DEBUG_DRDY*) reg [(3*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
+localparam [2:0] DRDY_STATE_AWAIT_LOW    = 3'd0,
+                 DRDY_STATE_AWAIT_RISING = 3'd1,
+                 DRDY_STATE_SKEW_1       = 3'd2,
+                 DRDY_STATE_SKEW_2       = 3'd3,
+                 DRDY_STATE_SKEW_3       = 3'd4;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [2:0] drdyState = DRDY_STATE_AWAIT_LOW;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [(4*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
 
 always @(posedge acqClk) begin
     case (drdyState)
@@ -278,10 +279,15 @@ always @(posedge acqClk) begin
         if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
             // Aligned within between about 8 and about 24 ns
             drdyAligned <= 1;
+            drdyState <= DRDY_STATE_AWAIT_LOW;
         end
         else begin
             drdyAligned <= 0;
+            drdyState <= DRDY_STATE_SKEW_3;
         end
+    end
+    DRDY_STATE_SKEW_3: begin
+        drdySkewPattern[3*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
         drdyState <= DRDY_STATE_AWAIT_LOW;
     end
     default: drdyState <= DRDY_STATE_AWAIT_LOW;
@@ -450,7 +456,7 @@ assign sysDRDYstatus = { !drdyAligned,
                          ppsDrdyTicks };
 
 assign sysDRDYhistory = { drdyState,
-                          {32-2-(3*ADC_CHIP_COUNT){1'b0}},
+                          {32-3-(4*ADC_CHIP_COUNT){1'b0}},
                           drdySkewPattern };
 
 assign sysAlignCount = { {32-ADC_ALIGN_COUNT_WIDTH{1'b0}}, adcAlignCount };
