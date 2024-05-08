@@ -244,6 +244,7 @@ localparam [2:0] DRDY_STATE_AWAIT_LOW    = 3'd0,
 always @(posedge acqClk) begin
     case (drdyState)
     DRDY_STATE_AWAIT_LOW: begin
+        drdyRising <= 0;
         if (drdy == 0) begin
             drdyState <= DRDY_STATE_AWAIT_RISING;
         end
