@@ -438,8 +438,7 @@ always @(posedge acqClk) begin
     end
     else begin
         adcAlignStretch <= ADC_ALIGN_STRETCH_TICKS;
-        if ((!drdyAligned || (startAlignmentToggle != doneAlignmentToggle))
-         && acqPPSstrobe) begin
+        if ((startAlignmentToggle != doneAlignmentToggle) && acqPPSstrobe) begin
             adcAlignCount <= adcAlignCount + 1;
             alignmentActive <=1;
         end
