@@ -71,10 +71,10 @@ module NASA_ACQ #(
     output wire [CFG_MGT_COUNT-1:0] QSFP_TX_P,
     output wire [CFG_MGT_COUNT-1:0] QSFP_TX_N,
 
-    input  wire PMOD1_0,
-    input  wire PMOD1_1,
-    input  wire PMOD1_2,
-    input  wire PMOD1_3,
+    output wire PMOD1_0,
+    output wire PMOD1_1,
+    output wire PMOD1_2,
+    output wire PMOD1_3,
     input  wire PMOD1_4,
     input  wire PMOD1_5,
     input  wire PMOD1_6,
@@ -398,6 +398,12 @@ ad7768 #(
     .adcDOUT_a(AD7768_DOUT_MAPPED),
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
+
+assign PMOD1_0 = AD7768_DCLK[0];
+assign PMOD1_1 = AD7768_DRDY[0];
+assign PMOD1_2 = acqStrobe;
+assign PMOD1_3 = acqPPSstrobe;
+
 
 // Need different MCLK values to get the sampling rates we need.
 mclkSelect #(.DEBUG("false"))
