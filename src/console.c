@@ -312,19 +312,31 @@ static void
 cmdFMON(int argc, char **argv)
 {
     int i;
+    uint32_t csr, rate;
     static const char *names[] = { "System",
                                    "Network",
-                                   "AD7768 MCLK",
                                    "MGT Ref/2",
                                    "EVG",
                                    "EVR",
-                                   "EVF" };
+                                   "EVF",
+                                   "MCLK" };
     for (i = 0 ; i < sizeof names / sizeof names[0] ; i++) {
-        uint32_t csr, rate;
         printf("   %15s clock: ", names[i]);
-        GPIO_WRITE(GPIO_IDX_FREQUENCY_COUNTERS, i);
-        csr = GPIO_READ(GPIO_IDX_FREQUENCY_COUNTERS);
-        rate = csr & 0x3FFFFFFF;
+        if (i < ((sizeof names / sizeof names[0]) - 1)) {
+            GPIO_WRITE(GPIO_IDX_FREQUENCY_COUNTERS, i);
+            csr = GPIO_READ(GPIO_IDX_FREQUENCY_COUNTERS);
+            rate = csr & 0x3FFFFFFF;
+        }
+        else {
+            /* Accumulation is not in system clock domain
+             * so read until the value is stable.
+             */
+            uint32_t mclk, mclkOld = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR);
+            while ((mclk = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR)) != mclkOld) {
+                mclkOld = mclk;
+            }
+            rate = mclk;
+        }
         if (csr & 0x80000000) {
             /* Lower accuracy with internal PPS marker */
             rate /= 1000;
