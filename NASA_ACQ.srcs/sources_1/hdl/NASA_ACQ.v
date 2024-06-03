@@ -75,7 +75,7 @@ module NASA_ACQ #(
     output wire PMOD1_1,
     output wire PMOD1_2,
     output wire PMOD1_3,
-    input  wire PMOD1_4,
+    output wire PMOD1_4,
     input  wire PMOD1_5,
     input  wire PMOD1_6,
     input  wire PMOD1_7,
@@ -402,7 +402,7 @@ assign PMOD1_0 = AD7768_DCLK[0];
 assign PMOD1_1 = AD7768_DRDY[0];
 assign PMOD1_2 = acqStrobe;
 assign PMOD1_3 = acqPPSstrobe;
-
+assign PMOD1_4 = AD7768_START_n;
 
 // Need different MCLK values to get the sampling rates we need.
 mclkSelect #(.DEBUG("false"))
