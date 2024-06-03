@@ -33,14 +33,16 @@ module mclkSelect #(
     input  wire        sysClk,
     input  wire        sysCsrStrobe,
     input  wire [31:0] sysGPIO_OUT,
-    output wire [31:0] sysStatus,
+    output reg  [31:0] mclkRate,
+
+    input  wire        acqClk,
+    input  wire        acqPPSstrobe,
 
     (*MARK_DEBUG=DEBUG*) input  wire clk32p768,
     (*MARK_DEBUG=DEBUG*) input  wire clk40p96,
     (*MARK_DEBUG=DEBUG*) input  wire clk51p2,
     (*MARK_DEBUG=DEBUG*) input  wire clk64,
-    (*MARK_DEBUG=DEBUG*) output wire MCLK,
-                         output wire MCLK_BUFG);
+    (*MARK_DEBUG=DEBUG*) output wire MCLK);
 
 localparam CLOCK_COUNT = 4;
 localparam SLOWEST_CLOCK = 32768000;
@@ -71,11 +73,39 @@ always @(posedge sysClk) begin
         activeClock <= newClock;
     end
 end
-assign sysStatus = { {32-CLOCK_COUNT{1'b0}}, activeClock };
 
+/*
+ * Measure clock rate
+ * Result is in acquisition clock domain, but processor readout
+ * knows this and reads the value until it is stable.
+ */
+(*ASYNC_REG="true"*) reg mclk_m;
+reg mclk_d0, mclk_d1, mclkRising;
+reg [31:0] mclkCounter;
+always @(posedge acqClk) begin
+    mclk_m  <= MCLK;
+    mclk_d0 <= mclk_m;
+    mclk_d1 <= mclk_d0;
+    mclkRising <= (mclk_d0 && !mclk_d1);
+    if (acqPPSstrobe) begin
+        mclkRate <= mclkCounter;
+        if (mclkRising) begin
+            mclkCounter <= 1;
+        end
+        else begin
+            mclkCounter <= 0;
+        end
+    end
+    else if (mclkRising) begin
+        mclkCounter <= mclkCounter +1 ;
+    end
+end
+
+/*
+ * Generate the clocks and select the desired one
+ */
 wire clk16p384, clk20p48, clk25p6, clk32;
 assign MCLK = |{ clk16p384, clk20p48, clk25p6, clk32 };
-BUFG BUFG_MCLK (.I(MCLK), .O(MCLK_BUFG));
 
 mclkSelectClockGen mclkSelectClockGen32 (
     .clkIn(clk64),

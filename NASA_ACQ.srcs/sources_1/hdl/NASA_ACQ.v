@@ -129,7 +129,7 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
 wire sysClk, clk125, fixedClk200, evrRxClk, evfRxClk, evgClk;
-wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk, mclk_bufg;
+wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk;
 wire refClk125;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
@@ -266,14 +266,13 @@ wire measuredUsingInteralAcqMarker;
 reg [2:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(7))
+    .CHANNEL_COUNT(6))
   frequencyCounters (
     .clk(sysClk),
     .measuredClocks({ evfRxClk,
                       evrRxClk,
                       evgClk,
                       gtRefClkDiv2,
-                      mclk_bufg,
                       clk125,
                       sysClk }),
     .acqMarker_a(hwPPSvalid && ppsMarker),
@@ -411,12 +410,13 @@ mclkSelect #(.DEBUG("false"))
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
-    .sysStatus(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
+    .mclkRate(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
+    .acqClk(clk125),
+    .acqPPSstrobe(acqPPSstrobe),
     .clk32p768(clk32p768),
     .clk40p96(clk40p96),
     .clk51p2(clk51p2),
     .clk64(clk64),
-    .MCLK_BUFG(mclk_bufg),
     .MCLK(mclk));
 OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 
