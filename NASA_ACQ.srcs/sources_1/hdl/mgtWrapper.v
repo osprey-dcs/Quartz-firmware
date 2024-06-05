@@ -107,11 +107,11 @@ always @(posedge sysClk) begin
             busy <= 1;
         end
         else begin
-            pmareset             <= sysGPIO_OUT[0];
-            rxreset              <= sysGPIO_OUT[1];
-            txreset              <= sysGPIO_OUT[2];
-            soft_reset_rx        <= sysGPIO_OUT[3];
-            soft_reset_tx        <= sysGPIO_OUT[4];
+            pmareset       <= sysGPIO_OUT[0];
+            rxreset        <= sysGPIO_OUT[1];
+            txreset        <= sysGPIO_OUT[2];
+            soft_reset_rx  <= sysGPIO_OUT[3];
+            soft_reset_tx  <= sysGPIO_OUT[4];
         end
     end
 end
@@ -249,6 +249,8 @@ MGT MGT_i (
     .gt0_drpwe_in                   (drpWE[4]),  // input wire gt0_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt0_dmonitorout_out            (), // output wire [7:0] gt0_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt0_rxpd_in                    (2'b11), // input wire [1:0] gt0_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt0_eyescanreset_in            (1'b0), // input wire gt0_eyescanreset_in
     .gt0_rxuserrdy_in               (1'b1), // input wire gt0_rxuserrdy_in
@@ -313,6 +315,8 @@ MGT MGT_i (
     .gt1_drpwe_in                   (drpWE[5]),  // input wire gt1_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt1_dmonitorout_out            (), // output wire [7:0] gt1_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt1_rxpd_in                    (2'b11), // input wire [1:0] gt1_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt1_eyescanreset_in            (1'b0),             // input wire gt1_eyescanreset_in
     .gt1_rxuserrdy_in               (1'b1), // input wire gt1_rxuserrdy_in
@@ -377,6 +381,8 @@ MGT MGT_i (
     .gt2_drpwe_in                   (drpWE[6]),  // input wire gt2_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt2_dmonitorout_out            (), // output wire [7:0] gt2_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt2_rxpd_in                    (2'b11), // input wire [1:0] gt2_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt2_eyescanreset_in            (1'b0), // input wire gt2_eyescanreset_in
     .gt2_rxuserrdy_in               (1'b1), // input wire gt2_rxuserrdy_in
@@ -441,6 +447,8 @@ MGT MGT_i (
     .gt3_drpwe_in                   (drpWE[7]),  // input wire gt3_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt3_dmonitorout_out            (), // output wire [7:0] gt3_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt3_rxpd_in                    (2'b11), // input wire [1:0] gt3_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt3_eyescanreset_in            (1'b0), // input wire gt3_eyescanreset_in
     .gt3_rxuserrdy_in               (1'b1), // input wire gt3_rxuserrdy_in
@@ -506,6 +514,8 @@ MGT MGT_i (
     .gt4_drpwe_in                   (drpWE[3]),  // input wire gt4_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt4_dmonitorout_out            (), // output wire [7:0] gt4_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt4_rxpd_in                    (2'b11), // input wire [1:0] gt4_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt4_eyescanreset_in            (1'b0), // input wire gt4_eyescanreset_in
     .gt4_rxuserrdy_in               (1'b1), // input wire gt4_rxuserrdy_in
@@ -570,6 +580,8 @@ MGT MGT_i (
     .gt5_drpwe_in                   (drpWE[0]),  // input wire gt5_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt5_dmonitorout_out            (), // output wire [7:0] gt5_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt5_rxpd_in                    (2'b00), // input wire [1:0] gt5_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt5_eyescanreset_in            (1'b0), // input wire gt5_eyescanreset_in
     .gt5_rxuserrdy_in               (1'b1), // input wire gt5_rxuserrdy_in
@@ -634,6 +646,8 @@ MGT MGT_i (
     .gt6_drpwe_in                   (drpWE[1]),  // input wire gt6_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt6_dmonitorout_out            (), // output wire [7:0] gt6_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt6_rxpd_in                    (2'b00), // input wire [1:0] gt6_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt6_eyescanreset_in            (1'b0), // input wire gt6_eyescanreset_in
     .gt6_rxuserrdy_in               (1'b1), // input wire gt6_rxuserrdy_in
@@ -698,6 +712,8 @@ MGT MGT_i (
     .gt7_drpwe_in                   (drpWE[2]),  // input wire gt7_drpwe_in
     //------------------------- Digital Monitor Ports --------------------------
     .gt7_dmonitorout_out            (), // output wire [7:0] gt7_dmonitorout_out
+    //---------------------------- Power-Down Ports ----------------------------
+    .gt7_rxpd_in                    (2'b11), // input wire [1:0] gt7_rxpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt7_eyescanreset_in            (1'b0), // input wire gt7_eyescanreset_in
     .gt7_rxuserrdy_in               (1'b1), // input wire gt7_rxuserrdy_in

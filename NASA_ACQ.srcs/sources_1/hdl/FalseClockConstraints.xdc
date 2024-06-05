@@ -40,3 +40,4 @@ set_false_path -from [get_clocks -of_objects [get_pins bd_i/clk_wiz_1/inst/mmcm_
 set_false_path -from [get_clocks -of_objects [get_pins bd_i/clk_wiz_4/inst/mmcm_adv_inst/CLKOUT0]] -to [get_clocks -of_objects [get_pins bd_i/clk_wiz_5/inst/mmcm_adv_inst/CLKOUT0]]
 set_false_path -from [get_clocks -of_objects [get_pins bd_i/clk_wiz_5/inst/mmcm_adv_inst/CLKOUT0]] -to [get_clocks -of_objects [get_pins bd_i/clk_wiz_4/inst/mmcm_adv_inst/CLKOUT0]]
 set_false_path -from [get_clocks -of_objects [get_pins bd_i/clk_wiz_3/inst/mmcm_adv_inst/CLKOUT1]] -to [get_clocks -of_objects [get_pins bd_i/clk_wiz_4/inst/mmcm_adv_inst/CLKOUT0]]
+set_false_path -from [get_clocks -of_objects [get_pins bd_i/clk_wiz_1/inst/mmcm_adv_inst/CLKOUT0]] -to [get_clocks eventSystem/mgtWrapper_i/MGT_i/inst/MGT_i/gt5_MGT_i/gtxe2_i/RXOUTCLK]
