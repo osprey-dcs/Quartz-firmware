@@ -75,7 +75,6 @@ main()
     inputCouplingInit();
     fastDataInit();
     for (;;) {
-        mgtCrank();
         clockAdjustCrank();
         evgCrank();
         consoleCrank();

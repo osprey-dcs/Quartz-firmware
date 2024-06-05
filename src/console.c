@@ -319,7 +319,7 @@ cmdFMON(int argc, char **argv)
                                    "EVG",
                                    "EVR",
                                    "EVF",
-                                   "MCLK" };
+                                   "AD7768 MCLK" };
     for (i = 0 ; i < sizeof names / sizeof names[0] ; i++) {
         printf("   %15s clock: ", names[i]);
         if (i < ((sizeof names / sizeof names[0]) - 1)) {

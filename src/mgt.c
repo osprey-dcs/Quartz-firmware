@@ -33,10 +33,19 @@
 #include "mgt.h"
 #include "util.h"
 
+/*
+ * Index 0: EVR
+ * Index 1: EVF
+ */
+#define RX_CHANNEL_COUNT 2
+#define RX_CHANNEL_MASK ((1 << (RX_CHANNEL_COUNT)) - 1)
+
 #define CSR_W_DRP_ENABLE        0x80000000
 #define CSR_W_DRP_WRITE         0x40000000
 #define CSR_W_SEL_SHIFT         27
 #define CSR_W_SEL_MASK          (0x7 << CSR_W_SEL_SHIFT)
+#define CSR_W_RX_1_BITSLIDE     0x40
+#define CSR_W_RX_0_BITSLIDE     0x20
 #define CSR_W_TX_SOFT_RESET     0x10
 #define CSR_W_RX_SOFT_RESET     0x8
 #define CSR_W_TX_RESET          0x4
@@ -85,6 +94,7 @@ mgtInit(void)
 {
     uint32_t then;
     uint32_t csr;
+    int isUp, wasUp = 0;
     int mgtIndex;
     int mgtMap = (1UL << CFG_MGT_COUNT) - 1;
 
@@ -99,14 +109,14 @@ mgtInit(void)
             break;
         }
     }
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, /*CSR_W_TX_RESET | CSR_W_RX_RESET | */CSR_W_RX_SOFT_RESET | CSR_W_TX_SOFT_RESET);
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_TX_RESET | CSR_W_RX_RESET /*| CSR_W_RX_SOFT_RESET | CSR_W_TX_SOFT_RESET*/);
     microsecondSpin(1);
     GPIO_WRITE(GPIO_IDX_MGT_CSR, 0);
     mgtIndex = 0;
     while (mgtMap) {
         int mgtBit = 1UL << mgtIndex;
         if (mgtMap & mgtBit) {
-            uint32_t good = (mgtIndex < CFG_MGT_RX_COUNT) ? STATUS_GOOD 
+            uint32_t good = (mgtIndex < CFG_MGT_RX_COUNT) ? STATUS_GOOD
                                                           : TX_ONLY_STATUS_GOOD;
             then = microsecondsSinceBoot();
             for (;;) {
@@ -128,6 +138,18 @@ mgtInit(void)
         }
         mgtIndex++;
     }
+    then = microsecondsSinceBoot();
+    do {
+        int newUp;
+        isUp = GPIO_READ(GPIO_IDX_LINK_STATUS) & RX_CHANNEL_MASK;
+        if ((microsecondsSinceBoot() - then) > 2000000) {
+            break;
+        }
+        newUp = isUp & ~wasUp;
+        if (newUp & 0x1) printf("EVR link up.\n");
+        if (newUp & 0x2) printf("EVF link up.\n");
+        wasUp = isUp;
+    } while (isUp != RX_CHANNEL_MASK);
     showStatus();
     eyescanInit();
 
@@ -138,36 +160,6 @@ mgtInit(void)
     microsecondSpin(2);
     GPIO_WRITE(GPIO_IDX_MGT_CSR, 0);
     microsecondSpin(100);
-}
-
-/*
- * Only way to align receiver is to keep resetting it until
- * it comes up at the right framing.
- */
-void
-mgtCrank(void)
-{
-    uint32_t csr = GPIO_READ(GPIO_IDX_LINK_STATUS);
-    static int aligning;
-    static int wasUp;
-    static uint32_t whenReset;
-    if (csr & 0x1) {
-        aligning = 0;
-        if (!wasUp) {
-            printf("MGT EVR link up.\n");
-            wasUp = 1;
-        }
-    }
-    else {
-        wasUp = 0;
-        if (!aligning || ((microsecondsSinceBoot() - whenReset) > 10000)) {
-            GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RX_RESET);
-            microsecondSpin(1);
-            GPIO_WRITE(GPIO_IDX_MGT_CSR, 0);
-            whenReset = microsecondsSinceBoot();
-            aligning = 1;
-        }
-    }
 }
 
 uint32_t *
