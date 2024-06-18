@@ -51,7 +51,7 @@ struct fileInfo {
 };
 /* Assume that largest sector in flash is no larger than 64 KiB. */
 static const struct fileInfo fileTable[] = {
-    { "BOOT.bin",         0,                                          MiB(6), },
+    { "BOOT.bin",         0,                                          MiB(7), },
     { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,                  MiB(6), },
     { "SYSPARAM.dat",     MiB(15),                                    KiB(4), },
     { "Calibration.csv",  IS_ASCII|(MiB(15)+KiB(64)),                 KiB(4), },
