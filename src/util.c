@@ -81,18 +81,20 @@ writeICAP(int value)
 void
 resetFPGA(int bootAlternateImage)
 {
-    printf("====== FPGA REBOOT ======\n\n");
+    uint32_t wbstar = bootAlternateImage ? CFG_ALT_BOOT_IMAGE_OFFSET
+                                         : 0x00000000;
+    printf("====== FPGA REBOOT (WBSTAR=%06X) ======\n\n", wbstar);
     microsecondSpin(50000);
     writeICAP(0xFFFFFFFF); /* Dummy word */
     writeICAP(0xAA995566); /* Sync word */
     writeICAP(0x20000000); /* Type 1 NO-OP */
     writeICAP(0x30020001); /* Type 1 write 1 to Warm Boot STart Address Reg */
-    writeICAP(bootAlternateImage ? CFG_ALT_BOOT_IMAGE_OFFSET
-                                 : 0x00000000); /* Warm boot start addr */
+    writeICAP(wbstar);     /* Warm boot start addr */
     writeICAP(0x20000000); /* Type 1 NO-OP */
     writeICAP(0x30008001); /* Type 1 write 1 to CMD */
     writeICAP(0x0000000F); /* IPROG command */
     writeICAP(0x20000000); /* Type 1 NO-OP */
+    microsecondSpin(1000);
     Xil_Out32(XPAR_HWICAP_BASEADDR+0x10C, 0x1);   /* Initiate WRITE */
     microsecondSpin(1000000);
     printf("====== FPGA REBOOT FAILED ======\n\n");

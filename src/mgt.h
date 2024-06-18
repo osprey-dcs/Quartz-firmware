@@ -29,6 +29,7 @@
 #define _MGT_H_
 
 void mgtInit(void);
+void mgtShowStatus(void);
 uint32_t *mgtFetchSysmon(uint32_t *buf);
 
 void mgtDRPwrite(int mgtIndex, int drpAddress, int value);

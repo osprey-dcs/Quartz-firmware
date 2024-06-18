@@ -76,15 +76,15 @@
 #define CSR_W_DRP_ADDR_SHIFT    16
 #define CSR_RW_DRP_DATA_MASK    0xFFFF
 
-static void
-showStatus(void)
+void
+mgtShowStatus(void)
 {
     int mgtIndex;
     uint32_t csr;
     for(mgtIndex = 0 ; mgtIndex < CFG_MGT_COUNT ; mgtIndex++) {
         GPIO_WRITE(GPIO_IDX_MGT_CSR, mgtIndex << CSR_W_SEL_SHIFT);
         csr = GPIO_READ(GPIO_IDX_MGT_CSR);
-        printf("%d: %04X:%04X\n", mgtIndex, csr >> 16, csr & 0xFFFF);
+        printf("MGT %d: %04X:%04X\n", mgtIndex, csr >> 16, csr & 0xFFFF);
     }
     GPIO_WRITE(GPIO_IDX_MGT_CSR, 5 << CSR_W_SEL_SHIFT);
 }
@@ -150,7 +150,7 @@ mgtInit(void)
         if (newUp & 0x2) printf("EVF link up.\n");
         wasUp = isUp;
     } while (isUp != RX_CHANNEL_MASK);
-    showStatus();
+    mgtShowStatus();
     eyescanInit();
 
     /*

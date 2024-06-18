@@ -294,6 +294,10 @@ cmdDEBUG(int argc, char **argv)
         iicFPGAscan();
         debugFlags &= ~DEBUGFLAG_IIC_FPGA_SCAN;
     }
+    if (debugFlags & DEBUGFLAG_MGTSTATUSSHOW) {
+        mgtShowStatus();
+        debugFlags &= ~DEBUGFLAG_MGTSTATUSSHOW;
+    }
     if (debugFlags & DEBUGFLAG_MGTCLKSWITCHSHOW) {
         mgtClkSwitchShow();
         debugFlags &= ~DEBUGFLAG_MGTCLKSWITCHSHOW;
