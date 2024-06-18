@@ -290,7 +290,7 @@ assign GPIO_IN[GPIO_IDX_FREQUENCY_COUNTERS] = { measuredUsingInteralAcqMarker,
 
 //////////////////////////////////////////////////////////////////////////////
 // Drive boot flash SCLK from block design FLASH_SPI_sclk after initialization.
-wire BOOT_SCLK;
+wire BOOT_SCLK, startupEOS;
 STARTUPE2 aspiClkPin
      (.CLK(1'b0),
       .GSR(1'b0),
@@ -304,7 +304,7 @@ STARTUPE2 aspiClkPin
       .USRDONETS(1'b1),
       .CFGCLK(),
       .CFGMCLK(),
-      .EOS());
+      .EOS(startupEOS));
 
 ///////////////////////////////////////////////////////////////////////////////
 // FPGA I2C
@@ -578,6 +578,7 @@ bd bd_i (
     .refClk125(refClk125),
     .ext_reset_n(1'b1),
     .CLK20_VCXO(CLK20_VCXO),
+    .startupEOS(startupEOS),
 
     .sysClk(sysClk),
     .clk125(clk125),

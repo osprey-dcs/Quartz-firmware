@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x81391C2D6C086F16",
+      "boundary_crc": "0xD4F4FD5132DBBEF9",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -538,6 +538,9 @@
             "value_src": "default"
           }
         }
+      },
+      "startupEOS": {
+        "direction": "I"
       }
     },
     "components": {
@@ -2364,6 +2367,12 @@
         "ports": [
           "clk_wiz_5/clk_out1",
           "fixedClk200"
+        ]
+      },
+      "eos_in_0_1": {
+        "ports": [
+          "startupEOS",
+          "hwicap/eos_in"
         ]
       },
       "iic_fpga_gpo": {
