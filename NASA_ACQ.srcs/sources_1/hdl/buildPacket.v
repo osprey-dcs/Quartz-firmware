@@ -51,6 +51,7 @@ module buildPacket #(
     input  wire                                               acqClk,
     input  wire                                               acqStrobe,
     input  wire [(ADC_CHIP_COUNT*ADC_PER_CHIP*ADC_WIDTH)-1:0] acqData,
+    output wire         [(4*ADC_CHIP_COUNT*ADC_PER_CHIP)-1:0]acqLimitExcursions,
 
     input  wire [31:0] acqSeconds,
     input  wire [31:0] acqTicks,
@@ -63,7 +64,7 @@ module buildPacket #(
     input  wire       M_TREADY);
 
 localparam LIMIT_EXCURSION_WIDTH = 4 * ADC_CHIP_COUNT * ADC_PER_CHIP;
-wire [LIMIT_EXCURSION_WIDTH-1:0] acqLimitExcursions, packetLimitExcursions;
+wire [LIMIT_EXCURSION_WIDTH-1:0] packetLimitExcursions;
 wire       rawPacketTVALID, rawPacketTLAST, rawPacketTREADY;
 wire [7:0] rawPacketTDATA;
 

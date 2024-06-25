@@ -28,16 +28,16 @@ module tinyEVR #(
     parameter DEBUG            = "false",
     parameter TIMESTAMP_WIDTH  = 64
     ) (
-    input  wire                                            evrRxClk,
+    input  wire                       evrRxClk,
 
-    (*mark_debug=DEBUG*) input                      [15:0] evrRxWord,
-    (*mark_debug=DEBUG*) input                       [1:0] evrCharIsK,
+    (*mark_debug=DEBUG*) input [15:0] evrRxWord,
+    (*mark_debug=DEBUG*) input  [1:0] evrCharIsK,
 
-    (*mark_debug=DEBUG*) output wire                       ppsMarker,
-    (*mark_debug=DEBUG*) output wire                       timestampValid,
-    (*mark_debug=DEBUG*) output wire [TIMESTAMP_WIDTH-1:0] timestamp,
-    (*mark_debug=DEBUG*) output wire                 [7:0] distributedDataBus,
-    output wire [EVSTROBE_COUNT:1]                         evStrobe);
+    output wire                       ppsMarker,
+    output wire                       timestampValid,
+    output wire [TIMESTAMP_WIDTH-1:0] timestamp,
+    output wire                 [7:0] distributedDataBus,
+    output wire    [EVSTROBE_COUNT:1] evStrobe);
 
 tinyEVRcommon #(.ACTION_RAM_WIDTH(0),
                 .EVSTROBE_COUNT(EVSTROBE_COUNT),
@@ -66,16 +66,16 @@ module smallEVR #(
     parameter DEBUG           = "false",
     parameter TIMESTAMP_WIDTH = 64
     ) (
-    input  wire                                            evrRxClk,
+    input  wire                       evrRxClk,
 
-    (*mark_debug=DEBUG*) input                      [15:0] evrRxWord,
-    (*mark_debug=DEBUG*) input                       [1:0] evrCharIsK,
+    (*mark_debug=DEBUG*) input [15:0] evrRxWord,
+    (*mark_debug=DEBUG*) input  [1:0] evrCharIsK,
 
-    (*mark_debug=DEBUG*) output wire                       ppsMarker,
-    (*mark_debug=DEBUG*) output wire                       timestampValid,
-    (*mark_debug=DEBUG*) output wire [TIMESTAMP_WIDTH-1:0] timestamp,
-    (*mark_debug=DEBUG*) output wire                 [7:0] distributedDataBus,
-    (*mark_debug=DEBUG*) output wire    [ACTION_WIDTH-1:0] action,
+    output wire                       ppsMarker,
+    output wire                       timestampValid,
+    output wire [TIMESTAMP_WIDTH-1:0] timestamp,
+    output wire                 [7:0] distributedDataBus,
+    output wire    [ACTION_WIDTH-1:0] action,
 
     input                    sysClk,
     input                    sysActionWriteEnable,

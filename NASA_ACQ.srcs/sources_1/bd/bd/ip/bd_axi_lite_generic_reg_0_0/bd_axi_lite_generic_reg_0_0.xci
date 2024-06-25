@@ -8,12 +8,12 @@
     "gen_directory": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_axi_lite_generic_reg_0_0",
     "parameters": {
       "component_parameters": {
-        "C_S_AXI_ADDR_WIDTH": [ { "value": "7", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "C_S_AXI_ADDR_WIDTH": [ { "value": "8", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_S_AXI_DATA_WIDTH": [ { "value": "32", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "Component_Name": [ { "value": "bd_axi_lite_generic_reg_0_0", "resolve_type": "user", "usage": "all" } ]
       },
       "model_parameters": {
-        "C_S_AXI_ADDR_WIDTH": [ { "value": "7", "resolve_type": "generated", "format": "long", "usage": "all" } ],
+        "C_S_AXI_ADDR_WIDTH": [ { "value": "8", "resolve_type": "generated", "format": "long", "usage": "all" } ],
         "C_S_AXI_DATA_WIDTH": [ { "value": "32", "resolve_type": "generated", "format": "long", "usage": "all" } ]
       },
       "project_parameters": {
@@ -42,15 +42,15 @@
     },
     "boundary": {
       "ports": {
-        "GPIO_IN": [ { "direction": "in", "size_left": "1023", "size_right": "0" } ],
-        "GPIO_STROBES": [ { "direction": "out", "size_left": "31", "size_right": "0" } ],
+        "GPIO_IN": [ { "direction": "in", "size_left": "2047", "size_right": "0" } ],
+        "GPIO_STROBES": [ { "direction": "out", "size_left": "63", "size_right": "0" } ],
         "GPIO_OUT": [ { "direction": "out", "size_left": "31", "size_right": "0" } ],
         "s_axi_aclk": [ { "direction": "in" } ],
         "s_axi_aresetn": [ { "direction": "in" } ],
         "s_axi_arvalid": [ { "direction": "in", "driver_value": "0" } ],
         "s_axi_arready": [ { "direction": "out", "driver_value": "1" } ],
         "s_axi_arprot": [ { "direction": "in", "size_left": "2", "size_right": "0", "driver_value": "0" } ],
-        "s_axi_araddr": [ { "direction": "in", "size_left": "6", "size_right": "0", "driver_value": "0" } ],
+        "s_axi_araddr": [ { "direction": "in", "size_left": "7", "size_right": "0", "driver_value": "0" } ],
         "s_axi_rdata": [ { "direction": "out", "size_left": "31", "size_right": "0" } ],
         "s_axi_rvalid": [ { "direction": "out", "driver_value": "0" } ],
         "s_axi_rready": [ { "direction": "in", "driver_value": "0" } ],
@@ -58,7 +58,7 @@
         "s_axi_awvalid": [ { "direction": "in", "driver_value": "0" } ],
         "s_axi_awready": [ { "direction": "out" } ],
         "s_axi_awprot": [ { "direction": "in", "size_left": "2", "size_right": "0", "driver_value": "0" } ],
-        "s_axi_awaddr": [ { "direction": "in", "size_left": "6", "size_right": "0", "driver_value": "0" } ],
+        "s_axi_awaddr": [ { "direction": "in", "size_left": "7", "size_right": "0", "driver_value": "0" } ],
         "s_axi_wvalid": [ { "direction": "in", "driver_value": "0" } ],
         "s_axi_wready": [ { "direction": "out", "driver_value": "1" } ],
         "s_axi_wstrb": [ { "direction": "in", "size_left": "3", "size_right": "0", "driver_value": "1" } ],
@@ -78,7 +78,7 @@
             "PROTOCOL": [ { "value": "AXI4LITE", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "is_ips_inferred": true, "is_static_object": false } ],
             "FREQ_HZ": [ { "value": "100000000", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
             "ID_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
-            "ADDR_WIDTH": [ { "value": "7", "value_src": "auto", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
+            "ADDR_WIDTH": [ { "value": "8", "value_src": "auto", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
             "AWUSER_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
             "ARUSER_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],
             "WUSER_WIDTH": [ { "value": "0", "value_src": "constant", "value_permission": "bd", "resolve_type": "generated", "format": "long", "is_ips_inferred": true, "is_static_object": false } ],

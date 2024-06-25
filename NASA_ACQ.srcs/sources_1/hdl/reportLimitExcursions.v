@@ -23,7 +23,7 @@
  */
 
 /*
- * Stretch ADC values beyond thresholds to user-visible range
+ * Latch ADC excursions beyond thresholds until read
  */
 `default_nettype none
 module reportLimitExcursions #(

@@ -24,7 +24,6 @@
 
 /*
  * Wrap wizard-generated Multi-Gigabit Transceivers
- * Eight transmitter lanes, two receiver lanes.
  */
 `default_nettype none
 module mgtWrapper #(
@@ -37,27 +36,37 @@ module mgtWrapper #(
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
 
-    input  wire                 gtRefClk,
+    input  wire                 gtRefClkP,
+    input  wire                 gtRefClkN,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN,
 
-    output wire                                               evrRxClk,
-    (*MARK_DEBUG=DEBUG*) output wire                          evrRxLinkUp,
-    (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] evrRxChars,
-    (*MARK_DEBUG=DEBUG*) output wire [(MGT_DATA_WIDTH/8)-1:0] evrRxCharIsK,
-    output wire                                               evfRxClk,
-    (*MARK_DEBUG=DEBUG*) output wire                          evfRxLinkUp,
-    (*MARK_DEBUG=DEBUG*) output wire     [MGT_DATA_WIDTH-1:0] evfRxChars,
-    (*MARK_DEBUG=DEBUG*) output wire [(MGT_DATA_WIDTH/8)-1:0] evfRxCharIsK,
-    output wire                                               mgtTxClk,
-    (*MARK_DEBUG=DEBUG*) input  wire     [MGT_DATA_WIDTH-1:0] mgtTxChars,
-    (*MARK_DEBUG=DEBUG*) input  wire [(MGT_DATA_WIDTH/8)-1:0] mgtTxIsK);
+    output wire                  [MGT_COUNT-1:0] mgtRxClks,
+    output wire                  [MGT_COUNT-1:0] mgtRxLinkUp,
+    output wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars,
+    output wire                  [MGT_COUNT-1:0] mgtRxCharIsK,
+    output wire                                  mgtTxClk,
+    input  wire                                  mgtIsEVG,
+    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] mpsTxChars,
+    (*MARK_DEBUG=DEBUG*) input  wire                      mpsTxCharIsK,
+    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] mpfTxChars,
+    (*MARK_DEBUG=DEBUG*) input  wire                      mpfTxCharIsK,
+    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] evsTxChars,
+    (*MARK_DEBUG=DEBUG*) input  wire                      evsTxCharIsK);
 
 localparam MGT_STATUS_WIDTH = 4;
-localparam MGT_SEL_WIDTH = MGT_COUNT > 1 ? $clog2(MGT_COUNT) : 1;
+localparam MGT_SEL_WIDTH = $clog2(MGT_COUNT);
 localparam MGT_BYTE_COUNT = MGT_DATA_WIDTH / 8;
+
+`ifdef notdef
+initial
+begin
+    $display("%d", MGT_SEL_WIDTH);
+    $finish;
+end
+`endif
 
 localparam DRP_ADDR_WIDTH = 9;
 localparam DRP_DATA_WIDTH = 16;
@@ -65,10 +74,7 @@ wire [MGT_SEL_WIDTH-1:0] sysMGTsel = sysGPIO_OUT[27+:MGT_SEL_WIDTH];
 reg [MGT_SEL_WIDTH-1:0] mgtSel;
 wire [MGT_STATUS_WIDTH-1:0] mgtStatus[0:MGT_COUNT-1];
 reg  [MGT_STATUS_WIDTH-1:0] mgtStatusMux;
-// Attachment points for internal logic analyzer
-genvar i; generate for (i = 0 ; i < MGT_COUNT ; i = i + 1) begin : mgtStat
-    (*MARK_DEBUG=DEBUG*) wire [MGT_STATUS_WIDTH-1:0] status = mgtStatus[i];
-end endgenerate
+wire isLeaf = 0; // FIXME: Should be settable from processor for leaf nodes
 
 /*
  * Dynamic reconfiguration port
@@ -117,100 +123,62 @@ always @(posedge sysClk) begin
 end
 
 /*
- * Check link validity
+ * Buffer transmitter clock (common to all lanes)
  */
-(*MARK_DEBUG=DEBUG*) wire [MGT_DATA_WIDTH-1:0] evrRxData, evfRxData;
-(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] evrRxDataIsK, evfRxDataIsK;
-(*MARK_DEBUG=DEBUG*) wire [MGT_BYTE_COUNT-1:0] evrRxNotInTable, evfRxNotInTable;
-mgtLinkStatus #(
-    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
-    .MGT_BYTE_COUNT(MGT_BYTE_COUNT))
-  evrLinkStatus (
-    .clk(evrRxClk),
-    .mgtData(evrRxData),
-    .mgtDataIsK(evrRxDataIsK),
-    .mgtNotInTable(evrRxNotInTable),
-    .rxChars(evrRxChars),
-    .rxCharIsK(evrRxCharIsK),
-    .rxLinkUp(evrRxLinkUp));
-mgtLinkStatus #(
-    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
-    .MGT_BYTE_COUNT(MGT_BYTE_COUNT))
-  evfLinkStatus (
-    .clk(evfRxClk),
-    .mgtData(evfRxData),
-    .mgtDataIsK(evfRxDataIsK),
-    .mgtNotInTable(evfRxNotInTable),
-    .rxChars(evfRxChars),
-    .rxCharIsK(evfRxCharIsK),
-    .rxLinkUp(evfRxLinkUp));
+wire mgtTxClkUnbuf;
+BUFG txoutclk_bufg(.I(mgtTxClkUnbuf), .O(mgtTxClk));
 
 /*
- * Buffer the receiver and transmitter clocks
+ * Per-lane code
  */
-wire txoutclk, rxoutclkEVR, rxoutclkEVF;
-BUFG txoutclk_bufg(.I(txoutclk), .O(mgtTxClk));
-BUFG rxoutclkEVR_bufg(.I(rxoutclkEVR), .O(evrRxClk));
-BUFG rxoutclkEVF_bufg(.I(rxoutclkEVF), .O(evfRxClk));
+wire          [MGT_COUNT-1:0] mgtRxClksUnbuf;
+wire     [MGT_DATA_WIDTH-1:0] mgtRxData [0:MGT_COUNT-1];
+wire [(MGT_DATA_WIDTH/8)-1:0] mgtRxDataK [0:MGT_COUNT-1];
+wire [(MGT_DATA_WIDTH/8)-1:0] mgtRxNotInTable [0:MGT_COUNT-1];
+genvar i;
+generate
+for (i = 0 ; i < MGT_COUNT ; i = i + 1) begin : perLane
+    /*
+     * Buffer recovered clock
+     */
+    BUFG rxclk_bufg(.I(mgtRxClksUnbuf[i]), .O(mgtRxClks[i]));
+
+    /*
+     * Check link validity
+     */
+    mgtLinkStatus #(
+        .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
+        .MGT_BYTE_COUNT(MGT_BYTE_COUNT))
+      mgtLinkStatus_i (
+        .clk(mgtRxClks[i]),
+        .mgtData(mgtRxData[i]),
+        .mgtDataIsK(mgtRxDataK[i]),
+        .mgtRxNotInTable(mgtRxNotInTable[i]),
+        .rxChars(mgtRxChars[(i*MGT_DATA_WIDTH)+:MGT_DATA_WIDTH]),
+        .rxCharIsK(mgtRxCharIsK[i]),
+        .rxLinkUp(mgtRxLinkUp[i]));
+end
+endgenerate
 
 /*
- * Instantiate the MGT common blocks.
- * Common block code (mgt_common.v) copied from example design.
- * Instantiation based on example design mgt_support.v.
+ * Status register
  */
-wire gt0_qplllock_in;
-wire gt0_qpllrefclklost_in;
-wire gt0_qpllreset_out;
-wire gt0_qplloutclk_in;
-wire gt0_qplloutrefclk_in;
-wire gt1_qplllock_in;
-wire gt1_qpllrefclklost_in;
-wire gt1_qpllreset_out;
-wire gt1_qplloutclk_in;
-wire gt1_qplloutrefclk_in;
-
-MGT_common # (
-    .WRAPPER_SIM_GTRESET_SPEEDUP("TRUE"),
-    .SIM_QPLLREFCLK_SEL(3'b001))
-  common0_i (
-    .QPLLREFCLKSEL_IN(3'b001),
-    .GTREFCLK0_IN(gtRefClk),
-    .GTREFCLK1_IN(1'b0),
-    .QPLLLOCK_OUT(gt0_qplllock_in),
-    .QPLLLOCKDETCLK_IN(sysClk),
-    .QPLLOUTCLK_OUT(gt0_qplloutclk_in),
-    .QPLLOUTREFCLK_OUT(gt0_qplloutrefclk_in),
-    .QPLLREFCLKLOST_OUT(gt0_qpllrefclklost_in),
-    .QPLLRESET_IN(gt0_qpllreset_out));
-MGT_common # (
-    .WRAPPER_SIM_GTRESET_SPEEDUP("TRUE"),
-    .SIM_QPLLREFCLK_SEL(3'b001))
-  common1_i (
-    .QPLLREFCLKSEL_IN(3'b001),
-    .GTREFCLK0_IN(gtRefClk),
-    .GTREFCLK1_IN(1'b0),
-    .QPLLLOCK_OUT(gt1_qplllock_in),
-    .QPLLLOCKDETCLK_IN(sysClk),
-    .QPLLOUTCLK_OUT(gt1_qplloutclk_in),
-    .QPLLOUTREFCLK_OUT(gt1_qplloutrefclk_in),
-    .QPLLREFCLKLOST_OUT(gt1_qpllrefclklost_in),
-    .QPLLRESET_IN(gt1_qpllreset_out));
-
+wire [1:0] qpllLock, qpllRefClkLost;
 assign sysStatus = { busy,
                      1'b0,
-                     gt1_qplllock_in, gt0_qplllock_in,
-                     gt1_qpllrefclklost_in, gt0_qpllrefclklost_in,
+                     qpllLock, qpllRefClkLost,
                      {32-6-MGT_STATUS_WIDTH-DRP_DATA_WIDTH{1'b0}},
                      mgtStatusMux, drpDOmux };
 
 /*
  * Instantiate all the transceivers
  */
-MGT MGT_i (
-    .sysclk_in(sysClk),                  // input wire sysclk_in
-    .soft_reset_tx_in(soft_reset_tx),    // input wire soft_reset_tx_in
-    .soft_reset_rx_in(soft_reset_rx),    // input wire soft_reset_rx_in
-    .dont_reset_on_data_error_in(1'b1),  // input wire dont_reset_on_data_error_in
+mgtShared mgtShared_i (
+    .soft_reset_tx_in(soft_reset_tx),            // input wire soft_reset_tx_in
+    .soft_reset_rx_in(soft_reset_rx),            // input wire soft_reset_rx_in
+    .dont_reset_on_data_error_in(1'b1),          // input wire dont_reset_on_data_error_in
+    .q1_clk0_gtrefclk_pad_n_in(gtRefClkN),       // input wire q1_clk0_gtrefclk_pad_n_in
+    .q1_clk0_gtrefclk_pad_p_in(gtRefClkP),       // input wire q1_clk0_gtrefclk_pad_p_in
     .gt0_tx_fsm_reset_done_out(mgtStatus[4][0]), // output wire gt0_tx_fsm_reset_done_out
     .gt0_rx_fsm_reset_done_out(mgtStatus[4][1]), // output wire gt0_rx_fsm_reset_done_out
     .gt0_data_valid_in(1'b1),                    // input wire gt0_data_valid_in
@@ -236,12 +204,51 @@ MGT MGT_i (
     .gt7_rx_fsm_reset_done_out(mgtStatus[2][1]), // output wire gt7_rx_fsm_reset_done_out
     .gt7_data_valid_in(1'b1),                    // input wire gt7_data_valid_in
 
+    .gt0_txusrclk_out(),                  // output wire gt0_txusrclk_out
+    .gt0_txusrclk2_out(),                 // output wire gt0_txusrclk2_out
+    .gt0_rxusrclk_out(mgtRxClksUnbuf[4]), // output wire gt0_rxusrclk_out
+    .gt0_rxusrclk2_out(),                 // output wire gt0_rxusrclk2_out
+
+    .gt1_txusrclk_out(),                  // output wire gt1_txusrclk_out
+    .gt1_txusrclk2_out(),                 // output wire gt1_txusrclk2_out
+    .gt1_rxusrclk_out(mgtRxClksUnbuf[5]), // output wire gt1_rxusrclk_out
+    .gt1_rxusrclk2_out(),                 // output wire gt1_rxusrclk2_out
+
+    .gt2_txusrclk_out(),                  // output wire gt2_txusrclk_out
+    .gt2_txusrclk2_out(),                 // output wire gt2_txusrclk2_out
+    .gt2_rxusrclk_out(mgtRxClksUnbuf[6]), // output wire gt2_rxusrclk_out
+    .gt2_rxusrclk2_out(),                 // output wire gt2_rxusrclk2_out
+
+    .gt3_txusrclk_out(),                  // output wire gt3_txusrclk_out
+    .gt3_txusrclk2_out(),                 // output wire gt3_txusrclk2_out
+    .gt3_rxusrclk_out(mgtRxClksUnbuf[7]), // output wire gt3_rxusrclk_out
+    .gt3_rxusrclk2_out(),                 // output wire gt3_rxusrclk2_out
+
+    .gt4_txusrclk_out(),                  // output wire gt4_txusrclk_out
+    .gt4_txusrclk2_out(),                 // output wire gt4_txusrclk2_out
+    .gt4_rxusrclk_out(mgtRxClksUnbuf[3]), // output wire gt4_rxusrclk_out
+    .gt4_rxusrclk2_out(),                 // output wire gt4_rxusrclk2_out
+
+    .gt5_txusrclk_out(),                  // output wire gt5_txusrclk_out
+    .gt5_txusrclk2_out(mgtTxClkUnbuf),    // output wire gt5_txusrclk2_out
+    .gt5_rxusrclk_out(mgtRxClksUnbuf[0]), // output wire gt5_rxusrclk_out
+    .gt5_rxusrclk2_out(),                 // output wire gt5_rxusrclk2_out
+
+    .gt6_txusrclk_out(),                  // output wire gt6_txusrclk_out
+    .gt6_txusrclk2_out(),                 // output wire gt6_txusrclk2_out
+    .gt6_rxusrclk_out(mgtRxClksUnbuf[1]), // output wire gt6_rxusrclk_out
+    .gt6_rxusrclk2_out(),                 // output wire gt6_rxusrclk2_out
+
+    .gt7_txusrclk_out(),                  // output wire gt7_txusrclk_out
+    .gt7_txusrclk2_out(),                 // output wire gt7_txusrclk2_out
+    .gt7_rxusrclk_out(mgtRxClksUnbuf[2]), // output wire gt7_rxusrclk_out
+    .gt7_rxusrclk2_out(),                 // output wire gt7_rxusrclk2_out
+
     //_________________________________________________________________________
-    //GT0  (X0Y0)
+    //GT0  (X0Y0) -- QSFP2 fibers 1:12
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt0_drpaddr_in                 (drpADDR),   // input wire [8:0] gt0_drpaddr_in
-    .gt0_drpclk_in                  (sysClk),    // input wire gt0_drpclk_in
     .gt0_drpdi_in                   (drpDI),     // input wire [15:0] gt0_drpdi_in
     .gt0_drpdo_out                  (drpDO[4]),  // output wire [15:0] gt0_drpdo_out
     .gt0_drpen_in                   (drpEN[4]),  // input wire gt0_drpen_in
@@ -250,21 +257,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt0_dmonitorout_out            (), // output wire [7:0] gt0_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt0_rxpd_in                    (2'b11), // input wire [1:0] gt0_rxpd_in
+    .gt0_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt0_rxpd_in
+    .gt0_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt0_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt0_eyescanreset_in            (1'b0), // input wire gt0_eyescanreset_in
     .gt0_rxuserrdy_in               (1'b1), // input wire gt0_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt0_eyescandataerror_out       (),     // output wire gt0_eyescandataerror_out
     .gt0_eyescantrigger_in          (1'b0), // input wire gt0_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt0_rxusrclk_in                (1'b0), // input wire gt0_rxusrclk_in
-    .gt0_rxusrclk2_in               (1'b0), // input wire gt0_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt0_rxdata_out                 (), // output wire [15:0] gt0_rxdata_out
+    .gt0_rxdata_out                 (mgtRxData[4]), // output wire [15:0] gt0_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt0_rxdisperr_out              (), // output wire [1:0] gt0_rxdisperr_out
-    .gt0_rxnotintable_out           (), // output wire [1:0] gt0_rxnotintable_out
+    .gt0_rxnotintable_out           (mgtRxNotInTable[4]), // output wire [1:0] gt0_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt0_gtxrxp_in                  (rxP[4]), // input wire gt0_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -274,40 +279,34 @@ MGT MGT_i (
     .gt0_rxmonitorout_out           (),      // output wire [6:0] gt0_rxmonitorout_out
     .gt0_rxmonitorsel_in            (2'b01), // input wire [1:0] gt0_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt0_rxoutclk_out               (), // output wire gt0_rxoutclk_out
     .gt0_rxoutclkfabric_out         (), // output wire gt0_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt0_gtrxreset_in               (rxreset),  // input wire gt0_gtrxreset_in
     .gt0_rxpmareset_in              (pmareset), // input wire gt0_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt0_rxcharisk_out              (), // output wire [1:0] gt0_rxcharisk_out
+    .gt0_rxcharisk_out              (mgtRxDataK[4]), // output wire [1:0] gt0_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt0_rxresetdone_out            (mgtStatus[4][2]), // output wire gt0_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt0_gttxreset_in               (txreset), // input wire gt0_gttxreset_in
-    .gt0_txuserrdy_in               (gt0_qplllock_in),    // input wire gt0_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt0_txusrclk_in                (mgtTxClk), // input wire gt0_txusrclk_in
-    .gt0_txusrclk2_in               (mgtTxClk), // input wire gt0_txusrclk2_in
+    .gt0_txuserrdy_in               (1'b1),    // input wire gt0_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt0_txdata_in                  (mgtTxChars), // input wire [15:0] gt0_txdata_in
+    .gt0_txdata_in                  (evsTxChars), // input wire [15:0] gt0_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt0_gtxtxn_out                 (txN[4]), // output wire gt0_gtxtxn_out
     .gt0_gtxtxp_out                 (txP[4]), // output wire gt0_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt0_txoutclk_out               (), // output wire gt0_txoutclk_out
     .gt0_txoutclkfabric_out         (), // output wire gt0_txoutclkfabric_out
     .gt0_txoutclkpcs_out            (), // output wire gt0_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt0_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt0_txcharisk_in
+    .gt0_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt0_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt0_txresetdone_out            (mgtStatus[4][3]), // output wire gt0_txresetdone_out
 
-    //GT1  (X0Y1)
+    //GT1  (X0Y1) -- QSFP2 fibers 2:11
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt1_drpaddr_in                 (drpADDR),   // input wire [8:0] gt1_drpaddr_in
-    .gt1_drpclk_in                  (sysClk),    // input wire gt1_drpclk_in
     .gt1_drpdi_in                   (drpDI),     // input wire [15:0] gt1_drpdi_in
     .gt1_drpdo_out                  (drpDO[5]),  // output wire [15:0] gt1_drpdo_out
     .gt1_drpen_in                   (drpEN[5]),  // input wire gt1_drpen_in
@@ -316,21 +315,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt1_dmonitorout_out            (), // output wire [7:0] gt1_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt1_rxpd_in                    (2'b11), // input wire [1:0] gt1_rxpd_in
+    .gt1_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt1_rxpd_in
+    .gt1_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt1_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt1_eyescanreset_in            (1'b0),             // input wire gt1_eyescanreset_in
     .gt1_rxuserrdy_in               (1'b1), // input wire gt1_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt1_eyescandataerror_out       (),     // output wire gt1_eyescandataerror_out
     .gt1_eyescantrigger_in          (1'b0), // input wire gt1_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt1_rxusrclk_in                (1'b0), // input wire gt1_rxusrclk_in
-    .gt1_rxusrclk2_in               (1'b0), // input wire gt1_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt1_rxdata_out                 (), // output wire [15:0] gt1_rxdata_out
+    .gt1_rxdata_out                 (mgtRxData[5]), // output wire [15:0] gt1_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt1_rxdisperr_out              (), // output wire [1:0] gt1_rxdisperr_out
-    .gt1_rxnotintable_out           (), // output wire [1:0] gt1_rxnotintable_out
+    .gt1_rxnotintable_out           (mgtRxNotInTable[5]), // output wire [1:0] gt1_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt1_gtxrxp_in                  (rxP[5]), // input wire gt1_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -340,40 +337,34 @@ MGT MGT_i (
     .gt1_rxmonitorout_out           (),      // output wire [6:0] gt1_rxmonitorout_out
     .gt1_rxmonitorsel_in            (2'b01), // input wire [1:0] gt1_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt1_rxoutclk_out               (), // output wire gt1_rxoutclk_out
     .gt1_rxoutclkfabric_out         (), // output wire gt1_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt1_gtrxreset_in               (rxreset),  // input wire gt1_gtrxreset_in
     .gt1_rxpmareset_in              (pmareset), // input wire gt1_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt1_rxcharisk_out              (), // output wire [1:0] gt1_rxcharisk_out
+    .gt1_rxcharisk_out              (mgtRxDataK[5]), // output wire [1:0] gt1_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt1_rxresetdone_out            (mgtStatus[5][2]), // output wire gt1_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt1_gttxreset_in               (txreset), // input wire gt1_gttxreset_in
-    .gt1_txuserrdy_in               (gt0_qplllock_in),    // input wire gt1_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt1_txusrclk_in                (mgtTxClk), // input wire gt1_txusrclk_in
-    .gt1_txusrclk2_in               (mgtTxClk), // input wire gt1_txusrclk2_in
+    .gt1_txuserrdy_in               (1'b1),    // input wire gt1_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt1_txdata_in                  (mgtTxChars), // input wire [15:0] gt1_txdata_in
+    .gt1_txdata_in                  (evsTxChars), // input wire [15:0] gt1_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt1_gtxtxn_out                 (txN[5]), // output wire gt1_gtxtxn_out
     .gt1_gtxtxp_out                 (txP[5]), // output wire gt1_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt1_txoutclk_out               (), // output wire gt1_txoutclk_out
     .gt1_txoutclkfabric_out         (), // output wire gt1_txoutclkfabric_out
     .gt1_txoutclkpcs_out            (), // output wire gt1_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt1_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt1_txcharisk_in
+    .gt1_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt1_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt1_txresetdone_out            (mgtStatus[5][3]), // output wire gt1_txresetdone_out
 
-    //GT2  (X0Y2)
+    //GT2  (X0Y2) -- QSFP2 fibers 3:10
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt2_drpaddr_in                 (drpADDR),   // input wire [8:0] gt2_drpaddr_in
-    .gt2_drpclk_in                  (sysClk),    // input wire gt2_drpclk_in
     .gt2_drpdi_in                   (drpDI),     // input wire [15:0] gt2_drpdi_in
     .gt2_drpdo_out                  (drpDO[6]),  // output wire [15:0] gt2_drpdo_out
     .gt2_drpen_in                   (drpEN[6]),  // input wire gt2_drpen_in
@@ -382,21 +373,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt2_dmonitorout_out            (), // output wire [7:0] gt2_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt2_rxpd_in                    (2'b11), // input wire [1:0] gt2_rxpd_in
+    .gt2_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt2_rxpd_in
+    .gt2_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt2_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt2_eyescanreset_in            (1'b0), // input wire gt2_eyescanreset_in
     .gt2_rxuserrdy_in               (1'b1), // input wire gt2_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt2_eyescandataerror_out       (),     // output wire gt2_eyescandataerror_out
     .gt2_eyescantrigger_in          (1'b0), // input wire gt2_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt2_rxusrclk_in                (1'b0), // input wire gt2_rxusrclk_in
-    .gt2_rxusrclk2_in               (1'b0), // input wire gt2_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt2_rxdata_out                 (), // output wire [15:0] gt2_rxdata_out
+    .gt2_rxdata_out                 (mgtRxData[6]), // output wire [15:0] gt2_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt2_rxdisperr_out              (), // output wire [1:0] gt2_rxdisperr_out
-    .gt2_rxnotintable_out           (), // output wire [1:0] gt2_rxnotintable_out
+    .gt2_rxnotintable_out           (mgtRxNotInTable[6]), // output wire [1:0] gt2_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt2_gtxrxp_in                  (rxP[6]), // input wire gt2_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -406,40 +395,34 @@ MGT MGT_i (
     .gt2_rxmonitorout_out           (),      // output wire [6:0] gt2_rxmonitorout_out
     .gt2_rxmonitorsel_in            (2'b01), // input wire [1:0] gt2_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt2_rxoutclk_out               (), // output wire gt2_rxoutclk_out
     .gt2_rxoutclkfabric_out         (), // output wire gt2_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt2_gtrxreset_in               (rxreset),  // input wire gt2_gtrxreset_in
     .gt2_rxpmareset_in              (pmareset), // input wire gt2_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt2_rxcharisk_out              (), // output wire [1:0] gt2_rxcharisk_out
+    .gt2_rxcharisk_out              (mgtRxDataK[6]), // output wire [1:0] gt2_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt2_rxresetdone_out            (mgtStatus[6][2]), // output wire gt2_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt2_gttxreset_in               (txreset), // input wire gt2_gttxreset_in
-    .gt2_txuserrdy_in               (gt0_qplllock_in),    // input wire gt2_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt2_txusrclk_in                (mgtTxClk), // input wire gt2_txusrclk_in
-    .gt2_txusrclk2_in               (mgtTxClk), // input wire gt2_txusrclk2_in
+    .gt2_txuserrdy_in               (1'b1),    // input wire gt2_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt2_txdata_in                  (mgtTxChars), // input wire [15:0] gt2_txdata_in
+    .gt2_txdata_in                  (evsTxChars), // input wire [15:0] gt2_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt2_gtxtxn_out                 (txN[6]), // output wire gt2_gtxtxn_out
     .gt2_gtxtxp_out                 (txP[6]), // output wire gt2_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt2_txoutclk_out               (), // output wire gt2_txoutclk_out
     .gt2_txoutclkfabric_out         (), // output wire gt2_txoutclkfabric_out
     .gt2_txoutclkpcs_out            (), // output wire gt2_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt2_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt2_txcharisk_in
+    .gt2_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt2_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt2_txresetdone_out            (mgtStatus[6][3]), // output wire gt2_txresetdone_out
 
-    //GT3  (X0Y3)
+    //GT3  (X0Y3) -- QSFP2 fibers 4:9
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt3_drpaddr_in                 (drpADDR),   // input wire [8:0] gt3_drpaddr_in
-    .gt3_drpclk_in                  (sysClk),    // input wire gt3_drpclk_in
     .gt3_drpdi_in                   (drpDI),     // input wire [15:0] gt3_drpdi_in
     .gt3_drpdo_out                  (drpDO[7]),  // output wire [15:0] gt3_drpdo_out
     .gt3_drpen_in                   (drpEN[7]),  // input wire gt3_drpen_in
@@ -448,21 +431,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt3_dmonitorout_out            (), // output wire [7:0] gt3_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt3_rxpd_in                    (2'b11), // input wire [1:0] gt3_rxpd_in
+    .gt3_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt3_rxpd_in
+    .gt3_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt3_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt3_eyescanreset_in            (1'b0), // input wire gt3_eyescanreset_in
     .gt3_rxuserrdy_in               (1'b1), // input wire gt3_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt3_eyescandataerror_out       (),     // output wire gt3_eyescandataerror_out
     .gt3_eyescantrigger_in          (1'b0), // input wire gt3_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt3_rxusrclk_in                (1'b0), // input wire gt3_rxusrclk_in
-    .gt3_rxusrclk2_in               (1'b0), // input wire gt3_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt3_rxdata_out                 (), // output wire [15:0] gt3_rxdata_out
+    .gt3_rxdata_out                 (mgtRxData[7]), // output wire [15:0] gt3_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt3_rxdisperr_out              (), // output wire [1:0] gt3_rxdisperr_out
-    .gt3_rxnotintable_out           (), // output wire [1:0] gt3_rxnotintable_out
+    .gt3_rxnotintable_out           (mgtRxNotInTable[7]), // output wire [1:0] gt3_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt3_gtxrxp_in                  (rxP[7]), // input wire gt3_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -472,41 +453,34 @@ MGT MGT_i (
     .gt3_rxmonitorout_out           (),      // output wire [6:0] gt3_rxmonitorout_out
     .gt3_rxmonitorsel_in            (2'b01), // input wire [1:0] gt3_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt3_rxoutclk_out               (), // output wire gt3_rxoutclk_out
     .gt3_rxoutclkfabric_out         (), // output wire gt3_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt3_gtrxreset_in               (rxreset),  // input wire gt3_gtrxreset_in
     .gt3_rxpmareset_in              (pmareset), // input wire gt3_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt3_rxcharisk_out              (), // output wire [1:0] gt3_rxcharisk_out
+    .gt3_rxcharisk_out              (mgtRxDataK[7]), // output wire [1:0] gt3_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt3_rxresetdone_out            (mgtStatus[7][2]), // output wire gt3_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt3_gttxreset_in               (txreset), // input wire gt3_gttxreset_in
-    .gt3_txuserrdy_in               (gt0_qplllock_in),    // input wire gt3_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt3_txusrclk_in                (mgtTxClk), // input wire gt3_txusrclk_in
-    .gt3_txusrclk2_in               (mgtTxClk), // input wire gt3_txusrclk2_in
+    .gt3_txuserrdy_in               (1'b1),    // input wire gt3_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt3_txdata_in                  (mgtTxChars), // input wire [15:0] gt3_txdata_in
+    .gt3_txdata_in                  (evsTxChars), // input wire [15:0] gt3_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt3_gtxtxn_out                 (txN[7]), // output wire gt3_gtxtxn_out
     .gt3_gtxtxp_out                 (txP[7]), // output wire gt3_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt3_txoutclk_out               (), // output wire gt3_txoutclk_out
     .gt3_txoutclkfabric_out         (), // output wire gt3_txoutclkfabric_out
     .gt3_txoutclkpcs_out            (), // output wire gt3_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt3_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt3_txcharisk_in
+    .gt3_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt3_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt3_txresetdone_out            (mgtStatus[7][3]), // output wire gt3_txresetdone_out
 
-    //_________________________________________________________________________
-    //GT4  (X0Y4)
+    //GT4  (X0Y4) -- QSFP1 fibers 4:9
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt4_drpaddr_in                 (drpADDR),   // input wire [8:0] gt4_drpaddr_in
-    .gt4_drpclk_in                  (sysClk),    // input wire gt4_drpclk_in
     .gt4_drpdi_in                   (drpDI),     // input wire [15:0] gt4_drpdi_in
     .gt4_drpdo_out                  (drpDO[3]),  // output wire [15:0] gt4_drpdo_out
     .gt4_drpen_in                   (drpEN[3]),  // input wire gt4_drpen_in
@@ -515,21 +489,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt4_dmonitorout_out            (), // output wire [7:0] gt4_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt4_rxpd_in                    (2'b11), // input wire [1:0] gt4_rxpd_in
+    .gt4_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt4_rxpd_in
+    .gt4_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt4_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt4_eyescanreset_in            (1'b0), // input wire gt4_eyescanreset_in
     .gt4_rxuserrdy_in               (1'b1), // input wire gt4_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt4_eyescandataerror_out       (),     // output wire gt4_eyescandataerror_out
     .gt4_eyescantrigger_in          (1'b0), // input wire gt4_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt4_rxusrclk_in                (1'b0), // input wire gt4_rxusrclk_in
-    .gt4_rxusrclk2_in               (1'b0), // input wire gt4_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt4_rxdata_out                 (), // output wire [15:0] gt4_rxdata_out
+    .gt4_rxdata_out                 (mgtRxData[3]), // output wire [15:0] gt4_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt4_rxdisperr_out              (), // output wire [1:0] gt4_rxdisperr_out
-    .gt4_rxnotintable_out           (), // output wire [1:0] gt4_rxnotintable_out
+    .gt4_rxnotintable_out           (mgtRxNotInTable[3]), // output wire [1:0] gt4_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt4_gtxrxp_in                  (rxP[3]), // input wire gt4_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -539,40 +511,34 @@ MGT MGT_i (
     .gt4_rxmonitorout_out           (),      // output wire [6:0] gt4_rxmonitorout_out
     .gt4_rxmonitorsel_in            (2'b01), // input wire [1:0] gt4_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt4_rxoutclk_out               (), // output wire gt4_rxoutclk_out
     .gt4_rxoutclkfabric_out         (), // output wire gt4_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt4_gtrxreset_in               (rxreset),  // input wire gt4_gtrxreset_in
     .gt4_rxpmareset_in              (pmareset), // input wire gt4_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt4_rxcharisk_out              (), // output wire [1:0] gt4_rxcharisk_out
+    .gt4_rxcharisk_out              (mgtRxDataK[3]), // output wire [1:0] gt4_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt4_rxresetdone_out            (mgtStatus[3][2]), // output wire gt4_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt4_gttxreset_in               (txreset), // input wire gt4_gttxreset_in
-    .gt4_txuserrdy_in               (gt1_qplllock_in),    // input wire gt4_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt4_txusrclk_in                (mgtTxClk), // input wire gt4_txusrclk_in
-    .gt4_txusrclk2_in               (mgtTxClk), // input wire gt4_txusrclk2_in
+    .gt4_txuserrdy_in               (1'b1),    // input wire gt4_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt4_txdata_in                  (mgtTxChars), // input wire [15:0] gt4_txdata_in
+    .gt4_txdata_in                  (evsTxChars), // input wire [15:0] gt4_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt4_gtxtxn_out                 (txN[3]), // output wire gt4_gtxtxn_out
     .gt4_gtxtxp_out                 (txP[3]), // output wire gt4_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt4_txoutclk_out               (), // output wire gt4_txoutclk_out
     .gt4_txoutclkfabric_out         (), // output wire gt4_txoutclkfabric_out
     .gt4_txoutclkpcs_out            (), // output wire gt4_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt4_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt4_txcharisk_in
+    .gt4_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt4_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt4_txresetdone_out            (mgtStatus[3][3]), // output wire gt4_txresetdone_out
 
-    //GT5  (X0Y5)
+    //GT5  (X0Y5) -- QSFP1 fibers 1:12 -- Events in, MPS out
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt5_drpaddr_in                 (drpADDR),   // input wire [8:0] gt5_drpaddr_in
-    .gt5_drpclk_in                  (sysClk),    // input wire gt5_drpclk_in
     .gt5_drpdi_in                   (drpDI),     // input wire [15:0] gt5_drpdi_in
     .gt5_drpdo_out                  (drpDO[0]),  // output wire [15:0] gt5_drpdo_out
     .gt5_drpen_in                   (drpEN[0]),  // input wire gt5_drpen_in
@@ -582,20 +548,18 @@ MGT MGT_i (
     .gt5_dmonitorout_out            (), // output wire [7:0] gt5_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
     .gt5_rxpd_in                    (2'b00), // input wire [1:0] gt5_rxpd_in
+    .gt5_txpd_in                    (2'b00), // input wire [1:0] gt5_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt5_eyescanreset_in            (1'b0), // input wire gt5_eyescanreset_in
     .gt5_rxuserrdy_in               (1'b1), // input wire gt5_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt5_eyescandataerror_out       (),     // output wire gt5_eyescandataerror_out
     .gt5_eyescantrigger_in          (1'b0), // input wire gt5_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt5_rxusrclk_in                (evrRxClk), // input wire gt5_rxusrclk_in
-    .gt5_rxusrclk2_in               (evrRxClk), // input wire gt5_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt5_rxdata_out                 (evrRxData), // output wire [15:0] gt5_rxdata_out
+    .gt5_rxdata_out                 (mgtRxData[0]), // output wire [15:0] gt5_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt5_rxdisperr_out              (), // output wire [1:0] gt5_rxdisperr_out
-    .gt5_rxnotintable_out           (evrRxNotInTable), // output wire [1:0] gt5_rxnotintable_out
+    .gt5_rxnotintable_out           (mgtRxNotInTable[0]), // output wire [1:0] gt5_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt5_gtxrxp_in                  (rxP[0]), // input wire gt5_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -605,40 +569,34 @@ MGT MGT_i (
     .gt5_rxmonitorout_out           (),      // output wire [6:0] gt5_rxmonitorout_out
     .gt5_rxmonitorsel_in            (2'b01), // input wire [1:0] gt5_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt5_rxoutclk_out               (rxoutclkEVR), // output wire gt5_rxoutclk_out
     .gt5_rxoutclkfabric_out         (),             // output wire gt5_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt5_gtrxreset_in               (rxreset),  // input wire gt5_gtrxreset_in
     .gt5_rxpmareset_in              (pmareset), // input wire gt5_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt5_rxcharisk_out              (evrRxDataIsK), // output wire [1:0] gt5_rxcharisk_out
+    .gt5_rxcharisk_out              (mgtRxDataK[0]), // output wire [1:0] gt5_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt5_rxresetdone_out            (mgtStatus[0][2]), // output wire gt5_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt5_gttxreset_in               (txreset), // input wire gt5_gttxreset_in
-    .gt5_txuserrdy_in               (gt1_qplllock_in),    // input wire gt5_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt5_txusrclk_in                (mgtTxClk), // input wire gt5_txusrclk_in
-    .gt5_txusrclk2_in               (mgtTxClk), // input wire gt5_txusrclk2_in
+    .gt5_txuserrdy_in               (1'b1),    // input wire gt5_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt5_txdata_in                  (mgtTxChars), // input wire [15:0] gt5_txdata_in
+    .gt5_txdata_in                  (mpsTxChars), // input wire [15:0] gt5_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt5_gtxtxn_out                 (txN[0]), // output wire gt5_gtxtxn_out
     .gt5_gtxtxp_out                 (txP[0]), // output wire gt5_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt5_txoutclk_out               (txoutclk), // output wire gt5_txoutclk_out
     .gt5_txoutclkfabric_out         (),             // output wire gt5_txoutclkfabric_out
     .gt5_txoutclkpcs_out            (),             // output wire gt5_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt5_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt5_txcharisk_in
+    .gt5_txcharisk_in               ({1'b0,mpsTxCharIsK}), // input wire [1:0] gt5_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt5_txresetdone_out            (mgtStatus[0][3]), // output wire gt5_txresetdone_out
 
-    //GT6  (X0Y6)
+    //GT6  (X0Y6) -- QSFP1 fibers 2:11
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt6_drpaddr_in                 (drpADDR),   // input wire [8:0] gt6_drpaddr_in
-    .gt6_drpclk_in                  (sysClk),    // input wire gt6_drpclk_in
     .gt6_drpdi_in                   (drpDI),     // input wire [15:0] gt6_drpdi_in
     .gt6_drpdo_out                  (drpDO[1]),  // output wire [15:0] gt6_drpdo_out
     .gt6_drpen_in                   (drpEN[1]),  // input wire gt6_drpen_in
@@ -647,21 +605,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt6_dmonitorout_out            (), // output wire [7:0] gt6_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt6_rxpd_in                    (2'b00), // input wire [1:0] gt6_rxpd_in
+    .gt6_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt6_rxpd_in
+    .gt6_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt6_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt6_eyescanreset_in            (1'b0), // input wire gt6_eyescanreset_in
     .gt6_rxuserrdy_in               (1'b1), // input wire gt6_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt6_eyescandataerror_out       (),     // output wire gt6_eyescandataerror_out
     .gt6_eyescantrigger_in          (1'b0), // input wire gt6_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt6_rxusrclk_in                (evfRxClk), // input wire gt6_rxusrclk_in
-    .gt6_rxusrclk2_in               (evfRxClk), // input wire gt6_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt6_rxdata_out                 (evfRxData), // output wire [15:0] gt6_rxdata_out
+    .gt6_rxdata_out                 (mgtRxData[1]), // output wire [15:0] gt6_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt6_rxdisperr_out              (), // output wire [1:0] gt6_rxdisperr_out
-    .gt6_rxnotintable_out           (evfRxNotInTable), // output wire [1:0] gt6_rxnotintable_out
+    .gt6_rxnotintable_out           (mgtRxNotInTable[1]), // output wire [1:0] gt6_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt6_gtxrxp_in                  (rxP[1]), // input wire gt6_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -671,40 +627,34 @@ MGT MGT_i (
     .gt6_rxmonitorout_out           (),      // output wire [6:0] gt6_rxmonitorout_out
     .gt6_rxmonitorsel_in            (2'b01), // input wire [1:0] gt6_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt6_rxoutclk_out               (rxoutclkEVF), // output wire gt6_rxoutclk_out
     .gt6_rxoutclkfabric_out         (), // output wire gt6_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt6_gtrxreset_in               (rxreset),  // input wire gt6_gtrxreset_in
     .gt6_rxpmareset_in              (pmareset), // input wire gt6_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt6_rxcharisk_out              (evfRxDataIsK), // output wire [1:0] gt6_rxcharisk_out
+    .gt6_rxcharisk_out              (mgtRxDataK[1]), // output wire [1:0] gt6_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt6_rxresetdone_out            (mgtStatus[1][2]), // output wire gt6_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt6_gttxreset_in               (txreset), // input wire gt6_gttxreset_in
-    .gt6_txuserrdy_in               (gt1_qplllock_in),    // input wire gt6_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt6_txusrclk_in                (mgtTxClk), // input wire gt6_txusrclk_in
-    .gt6_txusrclk2_in               (mgtTxClk), // input wire gt6_txusrclk2_in
+    .gt6_txuserrdy_in               (1'b1),    // input wire gt6_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt6_txdata_in                  (mgtTxChars), // input wire [15:0] gt6_txdata_in
+    .gt6_txdata_in                  (mgtIsEVG ? evsTxChars : mpfTxChars), // input wire [15:0] gt6_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt6_gtxtxn_out                 (txN[1]), // output wire gt6_gtxtxn_out
     .gt6_gtxtxp_out                 (txP[1]), // output wire gt6_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt6_txoutclk_out               (), // output wire gt6_txoutclk_out
     .gt6_txoutclkfabric_out         (), // output wire gt6_txoutclkfabric_out
     .gt6_txoutclkpcs_out            (), // output wire gt6_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt6_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt6_txcharisk_in
+    .gt6_txcharisk_in               ({1'b0, mgtIsEVG ? evsTxCharIsK : mpfTxCharIsK}), // input wire [1:0] gt6_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt6_txresetdone_out            (mgtStatus[1][3]), // output wire gt6_txresetdone_out
 
-    //GT7  (X0Y7)
+    //GT7  (X0Y7) -- QSFP1 fibers 3:10
     //____________________________CHANNEL PORTS________________________________
     //-------------------------- Channel - DRP Ports  --------------------------
     .gt7_drpaddr_in                 (drpADDR),   // input wire [8:0] gt7_drpaddr_in
-    .gt7_drpclk_in                  (sysClk),    // input wire gt7_drpclk_in
     .gt7_drpdi_in                   (drpDI),     // input wire [15:0] gt7_drpdi_in
     .gt7_drpdo_out                  (drpDO[2]),  // output wire [15:0] gt7_drpdo_out
     .gt7_drpen_in                   (drpEN[2]),  // input wire gt7_drpen_in
@@ -713,21 +663,19 @@ MGT MGT_i (
     //------------------------- Digital Monitor Ports --------------------------
     .gt7_dmonitorout_out            (), // output wire [7:0] gt7_dmonitorout_out
     //---------------------------- Power-Down Ports ----------------------------
-    .gt7_rxpd_in                    (2'b11), // input wire [1:0] gt7_rxpd_in
+    .gt7_rxpd_in                    ({2{isLeaf}}), // input wire [1:0] gt7_rxpd_in
+    .gt7_txpd_in                    ({2{isLeaf}}), // input wire [1:0] gt7_txpd_in
     //------------------- RX Initialization and Reset Ports --------------------
     .gt7_eyescanreset_in            (1'b0), // input wire gt7_eyescanreset_in
     .gt7_rxuserrdy_in               (1'b1), // input wire gt7_rxuserrdy_in
     //------------------------ RX Margin Analysis Ports ------------------------
     .gt7_eyescandataerror_out       (),     // output wire gt7_eyescandataerror_out
     .gt7_eyescantrigger_in          (1'b0), // input wire gt7_eyescantrigger_in
-    //---------------- Receive Ports - FPGA RX Interface Ports -----------------
-    .gt7_rxusrclk_in                (1'b0), // input wire gt7_rxusrclk_in
-    .gt7_rxusrclk2_in               (1'b0), // input wire gt7_rxusrclk2_in
     //---------------- Receive Ports - FPGA RX interface Ports -----------------
-    .gt7_rxdata_out                 (), // output wire [15:0] gt7_rxdata_out
+    .gt7_rxdata_out                 (mgtRxData[2]), // output wire [15:0] gt7_rxdata_out
     //---------------- Receive Ports - RX 8B/10B Decoder Ports -----------------
     .gt7_rxdisperr_out              (), // output wire [1:0] gt7_rxdisperr_out
-    .gt7_rxnotintable_out           (), // output wire [1:0] gt7_rxnotintable_out
+    .gt7_rxnotintable_out           (mgtRxNotInTable[2]), // output wire [1:0] gt7_rxnotintable_out
     //------------------------- Receive Ports - RX AFE -------------------------
     .gt7_gtxrxp_in                  (rxP[2]), // input wire gt7_gtxrxp_in
     //---------------------- Receive Ports - RX AFE Ports ----------------------
@@ -737,46 +685,40 @@ MGT MGT_i (
     .gt7_rxmonitorout_out           (),      // output wire [6:0] gt7_rxmonitorout_out
     .gt7_rxmonitorsel_in            (2'b01), // input wire [1:0] gt7_rxmonitorsel_in
     //------------- Receive Ports - RX Fabric Output Control Ports -------------
-    .gt7_rxoutclk_out               (), // output wire gt7_rxoutclk_out
     .gt7_rxoutclkfabric_out         (), // output wire gt7_rxoutclkfabric_out
     //----------- Receive Ports - RX Initialization and Reset Ports ------------
     .gt7_gtrxreset_in               (rxreset),  // input wire gt7_gtrxreset_in
     .gt7_rxpmareset_in              (pmareset), // input wire gt7_rxpmareset_in
     //----------------- Receive Ports - RX8B/10B Decoder Ports -----------------
-    .gt7_rxcharisk_out              (), // output wire [1:0] gt7_rxcharisk_out
+    .gt7_rxcharisk_out              (mgtRxDataK[2]), // output wire [1:0] gt7_rxcharisk_out
     //------------ Receive Ports -RX Initialization and Reset Ports ------------
     .gt7_rxresetdone_out            (mgtStatus[2][2]), // output wire gt7_rxresetdone_out
     //------------------- TX Initialization and Reset Ports --------------------
     .gt7_gttxreset_in               (txreset), // input wire gt7_gttxreset_in
-    .gt7_txuserrdy_in               (gt1_qplllock_in),    // input wire gt7_txuserrdy_in
-    //---------------- Transmit Ports - FPGA TX Interface Ports ----------------
-    .gt7_txusrclk_in                (mgtTxClk), // input wire gt7_txusrclk_in
-    .gt7_txusrclk2_in               (mgtTxClk), // input wire gt7_txusrclk2_in
+    .gt7_txuserrdy_in               (1'b1),    // input wire gt7_txuserrdy_in
     //---------------- Transmit Ports - TX Data Path interface -----------------
-    .gt7_txdata_in                  (mgtTxChars), // input wire [15:0] gt7_txdata_in
+    .gt7_txdata_in                  (evsTxChars), // input wire [15:0] gt7_txdata_in
     //-------------- Transmit Ports - TX Driver and OOB signaling --------------
     .gt7_gtxtxn_out                 (txN[2]), // output wire gt7_gtxtxn_out
     .gt7_gtxtxp_out                 (txP[2]), // output wire gt7_gtxtxp_out
     //--------- Transmit Ports - TX Fabric Clock Output Control Ports ----------
-    .gt7_txoutclk_out               (), // output wire gt7_txoutclk_out
     .gt7_txoutclkfabric_out         (), // output wire gt7_txoutclkfabric_out
     .gt7_txoutclkpcs_out            (), // output wire gt7_txoutclkpcs_out
     //------------------- Transmit Ports - TX Gearbox Ports --------------------
-    .gt7_txcharisk_in               (mgtTxIsK), // input wire [1:0] gt7_txcharisk_in
+    .gt7_txcharisk_in               ({1'b0,evsTxCharIsK}), // input wire [1:0] gt7_txcharisk_in
     //----------- Transmit Ports - TX Initialization and Reset Ports -----------
     .gt7_txresetdone_out            (mgtStatus[2][3]), // output wire gt7_txresetdone_out
 
     //____________________________COMMON PORTS________________________________
-    .gt0_qplllock_in(gt0_qplllock_in),             // input wire gt0_qplllock_in
-    .gt0_qpllrefclklost_in(gt0_qpllrefclklost_in), // input wire gt0_qpllrefclklost_in
-    .gt0_qpllreset_out(gt0_qpllreset_out),         // output wire gt0_qpllreset_out
-    .gt0_qplloutclk_in(gt0_qplloutclk_in),         // input wire gt0_qplloutclk_in
-    .gt0_qplloutrefclk_in(gt0_qplloutrefclk_in),   // input wire gt0_qplloutrefclk_in
-    .gt1_qplllock_in(gt1_qplllock_in),             // input wire gt1_qplllock_in
-    .gt1_qpllrefclklost_in(gt1_qpllrefclklost_in), // input wire gt1_qpllrefclklost_in
-    .gt1_qpllreset_out(gt1_qpllreset_out),         // output wire gt1_qpllreset_out
-    .gt1_qplloutclk_in(gt1_qplloutclk_in),         // input wire gt1_qplloutclk_in
-    .gt1_qplloutrefclk_in(gt1_qplloutrefclk_in)    // input wire gt1_qplloutrefclk_in
+    .gt0_qplllock_out(qpllLock[0]),             // output wire gt0_qplllock_out
+    .gt0_qpllrefclklost_out(qpllRefClkLost[0]), // output wire gt0_qpllrefclklost_out
+    .gt0_qplloutclk_out(),               // output wire gt0_qplloutclk_out 
+    .gt0_qplloutrefclk_out(),                   // output wire gt0_qplloutrefclk_out
+    .gt1_qplllock_out(qpllLock[1]),             // output wire gt1_qplllock_out
+    .gt1_qpllrefclklost_out(qpllRefClkLost[1]), // output wire gt1_qpllrefclklost_out
+    .gt1_qplloutclk_out(),                      // output wire gt1_qplloutclk_out 
+    .gt1_qplloutrefclk_out(),                   // output wire gt1_qplloutrefclk_out
+    .sysclk_in(sysClk)                          // input wire sysclk_in
 );
 
 endmodule
@@ -791,9 +733,9 @@ module mgtLinkStatus #(
     input  wire                       clk,
     input  wire  [MGT_DATA_WIDTH-1:0] mgtData,
     input  wire  [MGT_BYTE_COUNT-1:0] mgtDataIsK,
-    input  wire  [MGT_BYTE_COUNT-1:0] mgtNotInTable,
+    input  wire  [MGT_BYTE_COUNT-1:0] mgtRxNotInTable,
     output reg   [MGT_DATA_WIDTH-1:0] rxChars,
-    output reg   [MGT_BYTE_COUNT-1:0] rxCharIsK,
+    output reg                        rxCharIsK,
     output wire                       rxLinkUp);
 
 localparam COMMAS_REQUIRED = 50;
@@ -811,8 +753,8 @@ assign rxLinkUp = nullsNeeded[NULL_COUNTER_WIDTH-1];
 
 always @(posedge clk) begin
     rxChars <= mgtData;
-    rxCharIsK <= mgtDataIsK;
-    if ((mgtNotInTable != 0)
+    rxCharIsK <= mgtDataIsK[0];
+    if ((mgtRxNotInTable != 0)
      || (mgtDataIsK[0] && (mgtData[7:0] != 8'hBC))) begin
         nullsNeeded <= NULL_COUNTER_LOAD;
         commasNeeded <= COMMA_COUNTER_LOAD;

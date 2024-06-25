@@ -1,0 +1,98 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Tue Jun 25 21:12:03 2024
+[*]
+[dumpfile] "mpsMerge_tb.fst"
+[dumpfile_mtime] "Tue Jun 25 21:11:45 2024"
+[dumpfile_size] 1720
+[savefile] "mpsMerge_tb.gtkw"
+[timestart] 632
+[size] 1688 600
+[pos] 1998 0
+*-3.583932 665 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] mpsMerge_tb.
+[treeopen] mpsMerge_tb.mpsMerge_i.
+[sst_width] 253
+[signals_width] 193
+[sst_expanded] 1
+[sst_vpaned_height] 159
+@421
+mpsMerge_tb.good
+@28
+mpsMerge_tb.sysClk
+mpsMerge_tb.mpsMerge_i.sysCsrStrobe
+@c00022
+mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+@28
+(0)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(1)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(2)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(3)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(4)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(5)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(6)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(7)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(8)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(9)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(10)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(11)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(12)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(13)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(14)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(15)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(16)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(17)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(18)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(19)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(20)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(21)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(22)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(23)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(24)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(25)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(26)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(27)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(28)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(29)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(30)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+(31)mpsMerge_tb.mpsMerge_i.sysGPIO_OUT[31:0]
+@1401200
+-group_end
+@22
+mpsMerge_tb.sysStatus[31:0]
+mpsMerge_tb.mgtRxLinkUp[7:0]
+mpsMerge_tb.mgtRxChars[127:0]
+@28
+mpsMerge_tb.mgtTxClk
+@22
+mpsMerge_tb.mpfTxChars[15:0]
+@28
+mpsMerge_tb.mpfTxCharIsK
+[pattern_trace] 1
+[pattern_trace] 0

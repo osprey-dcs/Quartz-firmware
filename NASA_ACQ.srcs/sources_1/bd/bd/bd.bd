@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0xD4F4FD5132DBBEF9",
+      "boundary_crc": "0x5FC455433392BBB9",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -284,7 +284,7 @@
       },
       "GPIO_STROBES": {
         "direction": "O",
-        "left": "31",
+        "left": "63",
         "right": "0"
       },
       "GPIO_OUT": {
@@ -294,7 +294,7 @@
       },
       "GPIO_IN": {
         "direction": "I",
-        "left": "1023",
+        "left": "2047",
         "right": "0"
       },
       "phy_reset_n": {
@@ -1959,7 +1959,12 @@
         "vlnv": "ospreydcs.com:user:axi_lite_generic_reg_v3_0:1.0",
         "xci_name": "bd_axi_lite_generic_reg_0_0",
         "xci_path": "ip/bd_axi_lite_generic_reg_0_0/bd_axi_lite_generic_reg_0_0.xci",
-        "inst_hier_path": "generic_reg"
+        "inst_hier_path": "generic_reg",
+        "parameters": {
+          "C_S_AXI_ADDR_WIDTH": {
+            "value": "8"
+          }
+        }
       },
       "clk_wiz_0": {
         "vlnv": "xilinx.com:ip:clk_wiz:6.0",

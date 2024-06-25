@@ -23,15 +23,15 @@
  */
 
 /*
- * Wrap tiny event receiver and multi-gigabit transceiver
+ * Instantiate all multi-gigabit transceivers and the code associated with them.
  * FIXME: The event forwarding is good only for distributing time stamps
  *        and acquisition alignment to just a little better than 100 ns.
  */
 `default_nettype none
-module eventSystem #(
-    parameter CFG_EVG_CLK_RATE   = 1,
+module fiberLinks #(
     parameter MGT_COUNT          = 1,
-    parameter EVG_CLK_RATE       = 1,
+    parameter MGT_DATA_WIDTH     = 16,
+    parameter MPS_OUTPUT_COUNT   = 8,
     parameter TIMESTAMP_WIDTH    = 64,
     parameter EVR_ACQ_START_CODE = 1,
     parameter EVR_ACQ_STOP_CODE  = 1,
@@ -48,9 +48,12 @@ module eventSystem #(
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysLinkStatus,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] sysTimestamp,
 
+                         input  wire                       sysMPSmergeStrobe,
+                         output wire                [31:0] sysMPSmergeStatus,
+
                          output wire                       evrRxClk,
-    (*MARK_DEBUG=DEBUG_EVR*)output wire                    evrRxStartACQstrobe,
-    (*MARK_DEBUG=DEBUG_EVR*)output wire                    evrRxStopACQstrobe,
+                         output wire                       evrRxStartACQstrobe,
+                         output wire                       evrRxStopACQstrobe,
                          output wire                       evfRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
@@ -63,24 +66,24 @@ module eventSystem #(
                          output wire                       mgtTxClk,
                          input  wire                 [7:0] evgTxCode,
                          input  wire                       evgTxCodeValid,
+                         input  wire  [MGT_DATA_WIDTH-1:0] mpsTxChars,
+                         input  wire                       mpsTxCharIsK,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
     (*MARK_DEBUG=DEBUG*) output reg                        acqPPSstrobe,
 
-    input  wire                 gtRefClk,
+    input  wire                 gtRefClkP,
+    input  wire                 gtRefClkN,
     input  wire [MGT_COUNT-1:0] rxP,
     input  wire [MGT_COUNT-1:0] rxN,
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN);
 
-localparam MGT_DATA_WIDTH = 16;
 localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
 
-wire [MGT_DATA_WIDTH-1:0] txChars;
-wire [MGT_BYTE_COUNT-1:0] txCharIsK;
 wire [MGT_DATA_WIDTH-1:0] evrRxChars, evfRxChars;
-wire [MGT_BYTE_COUNT-1:0] evrRxCharIsK, evfRxCharIsK;
+wire                      evrRxCharIsK, evfRxCharIsK;
 
 wire evrRxPPSmarker = 0;
 wire [63:0] evrRxTimestamp;
@@ -99,7 +102,7 @@ tinyEVR #(
   tinyEVR_i (
     .evrRxClk(evrRxClk),
     .evrRxWord(evrRxChars & {MGT_DATA_WIDTH{evrRxLinkUp}}),
-    .evrCharIsK(evrRxCharIsK),
+    .evrCharIsK({1'b0, evrRxCharIsK}),
     .ppsMarker(evrPPSstrobe),
     .timestampValid(evrTimestampValid),
     .timestamp(evrTimestamp),
@@ -155,32 +158,64 @@ always @(posedge acqClk) begin
 end
 
 ///////////////////////////////////////////////////////////////////////////////
-// Instantiate the multi gigabit transceiver
+// Select event source
+(*ASYNC_REG="true"*) reg mgtIsEVG_m;
+reg mgtIsEVG;
+wire [MGT_DATA_WIDTH-1:0] mpfTxChars;
+wire                      mpfTxCharIsK;
+wire [MGT_DATA_WIDTH-1:0] evfTxChars;
+wire                      evfTxCharIsK;
+wire [MGT_DATA_WIDTH-1:0] evsTxChars;
+wire                      evsTxCharIsK;
+always @(posedge mgtTxClk) begin
+    mgtIsEVG_m <= isEVG;
+    mgtIsEVG   <= mgtIsEVG_m;
+end
+assign evsTxChars =   mgtIsEVG ? evgTxChars   : evfTxChars;
+assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : evfTxCharIsK;
+
+///////////////////////////////////////////////////////////////////////////////
+// Instantiate the multi gigabit transceivers
+wire                  [MGT_COUNT-1:0] mgtRxClks;
+wire                  [MGT_COUNT-1:0] mgtRxLinkUp;
+wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
+wire                  [MGT_COUNT-1:0] mgtRxCharIsK;
 mgtWrapper #(
     .MGT_COUNT(MGT_COUNT),
-    .MGT_DATA_WIDTH(16),
+    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
     .DEBUG(DEBUG_MGT))
   mgtWrapper_i (
     .sysClk(sysClk),
     .sysCsrStrobe(sysCsrStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysStatus),
-    .gtRefClk(gtRefClk),
+    .gtRefClkP(gtRefClkP),
+    .gtRefClkN(gtRefClkN),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),
     .txN(txN),
-    .evrRxClk(evrRxClk),
-    .evrRxLinkUp(evrRxLinkUp),
-    .evrRxChars(evrRxChars),
-    .evrRxCharIsK(evrRxCharIsK),
-    .evfRxClk(evfRxClk),
-    .evfRxLinkUp(evfRxLinkUp),
-    .evfRxChars(evfRxChars),
-    .evfRxCharIsK(evfRxCharIsK),
+    .mgtRxClks(mgtRxClks),
+    .mgtRxLinkUp(mgtRxLinkUp),
+    .mgtRxChars(mgtRxChars),
+    .mgtRxCharIsK(mgtRxCharIsK),
     .mgtTxClk(mgtTxClk),
-    .mgtTxChars(txChars),
-    .mgtTxIsK(txCharIsK));
+    .mgtIsEVG(mgtIsEVG),
+    .mpsTxChars(mpsTxChars),
+    .mpsTxCharIsK(mpsTxCharIsK),
+    .mpfTxChars(mpfTxChars),
+    .mpfTxCharIsK(mpfTxCharIsK),
+    .evsTxChars(evsTxChars),
+    .evsTxCharIsK(evsTxCharIsK));
+
+assign evrRxClk     = mgtRxClks[0];
+assign evrRxCharIsK = mgtRxCharIsK[0];
+assign evrRxChars   = mgtRxChars[0*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
+assign evrRxLinkUp  = mgtRxLinkUp[0];
+assign evfRxClk     = mgtRxClks[1];
+assign evfRxCharIsK = mgtRxCharIsK[1];
+assign evfRxChars   = mgtRxChars[1*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
+assign evfRxLinkUp  = mgtRxLinkUp[1];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event generator
@@ -257,28 +292,33 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
 
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event fanout
-wire [MGT_DATA_WIDTH-1:0] evfTxChars;
-wire [MGT_BYTE_COUNT-1:0] evfTxCharIsK;
+wire pad;
 evf #(.DEBUG(DEBUG_EVF))
   evf_i (
     .rxClk(evfRxClk),
     .rxLinkUp(evfRxLinkUp && !isEVG),
     .rxChars(evfRxChars),
-    .rxCharIsK(evfRxCharIsK),
+    .rxCharIsK({1'b0, evfRxCharIsK}),
     .txClk(mgtTxClk),
     .txChars(evfTxChars),
-    .txCharIsK(evfTxCharIsK));
+    .txCharIsK({pad, evfTxCharIsK}));
 
 ///////////////////////////////////////////////////////////////////////////////
-// Select event source
-(*ASYNC_REG="true"*) reg txIsEVG_m;
-reg txIsEVG;
-always @(posedge mgtTxClk) begin
-    txIsEVG_m <= isEVG;
-    txIsEVG   <= txIsEVG_m;
-end
-assign txChars = txIsEVG ? evgTxChars : evfTxChars;
-assign txCharIsK = txIsEVG ? evgTxCharIsK : evfTxCharIsK;
+// Merge MPS uplinks
+mpsMerge #(
+    .MGT_COUNT(MGT_COUNT),
+    .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
+    .MPS_OUTPUT_COUNT(MPS_OUTPUT_COUNT))
+  mpsMerge_i (
+    .sysClk(sysClk),
+    .sysCsrStrobe(sysMPSmergeStrobe),
+    .sysGPIO_OUT(sysGPIO_OUT),
+    .sysStatus(sysMPSmergeStatus),
+    .mgtRxChars(mgtRxChars),
+    .mgtRxLinkUp(mgtRxLinkUp),
+    .mgtTxClk(mgtTxClk),
+    .mpfTxChars(mpfTxChars),
+    .mpfTxCharIsK(mpfTxCharIsK));
 
 endmodule
 `default_nettype wire

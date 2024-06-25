@@ -128,18 +128,10 @@ assign WR_DAC2_SYNC_Tn = 1'b1;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Clocks
-wire sysClk, clk125, fixedClk200, evrRxClk, evfRxClk, evgClk;
+wire sysClk, acqClk, fixedClk200, evrRxClk, evfRxClk, evgClk;
 wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk;
 wire refClk125;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
-
-wire gtRefClk, gtRefClkDiv2;
-IBUFDS_GTE2 gtRefClkBuf (
-    .O(gtRefClk),
-    .ODIV2(gtRefClkDiv2),
-    .CEB(1'b0),
-    .I(MGTREFCLK0_116_P),
-    .IB(MGTREFCLK0_116_N));
 
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
@@ -186,7 +178,7 @@ marbleClockSync #(
     .sysHwInterval(GPIO_IN[GPIO_IDX_ACQCLK_HW_INTERVAL]),
     .sysPPSjitter(GPIO_IN[GPIO_IDX_ACQCLK_HW_JITTER]),
     .stableClk200(fixedClk200),
-    .clk(clk125),
+    .clk(acqClk),
     .ppsPrimary_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
     .ppsSecondary_a(isEVG ? PMOD2_3 : 1'b0),
     .isOffsetBinary(1'b0),
@@ -199,32 +191,37 @@ marbleClockSync #(
     .SPI_SDI(WR_DAC_DIN_T));
 
 ///////////////////////////////////////////////////////////////////////////////
-// Basic MRF-comptatible event receiver, generator, and fanout
+// Basic MRF-comptatible event receiver, generator, and fanout.
+// Machine protection data transfer.
 localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
 wire evrRxStartACQstrobe, evrRxStopACQstrobe;
-wire [7:0] evgTxCode;
-wire       evgTxCodeValid;
-eventSystem #(
-    .CFG_EVG_CLK_RATE(CFG_EVG_CLK_RATE),
+wire  [7:0] evgTxCode;
+wire        evgTxCodeValid;
+wire [15:0] mpsTxChars;
+wire        mpsTxCharIsK;
+fiberLinks #(
     .MGT_COUNT(CFG_MGT_COUNT),
-    .EVG_CLK_RATE(CFG_EVG_CLK_RATE),
+    .MGT_DATA_WIDTH(16),
+    .MPS_OUTPUT_COUNT(CFG_MPS_OUTPUT_COUNT),
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
     .EVR_ACQ_START_CODE(CFG_EVR_ACQ_START_CODE),
     .EVR_ACQ_STOP_CODE(CFG_EVR_ACQ_STOP_CODE),
     .DEBUG("false"),
-    .DEBUG_MGT("false"),
-    .DEBUG_EVR("false"),
+    .DEBUG_MGT("true"),
+    .DEBUG_EVR("true"),
     .DEBUG_EVF("false"),
     .DEBUG_EVG("false"))
-  eventSystem (
+  fiberLinks (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MGT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_MGT_CSR]),
     .sysLinkStatus(GPIO_IN[GPIO_IDX_LINK_STATUS]),
     .sysEVGsetTimeStrobe(GPIO_STROBES[GPIO_IDX_EVG_CSR]),
+    .sysMPSmergeStrobe(GPIO_STROBES[GPIO_IDX_MPS_MERGE_CSR]),
+    .sysMPSmergeStatus(GPIO_IN[GPIO_IDX_MPS_MERGE_CSR]),
     .sysEVGstatus(GPIO_IN[GPIO_IDX_EVG_CSR]),
     .evrRxClk(evrRxClk),
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
@@ -237,11 +234,14 @@ eventSystem #(
     .mgtTxClk(evgClk),
     .evgTxCode(evgTxCode),
     .evgTxCodeValid(evgTxCodeValid),
+    .mpsTxChars(mpsTxChars),
+    .mpsTxCharIsK(mpsTxCharIsK),
     .sysTimestamp(sysTimestamp),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqTimestamp(acqTimestamp),
     .acqPPSstrobe(acqPPSstrobe),
-    .gtRefClk(gtRefClk),
+    .gtRefClkP(MGTREFCLK0_116_P),
+    .gtRefClkN(MGTREFCLK0_116_N),
     .rxP(QSFP_RX_P),
     .rxN(QSFP_RX_N),
     .txP(QSFP_TX_P),
@@ -266,14 +266,13 @@ wire measuredUsingInteralAcqMarker;
 reg [2:0] frequencyChannelSelect = 0;
 frequencyCounters #(
     .CLOCKS_PER_ACQUISITION(CFG_SYSCLK_RATE),
-    .CHANNEL_COUNT(6))
+    .CHANNEL_COUNT(5))
   frequencyCounters (
     .clk(sysClk),
     .measuredClocks({ evfRxClk,
                       evrRxClk,
                       evgClk,
-                      gtRefClkDiv2,
-                      clk125,
+                      acqClk,
                       sysClk }),
     .acqMarker_a(hwPPSvalid && ppsMarker),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
@@ -383,7 +382,7 @@ ad7768 #(
     .sysDRDYhistory(GPIO_IN[GPIO_IDX_AD7768_DRDY_HISTORY]),
     .sysAlignCount(GPIO_IN[GPIO_IDX_AD7768_ALIGN_COUNT]),
     .clk32(clk32),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
     .acqData(ad7768Data),
@@ -411,7 +410,7 @@ mclkSelect #(.DEBUG("false"))
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .mclkRate(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .clk32p768(clk32p768),
     .clk40p96(clk40p96),
@@ -434,7 +433,7 @@ inputCoupling #(
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_INPUT_COUPLING_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_INPUT_COUPLING_CSR]),
-    .clk(clk125),
+    .clk(acqClk),
     .inTDATA(ad7768Data),
     .inTVALID(ad7768Strobe),
     .outTDATA(coupledData),
@@ -471,7 +470,7 @@ rateSelect #(
     .sysFilterStrobe5(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_5_CSR]),
     .sysFilterStrobe2(GPIO_STROBES[GPIO_IDX_DOWNSAMPLE_2_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqEnabled(acqEnableAcquisition),
     .S_TDATA(coupledData),
     .S_TVALID(coupledDataStrobe),
@@ -486,6 +485,7 @@ assign acqStrobe = coupledDataStrobe;
 // Build packet
 wire [7:0] unbufPK_TDATA;
 wire unbufPK_TVALID, unbufPK_TLAST, unbufPK_TREADY;
+wire [(4*CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP)-1:0] acqLimitExcursions;
 buildPacket #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -507,9 +507,10 @@ buildPacket #(
     .sysByteCountRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
     .sysLimitExcursions(GPIO_IN[GPIO_IDX_ADC_EXCURSIONS]),
     .sysTimeValid(GPIO_IN[GPIO_IDX_LINK_STATUS][31]),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqStrobe(acqStrobe),
     .acqData(acqData),
+    .acqLimitExcursions(acqLimitExcursions),
     .acqSeconds(acqTimestamp[63:32]),
     .acqTicks(acqTimestamp[31:0]),
     .acqClkLocked(GPIO_IN[GPIO_IDX_ACQCLK_PLL_CSR][31]),
@@ -524,7 +525,7 @@ wire [7:0] PK_TDATA;
 wire PK_TVALID, PK_TLAST, PK_TREADY;
 fastDataFIFO fastDataFIFO (
   .s_axis_aresetn(1'b1),
-  .s_axis_aclk(clk125),
+  .s_axis_aclk(acqClk),
   .s_axis_tvalid(unbufPK_TVALID),
   .s_axis_tready(unbufPK_TREADY),
   .s_axis_tdata(unbufPK_TDATA),
@@ -549,7 +550,7 @@ evgAcqControl #(
     .evgClk(evgClk),
     .evgEventCode(evgTxCode),
     .evgEventCodeValid(evgTxCodeValid),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqStrobe(ad7768Strobe));
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -559,8 +560,32 @@ evrAcqControl #(.DEBUG("false"))
     .evrClk(evrRxClk),
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
     .evrRxStopACQstrobe(evrRxStopACQstrobe),
-    .acqClk(clk125),
+    .acqClk(acqClk),
     .acqEnableAcquisition(acqEnableAcquisition));
+
+///////////////////////////////////////////////////////////////////////////////
+// MPS
+mpsLocal #(
+    .MPS_OUTPUT_COUNT(CFG_MPS_OUTPUT_COUNT),
+    .MPS_INPUT_COUNT(CFG_MPS_INPUT_COUNT),
+    .ADC_COUNT(CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP),
+    .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
+    .DEBUG(DEBUG))
+  mpsLocal_i (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MPS_CSR]),
+    .sysDataStrobe(GPIO_STROBES[GPIO_IDX_MPS_DATA]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_MPS_CSR]),
+    .sysData(GPIO_IN[GPIO_IDX_MPS_DATA]),
+    .acqClk(acqClk),
+    .acqLimitExcursions(acqLimitExcursions),
+    .acqLimitExcursionsTVALID(acqStrobe),
+    .acqTimestamp(acqTimestamp),
+    .mpsInputStates_a({PMOD2_7,PMOD2_6,PMOD2_5,PMOD2_4,PMOD2_3,PMOD2_2,PMOD2_1,PMOD2_0}), // FIXME -- how will interlock inputs be handed for real?
+    .mgtTxClk(evgClk),
+    .mpsTxChars(mpsTxChars),
+    .mpsTxCharIsK(mpsTxCharIsK));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Delay data from PHY
@@ -581,7 +606,7 @@ bd bd_i (
     .startupEOS(startupEOS),
 
     .sysClk(sysClk),
-    .clk125(clk125),
+    .clk125(acqClk),
     .fixedClk200(fixedClk200),
     .clk32(clk32),
     .clk32p768(clk32p768),

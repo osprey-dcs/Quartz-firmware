@@ -286,3 +286,4 @@ set_property -dict {PACKAGE_PIN A20 IOSTANDARD LVDS_25} [get_ports AD7768_MCLK_N
 #set_property -dict {PACKAGE_PIN B21 IOSTANDARD LVCMOS25} [get_ports {FMC2_LA_P[33]}]
 
 
+

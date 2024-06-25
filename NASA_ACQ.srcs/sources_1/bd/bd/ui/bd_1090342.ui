@@ -63,6 +63,7 @@ preplace netloc clk_wiz_3_clk_out1 1 6 1 NJ 160
 preplace netloc clk_wiz_3_clk_out2 1 6 1 NJ 180
 preplace netloc clk_wiz_4_clk_out1 1 5 2 1800 1540 NJ
 preplace netloc clk_wiz_5_clk_out1 1 6 1 NJ 60
+preplace netloc eos_in_0_1 1 0 6 NJ 1860 NJ 1860 NJ 1860 NJ 1860 NJ 1860 1810J
 preplace netloc iic_fpga_gpo 1 6 1 NJ 460
 preplace netloc mdm_1_debug_sys_rst 1 1 5 190 1700 570J 1650 870 1700 1390 1720 1790
 preplace netloc microblaze_0_Clk 1 1 6 190 1360 590 1660 860 1360 1390 1540 1760 1520 NJ
@@ -73,7 +74,6 @@ preplace netloc rst_clk_wiz_1_100M_bus_struct_reset 1 2 3 560 1690 NJ 1690 1380J
 preplace netloc rst_clk_wiz_1_100M_mb_reset 1 2 2 600 1670 880J
 preplace netloc rst_clk_wiz_1_100M_peripheral_aresetn 1 2 4 580 1680 NJ 1680 1370 1550 1770
 preplace netloc rst_clk_wiz_1_100M_peripheral_reset 1 2 5 550J 1880 NJ 1880 NJ 1880 NJ 1880 NJ
-preplace netloc eos_in_0_1 1 0 6 NJ 1860 NJ 1860 NJ 1860 NJ 1860 NJ 1860 1810J
 preplace netloc axi_iic_0_IIC 1 6 1 NJ 420
 preplace netloc axi_uartlite_0_UART 1 6 1 NJ 730
 preplace netloc fastTx_0_1 1 0 6 NJ 790 NJ 790 NJ 790 NJ 790 NJ 790 1800J
