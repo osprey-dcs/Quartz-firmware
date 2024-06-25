@@ -65,12 +65,14 @@ wire      [MPS_OUTPUT_COUNT-1:0] acqPerChannelTripped;
 // System clock domain
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        sysREGsel <= sysGPIO_OUT[0+:REG_SEL_WIDTH];
-        sysMPSsel <= sysGPIO_OUT[REG_SEL_WIDTH+:MPS_SEL_WIDTH];
+        sysMPSsel <= sysGPIO_OUT[0+:MPS_SEL_WIDTH];
+        sysREGsel <= sysGPIO_OUT[8+:REG_SEL_WIDTH];
         if (sysGPIO_OUT[31]) sysClearTripToggle <= !sysClearTripToggle;
     end
     sysData <= acqPerChannelData[sysMPSsel*32+:32];
 end
+assign sysStatus = { {24-REG_SEL_WIDTH{1'b0}}, sysREGsel,
+                      {8-REG_SEL_WIDTH{1'b0}}, sysMPSsel };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock domain
@@ -197,7 +199,8 @@ always @(posedge sysClk) begin
                (sysREGsel ==  9) ? firstFaultLOLO :
                (sysREGsel == 10) ? firstFaultDiscrete :
                (sysREGsel == 11) ? whenFaulted[32+:32] :
-               (sysREGsel == 12) ? whenFaulted[ 0+:32] : 0;
+               (sysREGsel == 12) ? whenFaulted[ 0+:32] :
+               (sysREGsel == 13) ? {31'b0, acqTripped} : 0;
 end
 
 /*
