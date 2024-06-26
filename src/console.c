@@ -41,6 +41,7 @@
 #include "gpio.h"
 #include "iicFPGA.h"
 #include "mgtClkSwitch.h"
+#include "mpsLocal.h"
 #include "systemParameters.h"
 #include "tftp.h"
 #include "util.h"
@@ -309,6 +310,10 @@ cmdDEBUG(int argc, char **argv)
     if (debugFlags & DEBUGFLAG_START_AD7768_ALIGN) {
         ad7768StartAlignment();
         debugFlags &= ~DEBUGFLAG_START_AD7768_ALIGN;
+    }
+    if (debugFlags & DEBUGFLAG_DUMP_MPS_REG) {
+        mpsLocalDumpReg();
+        debugFlags &= ~DEBUGFLAG_DUMP_MPS_REG;
     }
 }
 

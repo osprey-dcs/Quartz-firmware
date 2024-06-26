@@ -82,5 +82,12 @@
  */
 #define CFG_EVR_ACQ_STOP_CODE  96
 #define CFG_EVR_ACQ_START_CODE 97
+#define CFG_EVR_MPS_CLEAR_CODE 99
+
+/*
+ * Machine protection
+ */
+#define CFG_MPS_INPUT_COUNT     8
+#define CFG_MPS_OUTPUT_COUNT    8
 
 #endif /* _CONFIG_H_ */

@@ -30,6 +30,7 @@
 
 void evgInit(void);
 void evgAcqControl(int enable);
+void evgSendEvent(int eventCode);
 void evgCrank(void);
 
 #define isEVG() (systemParameters.ntpServer != 0)

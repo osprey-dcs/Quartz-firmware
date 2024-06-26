@@ -454,4 +454,116 @@
     "data_width": 32,
     "sign": "signed"
   }
+  "MPS:reg:XX": {
+    "access": "rw",
+    "addr_width": 8,
+    "base_addr":  1200,
+    "data_width": 32,
+    "sign": "unigned"
+  },
+  "MPS:chkLOLO:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr":  1200,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:chkLO:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr": 1216,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:chkHI:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr": 1232,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:chkHIHI:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr": 1248,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:chkDiscrete:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr": 1264,
+    "data_width": 8,
+    "sign": "unsigned"
+  },
+  "MPS:discreteGood:XX": {
+    "access": "rw",
+    "addr_width": 3,
+    "base_addr": 1280,
+    "data_width": 8,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultLOLO:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr":  1296,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultLO:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1312,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultHI:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1328,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultHIHI:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1344,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultDiscrete:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1360,
+    "data_width": 8,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultSeconds:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1376,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:firstFaultTicks:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1392,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:status:XX": {
+    "access": "r",
+    "addr_width": 3,
+    "base_addr": 1408,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "MPS:clear": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 70,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
 }

@@ -63,8 +63,11 @@
 #define GPIO_IDX_INPUT_COUPLING_SET_START  27 // SET coils (DC) and start SPI
 #define GPIO_IDX_DIGITIZER_AMC7823         28 // Digitizer slow monitors
 #define GPIO_IDX_PPS_LATENCY               29 // HW to EVR PPS interval
+#define GPIO_IDX_MPS_CSR                   30 // Machine protection CSR
+#define GPIO_IDX_MPS_DATA                  31 // Machine protection data
+#define GPIO_IDX_MPS_MERGE_CSR             32 // MPS merge/forward CSR
 
-#define GPIO_IDX_COUNT                     32 // Number of GPIO registers
+#define GPIO_IDX_COUNT                     64 // Number of GPIO registers
 
 #define GPIO_READ(r) Xil_In32(XPAR_GENERIC_REG_BASEADDR+((r)*4))
 #define GPIO_WRITE(r,v) Xil_Out32(XPAR_GENERIC_REG_BASEADDR+((r)*4),(v))

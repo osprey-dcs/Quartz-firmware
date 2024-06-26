@@ -44,6 +44,7 @@
 #define PPS_CSR_QUARTZ_VALID    0x2
 #define PPS_CSR_USE_QUARTZ      0x1
 
+#define ACQ_CSR_W_SEND_EVENT    0x100
 #define ACQ_CSR_RW_ENABLE       0x1
 
 #define STARTUP_PAUSE (4 * 1000000)
@@ -208,6 +209,12 @@ void
 evgAcqControl(int enable)
 {
     GPIO_WRITE(GPIO_IDX_EVG_ACQ_CSR, enable ?  ACQ_CSR_RW_ENABLE : 0);
+}
+
+void
+evgSendEvent(int eventCode)
+{
+    GPIO_WRITE(GPIO_IDX_EVG_ACQ_CSR, ACQ_CSR_W_SEND_EVENT | eventCode);
 }
 
 void
