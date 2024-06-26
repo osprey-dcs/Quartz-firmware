@@ -37,6 +37,8 @@
 #include "gpio.h"
 #include "iicFPGA.h"
 #include "mmcMailbox.h"
+#include "mpsLocal.h"
+#include "mpsMerge.h"
 #include "softwareBuildDate.h"
 #include "systemParameters.h"
 #include "util.h"
@@ -73,6 +75,8 @@ struct LEEPpacket {
 #define REG_FMC1_SERIAL_NUMBER              50
 #define REG_FMC2_SERIAL_NUMBER              51
 #define REG_MPS_CLEAR                       70
+#define REG_MPS_MERGE_TRIPPED               71
+#define REG_MPS_MERGE_REQUIRED              72
 #define REG_ACQ_ENABLE                      80
 #define REG_SAMPLING_RATE                   81
 #define REG_RESET_ADCS                      82
@@ -121,6 +125,8 @@ writeReg(int address, uint32_t value)
     case REG_SAMPLING_RATE:     ad7768SetSamplingRate(value);            return;
     case REG_RESET_ADCS:        if (value == 40)  ad7768Reset();         return;
     case REG_SET_VCXO_DAC:      clockAdjustSet(value);                   return;
+    case REG_MPS_CLEAR: if(isEVG()) evgSendEvent(CFG_EVR_MPS_CLEAR_CODE);return;
+    case REG_MPS_MERGE_REQUIRED:mpsMergeSetRequiredLinks(value);         return;
     }
     if (MATCH(address, REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT)) {
         acqSetActive(address - REG_ACQ_CHAN_ACTIVE_BASE, value);
@@ -144,6 +150,30 @@ writeReg(int address, uint32_t value)
     }
     if (MATCH(address, REG_SET_HIHI_BASE, CHANNEL_COUNT)) {
         acqSetHIHIthreshold(address - REG_SET_HIHI_BASE, value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetLOLObitmap(address - REG_MPS_LOLO_BITMAP_BASE, value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetLObitmap(address - REG_MPS_LO_BITMAP_BASE, value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetHIbitmap(address - REG_MPS_HI_BITMAP_BASE, value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetHIHIbitmap(address - REG_MPS_HIHI_BITMAP_BASE, value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetDiscreteBitmap(address - REG_MPS_DISCRETE_BITMAP_BASE,value);
+        return;
+    }
+    if (MATCH(address, REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        mpsLocalSetDiscreteGoodState(address-REG_MPS_DISCRETE_GOOD_BASE,value);
         return;
     }
 }
@@ -183,6 +213,8 @@ readReg(int address)
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
+    case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
+    case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
     }
     if (MATCH(address, REG_SYSMON_BASE, SYSMON_SIZE)) {
         int offset = address - REG_SYSMON_BASE;
@@ -213,6 +245,47 @@ readReg(int address)
     }
     if (MATCH(address, REG_CALIB_CHAN_GAIN_BASE, CHANNEL_COUNT)) {
         return ad7768GetGain(address - REG_CALIB_CHAN_GAIN_BASE);
+    }
+    if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetLOLObitmap(address - REG_MPS_LOLO_BITMAP_BASE);
+    }
+    if (MATCH(address, REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetLObitmap(address - REG_MPS_LO_BITMAP_BASE);
+    }
+    if (MATCH(address, REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetHIbitmap(address - REG_MPS_HI_BITMAP_BASE);
+    }
+    if (MATCH(address, REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetHIHIbitmap(address - REG_MPS_HIHI_BITMAP_BASE);
+    }
+    if (MATCH(address, REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetDiscreteBitmap(address-REG_MPS_DISCRETE_BITMAP_BASE);
+    }
+    if (MATCH(address, REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetDiscreteGoodState(address-REG_MPS_DISCRETE_GOOD_BASE);
+    }
+    if (MATCH(address, REG_MPS_FIRST_FAULT_LOLO_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultLOLO(address-REG_MPS_FIRST_FAULT_LOLO_BASE);
+    }
+    if (MATCH(address, REG_MPS_FIRST_FAULT_LO_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultLO(address-REG_MPS_FIRST_FAULT_LO_BASE);
+    }
+    if (MATCH(address, REG_MPS_FIRST_FAULT_HI_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultHI(address-REG_MPS_FIRST_FAULT_HI_BASE);
+    }
+    if (MATCH(address, REG_MPS_FIRST_FAULT_HIHI_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultHIHI(address-REG_MPS_FIRST_FAULT_HIHI_BASE);
+    }
+    if (MATCH(address,REG_MPS_FIRST_FAULT_DISCRETE_BASE,CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultDiscrete(address -
+                                             REG_MPS_FIRST_FAULT_DISCRETE_BASE);
+    }
+    if (MATCH(address, REG_MPS_FIRST_FAULT_TICKS_BASE,CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetFirstFaultTicks(address -
+                                                REG_MPS_FIRST_FAULT_TICKS_BASE);
+    }
+    if (MATCH(address, REG_MPS_STATUS_BASE, CFG_MPS_OUTPUT_COUNT)) {
+        return mpsLocalGetStatus(address - REG_MPS_STATUS_BASE);
     }
     return 0;
 }

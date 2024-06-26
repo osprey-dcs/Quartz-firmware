@@ -29,7 +29,6 @@
 #ifndef _MPS_LOCAL_H_
 #define _MPS_LOCAL_H_
 
-void mpsLocalInit(void);
 void mpsLocalDumpReg(void);
 
 void mpsLocalSetLOLObitmap(int outputIndex, uint32_t map);
@@ -39,7 +38,6 @@ void mpsLocalSetHIHIbitmap(int outputIndex, uint32_t map);
 void mpsLocalSetDiscreteBitmap(int outputIndex, uint32_t map);
 void mpsLocalSetDiscreteGoodState(int outputIndex, uint32_t goodState);
 
-uint32_t mpsLocalIsTripped(int outputIndex);
 uint32_t mpsLocalGetLOLObitmap(int outputIndex);
 uint32_t mpsLocalGetLObitmap(int outputIndex);
 uint32_t mpsLocalGetHIbitmap(int outputIndex);
@@ -53,7 +51,6 @@ uint32_t mpsLocalGetFirstFaultHIHI(int outputIndex);
 uint32_t mpsLocalGetFirstFaultDiscrete(int outputIndex);
 uint32_t mpsLocalGetFirstFaultSeconds(int outputIndex);
 uint32_t mpsLocalGetFirstFaultTicks(int outputIndex);
-
-uint32_t mpsLocalFetchSysmon(int index);
+uint32_t mpsLocalGetStatus(int outputIndex);
 
 #endif /* _MPS_LOCAL_H_ */

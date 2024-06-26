@@ -48,17 +48,15 @@
 # define CSR_REG_FIRST_FAULT_DISCRETE   0x0A00
 # define CSR_REG_FIRST_FAULT_SECONDS    0x0B00
 # define CSR_REG_FIRST_FAULT_TICKS      0x0C00
-# define CSR_REG_TRIPPED                0x0D00
+# define CSR_REG_STATUS                 0x0D00
+
+#define STATUS_REG_TRIPPED  0x1
+#define STATUS_REG_FAULTED  0x2
 
 #define CSR_WRITE(x)  GPIO_WRITE(GPIO_IDX_MPS_CSR, (x))
 #define CSR_READ()    GPIO_READ(GPIO_IDX_MPS_CSR)
 #define DATA_WRITE(x) GPIO_WRITE(GPIO_IDX_MPS_DATA, (x))
 #define DATA_READ()   GPIO_READ(GPIO_IDX_MPS_DATA)
-
-void
-mpsLocalInit(void)
-{
-}
 
 static uint32_t
 getReg(int regSel, int outputIndex)
@@ -84,7 +82,7 @@ mpsLocalDumpReg(void)
     int o;
     for (o = 0 ; o < CFG_MPS_OUTPUT_COUNT ; o++) {
         int r;
-        uint32_t v = getReg(CSR_REG_TRIPPED, o);
+        uint32_t v = getReg(CSR_REG_STATUS, o);
         static const char * const names[] = {
             "Check HIHI",
             "Check HI",
@@ -100,7 +98,9 @@ mpsLocalDumpReg(void)
             "First Fault Seconds",
             "First Fault Ticks",
             "Status" };
-        printf("Output %d:%sripped\n", o + 1, (v & 0x1) ? "T" : " Not T");
+        printf("Output %d:%sripped%s\n", o + 1,
+                            (v & STATUS_REG_TRIPPED) ? "T" : " Not T",
+                            (v & STATUS_REG_FAULTED) ? " (Fault Present)" : "");
         for (r = 0 ; r < sizeof names / sizeof names[0] ; r++) {
             v = getReg((r << CSR_MPS_REG_SEL_SHIFT), o);
             printf("%24s: %04X:%04X\n", names[r], (v >> 16), v & 0xFFFF);
@@ -147,12 +147,6 @@ void
 mpsLocalSetDiscreteGoodState(int outputIndex, uint32_t goodState)
 {
     setReg(CSR_REG_DISCRETE_GOOD_STATE, outputIndex, goodState);
-}
-
-uint32_t
-mpsLocalIsTripped(int outputIndex)
-{
-    return getReg(CSR_REG_TRIPPED, outputIndex);
 }
 
 uint32_t
@@ -233,6 +227,11 @@ mpsLocalGetFirstFaultTicks(int outputIndex)
     return getReg(CSR_REG_FIRST_FAULT_TICKS, outputIndex);
 }
 
+uint32_t
+mpsLocalGetStatus(int outputIndex)
+{
+    return getReg(CSR_REG_STATUS, outputIndex);
+}
 
 uint32_t
 mpsLocalFetchSysmon(int index)

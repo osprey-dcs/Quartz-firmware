@@ -453,13 +453,6 @@
     "base_addr": 900,
     "data_width": 32,
     "sign": "signed"
-  }
-  "MPS:reg:XX": {
-    "access": "rw",
-    "addr_width": 8,
-    "base_addr":  1200,
-    "data_width": 32,
-    "sign": "unigned"
   },
   "MPS:chkLOLO:XX": {
     "access": "rw",
@@ -563,7 +556,21 @@
     "access": "w",
     "addr_width": 0,
     "base_addr": 70,
-    "data_width": 32,
+    "data_width": 1,
     "sign": "unsigned"
   },
+  "MPS:tripped": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 71,
+    "data_width": 8,
+    "sign": "unsigned"
+  },
+  "MPS:required": {
+    "access": "rw",
+    "addr_width": 0,
+    "base_addr": 72,
+    "data_width": 8,
+    "sign": "unsigned"
+  }
 }
