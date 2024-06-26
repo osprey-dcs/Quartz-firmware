@@ -63,34 +63,50 @@ struct LEEPpacket {
 };
 
 #define CHANNEL_COUNT ((CFG_AD7768_CHIP_COUNT) * (CFG_AD7768_ADC_PER_CHIP))
-#define REG_POWERUP_STATE           10
-#define REG_FIRMWARE_BUILD_DATE     20
-#define REG_SOFTWARE_BUILD_DATE     21
-#define REG_CALIBRATION_DATE        22
-#define REG_CALIBRATION_STATUS      23
-#define REG_FPGA_REBOOT             30
-#define REG_SECONDS_SINCE_BOOT      40
-#define REG_FMC1_SERIAL_NUMBER      50
-#define REG_FMC2_SERIAL_NUMBER      51
-#define REG_ACQ_ENABLE              80
-#define REG_SAMPLING_RATE           81
-#define REG_RESET_ADCS              82
-#define REG_SET_VCXO_DAC            83
-#define REG_GET_LOLO                90
-#define REG_GET_LO                  91
-#define REG_GET_HI                  92
-#define REG_GET_HIHI                93
-#define REG_SYSMON_BASE             100
-#define SYSMON_SIZE                 300
-#define REG_ACQ_CHAN_ACTIVE_BASE    400
-#define REG_ACQ_CHAN_COUPLING_BASE  500
-#define REG_CALIB_CHAN_OFFSET_BASE  800
-#define REG_CALIB_CHAN_GAIN_BASE    900
-#define REG_SET_LOLO_BASE           1000
-#define REG_SET_LO_BASE             1032
-#define REG_SET_HI_BASE             1064
-#define REG_SET_HIHI_BASE           1096
+#define REG_POWERUP_STATE                   10
+#define REG_FIRMWARE_BUILD_DATE             20
+#define REG_SOFTWARE_BUILD_DATE             21
+#define REG_CALIBRATION_DATE                22
+#define REG_CALIBRATION_STATUS              23
+#define REG_FPGA_REBOOT                     30
+#define REG_SECONDS_SINCE_BOOT              40
+#define REG_FMC1_SERIAL_NUMBER              50
+#define REG_FMC2_SERIAL_NUMBER              51
+#define REG_ACQ_ENABLE                      80
+#define REG_SAMPLING_RATE                   81
+#define REG_RESET_ADCS                      82
+#define REG_SET_VCXO_DAC                    83
+#define REG_GET_LOLO                        90
+#define REG_GET_LO                          91
+#define REG_GET_HI                          92
+#define REG_GET_HIHI                        93
+#define REG_SYSMON_BASE                     100
+#define SYSMON_SIZE                         300
+#define REG_ACQ_CHAN_ACTIVE_BASE            400
+#define REG_ACQ_CHAN_COUPLING_BASE          500
+#define REG_CALIB_CHAN_OFFSET_BASE          800
+#define REG_CALIB_CHAN_GAIN_BASE            900
+#define REG_SET_LOLO_BASE                   1000
+#define REG_SET_LO_BASE                     1032
+#define REG_SET_HI_BASE                     1064
+#define REG_SET_HIHI_BASE                   1096
+#define REG_MPS_LOLO_BITMAP_BASE            1200
+#define REG_MPS_LO_BITMAP_BASE              1216
+#define REG_MPS_HI_BITMAP_BASE              1232
+#define REG_MPS_HIHI_BITMAP_BASE            1248
+#define REG_MPS_DISCRETE_BITMAP_BASE        1264
+#define REG_MPS_DISCRETE_GOOD_BASE          1280
+#define REG_MPS_FIRST_FAULT_LOLO_BASE       1296
+#define REG_MPS_FIRST_FAULT_LO_BASE         1312
+#define REG_MPS_FIRST_FAULT_HI_BASE         1328
+#define REG_MPS_FIRST_FAULT_HIHI_BASE       1344
+#define REG_MPS_FIRST_FAULT_DISCRETE_BASE   1360
+#define REG_MPS_FIRST_FAULT_SECONDS_BASE    1376
+#define REG_MPS_FIRST_FAULT_TICKS_BASE      1392
+#define REG_MPS_TRIPPED_BASE                1408
 #define REG_JSON_ROM_BASE           0x800
+
+#define MATCH(value, base, size) ((address >= base) && (address < (base+size)))
 
 static int powerUpFlag = 1;
 
@@ -105,33 +121,27 @@ writeReg(int address, uint32_t value)
     case REG_RESET_ADCS:        if (value == 40)  ad7768Reset();         return;
     case REG_SET_VCXO_DAC:      clockAdjustSet(value);                   return;
     }
-    if ((address >= REG_ACQ_CHAN_ACTIVE_BASE)
-     && (address < (REG_ACQ_CHAN_ACTIVE_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT) {
         acqSetActive(address - REG_ACQ_CHAN_ACTIVE_BASE, value);
         return;
     }
-    if ((address >= REG_ACQ_CHAN_COUPLING_BASE)
-     && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT) {
         acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
         return;
     }
-    if ((address >= REG_SET_LOLO_BASE)
-     && (address < (REG_SET_LOLO_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_SET_LOLO_BASE, CHANNEL_COUNT) {
         acqSetLOLOthreshold(address - REG_SET_LOLO_BASE, value);
         return;
     }
-    if ((address >= REG_SET_LO_BASE)
-     && (address < (REG_SET_LO_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_SET_LO_BASE, CHANNEL_COUNT) {
         acqSetLOthreshold(address - REG_SET_LO_BASE, value);
         return;
     }
-    if ((address >= REG_SET_HI_BASE)
-     && (address < (REG_SET_HI_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_SET_HI_BASE, CHANNEL_COUNT) {
         acqSetHIthreshold(address - REG_SET_HI_BASE, value);
         return;
     }
-    if ((address >= REG_SET_HIHI_BASE)
-     && (address < (REG_SET_HIHI_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_SET_HIHI_BASE, CHANNEL_COUNT) {
         acqSetHIHIthreshold(address - REG_SET_HIHI_BASE, value);
         return;
     }
@@ -173,8 +183,7 @@ readReg(int address)
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
     }
-    if ((address >= REG_SYSMON_BASE)
-     && (address < (REG_SYSMON_BASE + SYSMON_SIZE))) {
+    if (match(address, REG_SYSMON_BASE, SYSMON_SIZE) {
         int offset = address - REG_SYSMON_BASE;
         int bank = offset & 0xE0;
         int index = offset & 0x1F;
@@ -189,24 +198,19 @@ readReg(int address)
         }
         return 0;
     }
-    if ((address >= REG_ACQ_CHAN_ACTIVE_BASE)
-     && (address < (REG_ACQ_CHAN_ACTIVE_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_ACQ_CHAN_ACTIVE_BASE, SYSMON_SIZE) {
         return acqGetActive(address - REG_ACQ_CHAN_ACTIVE_BASE);
     }
-    if ((address >= REG_ACQ_CHAN_COUPLING_BASE)
-     && (address < (REG_ACQ_CHAN_COUPLING_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT) {
         return acqGetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE);
     }
-    if ((address >= REG_GET_LOLO)
-     && (address <= REG_GET_HIHI)) {
+    if (match(address, REG_GET_LOLO, 4) {
         return acqGetLimitExcursions(address - REG_GET_LOLO);
     }
-    if ((address >= REG_CALIB_CHAN_OFFSET_BASE)
-     && (address < (REG_CALIB_CHAN_OFFSET_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_CALIB_CHAN_OFFSET_BASE, CHANNEL_COUNT) {
         return ad7768GetOfst(address - REG_CALIB_CHAN_OFFSET_BASE);
     }
-    if ((address >= REG_CALIB_CHAN_GAIN_BASE)
-     && (address < (REG_CALIB_CHAN_GAIN_BASE + CHANNEL_COUNT))) {
+    if (match(address, REG_CALIB_CHAN_GAIN_BASE, CHANNEL_COUNT) {
         return ad7768GetGain(address - REG_CALIB_CHAN_GAIN_BASE);
     }
     return 0;
