@@ -58,7 +58,7 @@
 #define HW_INTERVAL_R_PRIMARY_VALID     0x10000000
 #define HW_INTERVAL_STATUS_MASK         0xF0000000
 #define HW_INTERVAL_IS_EVG              0x08000000
-#define HW_INTERVAL_R_INTERVAL_MASK     0x000FFFFF
+#define HW_JITTER_R_JITTER_MASK         0x000FFFFF
 
 void
 clockAdjustInit(void)
@@ -77,7 +77,7 @@ clockAdjustFetchSysmon(int index)
                                                         HW_INTERVAL_STATUS_MASK)
                | (isEVG() ? HW_INTERVAL_IS_EVG : 0)
                | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
-                                                 & HW_INTERVAL_R_INTERVAL_MASK);
+                                                     & HW_JITTER_R_JITTER_MASK);
     }
     return 0;
 }
@@ -112,7 +112,7 @@ clockAdjustReport(uint32_t csr)
     printf(" DAC:%d PPS ", (int16_t)(aux & AUX_R_DAC_MASK));
     if (hwPPS & HW_INTERVAL_R_PPS_VALID) {
         printf("Jitter:%dns HW:%d", ppsJitter_ns,
-                                           hwPPS & HW_INTERVAL_R_INTERVAL_MASK);
+                                              hwPPS & ~HW_INTERVAL_STATUS_MASK);
     }
     else {
         print("Invalid");
