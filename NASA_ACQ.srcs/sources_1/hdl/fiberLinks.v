@@ -35,6 +35,7 @@ module fiberLinks #(
     parameter TIMESTAMP_WIDTH    = 64,
     parameter EVR_ACQ_START_CODE = 1,
     parameter EVR_ACQ_STOP_CODE  = 1,
+    parameter EVR_MPS_CLEAR_CODE = 1,
     parameter DEBUG_MGT          = "false",
     parameter DEBUG_EVR          = "false",
     parameter DEBUG_EVF          = "false",
@@ -54,6 +55,7 @@ module fiberLinks #(
                          output wire                       evrRxClk,
                          output wire                       evrRxStartACQstrobe,
                          output wire                       evrRxStopACQstrobe,
+                         output wire                       evrRxClearMPSstrobe,
                          output wire                       evfRxClk,
     (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
@@ -110,6 +112,7 @@ tinyEVR #(
     .evStrobe(evrStrobes));
 assign evrRxStartACQstrobe = evrStrobes[EVR_ACQ_START_CODE];
 assign evrRxStopACQstrobe  = evrStrobes[EVR_ACQ_STOP_CODE];
+assign evrRxClearMPSstrobe = evrStrobes[EVR_MPS_CLEAR_CODE];
 
 // Stretch PPS strobe to marker sure to be seen in other clock domains
 localparam PPS_STRETCH_COUNTER_WIDTH = 5;

@@ -196,7 +196,7 @@ marbleClockSync #(
 localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
-wire evrRxStartACQstrobe, evrRxStopACQstrobe;
+wire evrRxStartACQstrobe, evrRxStopACQstrobe, evrRxClearMPSstrobe;
 wire  [7:0] evgTxCode;
 wire        evgTxCodeValid;
 wire [15:0] mpsTxChars;
@@ -208,6 +208,7 @@ fiberLinks #(
     .TIMESTAMP_WIDTH(TIMESTAMP_WIDTH),
     .EVR_ACQ_START_CODE(CFG_EVR_ACQ_START_CODE),
     .EVR_ACQ_STOP_CODE(CFG_EVR_ACQ_STOP_CODE),
+    .EVR_MPS_CLEAR_CODE(CFG_EVR_MPS_CLEAR_CODE),
     .DEBUG("false"),
     .DEBUG_MGT("true"),
     .DEBUG_EVR("true"),
@@ -226,6 +227,7 @@ fiberLinks #(
     .evrRxClk(evrRxClk),
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
     .evrRxStopACQstrobe(evrRxStopACQstrobe),
+    .evrRxClearMPSstrobe(evrRxClearMPSstrobe),
     .evfRxClk(evfRxClk),
     .ppsValid(hwPPSvalid),
     .hwPPSmarker_a(ppsMarker),
@@ -578,6 +580,8 @@ mpsLocal #(
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_MPS_CSR]),
     .sysData(GPIO_IN[GPIO_IDX_MPS_DATA]),
+    .evrClk(evrRxClk),
+    .evrClearMPSstrobe(evrRxClearMPSstrobe),
     .acqClk(acqClk),
     .acqLimitExcursions(acqLimitExcursions),
     .acqLimitExcursionsTVALID(acqStrobe),

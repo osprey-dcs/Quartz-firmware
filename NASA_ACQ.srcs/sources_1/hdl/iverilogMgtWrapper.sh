@@ -14,5 +14,6 @@ iverilog -Wall \
          tinyEVG.v \
          tinyEVR.v \
          evf.v \
+         mpsMerge.v \
          "$UNI/glbl.v" \
          ../../../NASA_ACQ.gen/sources_1/ip/mgtShared/mgtShared_stub.v

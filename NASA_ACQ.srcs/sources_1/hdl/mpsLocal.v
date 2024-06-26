@@ -40,6 +40,8 @@ module mpsLocal #(
     output wire [31:0] sysStatus,
     output reg  [31:0] sysData,
   
+    input  wire evrClk,
+    input  wire evrClearMPSstrobe,
 
     input  wire                       acqClk,
     input  wire   [(4*ADC_COUNT)-1:0] acqLimitExcursions,
@@ -56,7 +58,6 @@ localparam REG_SEL_WIDTH = 4;
 
 reg [MPS_SEL_WIDTH-1:0] sysMPSsel = 0;
 reg [REG_SEL_WIDTH-1:0] sysREGsel = 0;
-reg                     sysClearTripToggle = 0; // FIXME -- this should probably come from the event system.....
 
 wire [(MPS_OUTPUT_COUNT*32)-1:0] acqPerChannelData;
 wire      [MPS_OUTPUT_COUNT-1:0] acqPerChannelTripped;
@@ -67,7 +68,6 @@ always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
         sysMPSsel <= sysGPIO_OUT[0+:MPS_SEL_WIDTH];
         sysREGsel <= sysGPIO_OUT[8+:REG_SEL_WIDTH];
-        if (sysGPIO_OUT[31]) sysClearTripToggle <= !sysClearTripToggle;
     end
     sysData <= acqPerChannelData[sysMPSsel*32+:32];
 end
@@ -75,9 +75,23 @@ assign sysStatus = { {24-REG_SEL_WIDTH{1'b0}}, sysREGsel,
                       {8-REG_SEL_WIDTH{1'b0}}, sysMPSsel };
 
 ///////////////////////////////////////////////////////////////////////////////
+// Event receiver clock domain
+// Stretch event strobe to ensure it's seen in the acquisition clock domain.
+reg [4:0] evrEventStretch = 0;
+wire evrClearMPS = evrEventStretch[4];
+always @(posedge evrClk) begin
+    if (evrClearMPSstrobe) begin
+        evrEventStretch <= ~0;
+    end
+    else if (evrClearMPS) begin
+        evrEventStretch <= evrEventStretch - 1;
+    end
+end
+
+///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock domain
-(*ASYN_REG="*true"*) reg acqClearTripToggle_m = 0;
-reg acqClearTripToggle = 0, acqClearTripToggle_d = 0, acqClearTrip;
+(*ASYN_REG="*true"*) reg acqClearMPS_m = 0;
+reg acqClearMPS_d0 = 0, acqClearMPS_d1 = 0, acqClearTrip = 0;
 
 reg [(4*ADC_COUNT)-1:0] acqLimitExcursionsLatched = 0;
 
@@ -86,11 +100,10 @@ always @(posedge acqClk) begin
         acqLimitExcursionsLatched <= acqLimitExcursions;
     end
 
-    acqClearTripToggle_m <= sysClearTripToggle;
-    acqClearTripToggle   <= acqClearTripToggle_m;
-    acqClearTripToggle_d <= acqClearTripToggle;
-    acqClearTrip = (acqClearTripToggle != acqClearTripToggle_d);
-
+    acqClearMPS_m  <= evrClearMPS;
+    acqClearMPS_d0 <= acqClearMPS_m;
+    acqClearMPS_d1 <= acqClearMPS_d0;
+    acqClearTrip = (acqClearMPS_d0 != acqClearMPS_d1);
 end
 
 // Instantiate each of the MPS output handlers
@@ -168,6 +181,7 @@ reg [ADC_COUNT-1:0] importantLOLO = 0, firstFaultLOLO = 0;
 reg [MPS_INPUT_COUNT-1:0] importantDiscrete = 0, firstFaultDiscrete = 0;
 reg [MPS_INPUT_COUNT-1:0] discreteGoodState = 0;
 reg [TIMESTAMP_WIDTH-1:0] whenFaulted = 0;
+reg [MPS_INPUT_COUNT-1:0] mpsInputs = 0, discrete = 0;
 
 /*
  * Registers to and from processor
@@ -175,6 +189,7 @@ reg [TIMESTAMP_WIDTH-1:0] whenFaulted = 0;
  * values should be stable and write transients will be
  * cleared up on the next acqClk.
  */
+wire trip;  // In other domain, but read here.
 always @(posedge sysClk) begin
     if (sysDataStrobe) begin
         case (sysREGsel)
@@ -191,23 +206,26 @@ always @(posedge sysClk) begin
                (sysREGsel ==  1) ? importantHI   :
                (sysREGsel ==  2) ? importantLO   :
                (sysREGsel ==  3) ? importantLOLO :
-               (sysREGsel ==  4) ? importantDiscrete :
-               (sysREGsel ==  5) ? discreteGoodState :
+               (sysREGsel ==  4) ? {{32-MPS_INPUT_COUNT{1'b0}},
+                                                            importantDiscrete} :
+               (sysREGsel ==  5) ? {{32-MPS_INPUT_COUNT{1'b0}},
+                                                            discreteGoodState} :
                (sysREGsel ==  6) ? firstFaultHIHI :
                (sysREGsel ==  7) ? firstFaultHI   :
                (sysREGsel ==  8) ? firstFaultLO   :
                (sysREGsel ==  9) ? firstFaultLOLO :
-               (sysREGsel == 10) ? firstFaultDiscrete :
+               (sysREGsel == 10) ? {
+                               {16-MPS_INPUT_COUNT{1'b0}}, mpsInputs,
+                               {16-MPS_INPUT_COUNT{1'b0}}, firstFaultDiscrete} :
                (sysREGsel == 11) ? whenFaulted[32+:32] :
                (sysREGsel == 12) ? whenFaulted[ 0+:32] :
-               (sysREGsel == 13) ? {31'b0, acqTripped} : 0;
+               (sysREGsel == 13) ? {{30{1'b0}}, trip, acqTripped} : 0;
 end
 
 /*
  * MPS
  */
 (*ASYNC_REG="true"*) reg [MPS_INPUT_COUNT-1:0] mpsInputs_m = 0;
-reg [MPS_INPUT_COUNT-1:0] mpsInputs = 0, discrete = 0;
 
 wire[ADC_COUNT-1:0] excursionsHIHI = acqLimitExcursions[ADC_COUNT*0+:ADC_COUNT];
 wire[ADC_COUNT-1:0] excursionsHI   = acqLimitExcursions[ADC_COUNT*1+:ADC_COUNT];
@@ -226,11 +244,11 @@ reg       [ADC_COUNT-1:0] firstFaultsLO   = 0;
 reg       [ADC_COUNT-1:0] firstFaultsLOLO = 0;
 reg [MPS_INPUT_COUNT-1:0] firstFaultsDiscrete = 0;
 
-wire trip = (faultsHIHI     != 0)
-         || (faultsHI       != 0)
-         || (faultsLO       != 0)
-         || (faultsLOLO     != 0)
-         || (faultsDiscrete != 0);
+assign trip = (faultsHIHI     != 0)
+           || (faultsHI       != 0)
+           || (faultsLO       != 0)
+           || (faultsLOLO     != 0)
+           || (faultsDiscrete != 0);
 
 always @(posedge acqClk) begin
     mpsInputs_m <= mpsInputs_a;

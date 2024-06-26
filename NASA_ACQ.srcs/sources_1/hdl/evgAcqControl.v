@@ -59,10 +59,18 @@ localparam WATCHDOG_TICKS = ns2ticks(8000);
 // System clock domain
 reg sysAcqEnabled = 0;
 reg sysAcqToggle = 0;
+reg [7:0] sysEventCode = 0;
+reg sysEventToggle = 0;
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        sysAcqEnabled <= sysGPIO_OUT[0];
-        sysAcqToggle <= !sysAcqToggle;
+        if (sysGPIO_OUT[8]) begin
+            sysEventCode <= sysGPIO_OUT[7:0];
+            sysEventToggle <= !sysEventToggle;
+        end
+        else begin
+            sysAcqEnabled <= sysGPIO_OUT[0];
+            sysAcqToggle <= !sysAcqToggle;
+        end
     end
 end
 assign sysStatus = { {31{1'b0}}, sysAcqEnabled };
@@ -93,13 +101,18 @@ end
 (*MARK_DEBUG=DEBUG*) reg evgAcqMatch = 0;
 (*ASYNC_REG="true"*) reg evgAcqStretched_m = 0;
 (*MARK_DEBUG=DEBUG*) reg evgAcqStretched = 0, evgAcqStretched_d = 0;
+(*ASYNC_REG="true"*) reg evgEventToggle_m = 0;
+(*MARK_DEBUG=DEBUG*) reg evgEventToggle = 0;
+(*MARK_DEBUG=DEBUG*) reg evgEventMatch = 0;
 
 // Event generation state machine
-localparam ST_IDLE       = 3'd0,
-           ST_SEND_STOP  = 3'd1,
-           ST_AWAIT_ACQ  = 3'd2,
-           ST_DELAY      = 3'd3,
-           ST_SEND_START = 3'd4;
+localparam ST_IDLE         = 3'd0,
+           ST_SEND_STOP    = 3'd1,
+           ST_AWAIT_ACQ    = 3'd2,
+           ST_DELAY        = 3'd3,
+           ST_SEND_START   = 3'd4,
+           ST_SEND_SYSCODE = 3'd5,
+           ST_FINISH       = 3'd6;
 (*MARK_DEBUG=DEBUG*) reg [2:0] state = ST_IDLE;
 
 localparam DELAY_LOAD = DELAY_TICKS - 1;
@@ -118,11 +131,12 @@ always @(posedge evgClk) begin
     evgAcqStretched_m <= acqStretched;
     evgAcqStretched   <= evgAcqStretched_m;
     evgAcqStretched_d <= evgAcqStretched;
+    evgEventToggle_m <= sysEventToggle;
+    evgEventToggle   <= evgEventToggle_m;
 
     // Send START code in gap between ADC data strobes
     case (state)
     ST_IDLE: begin
-        evgEventCodeValid <= 0;
         if (evgAcqToggle != evgAcqMatch) begin
             evgAcqMatch <= evgAcqToggle;
             if (sysAcqEnabled) begin
@@ -132,11 +146,15 @@ always @(posedge evgClk) begin
                 state <= ST_SEND_STOP;
             end
         end
+        else if (evgEventToggle != evgEventMatch) begin
+            evgEventMatch <= evgEventToggle;
+            state <= ST_SEND_SYSCODE;
+        end
     end
     ST_SEND_STOP: begin
         evgEventCode <= EVCODE_ACQ_STOP;
         evgEventCodeValid <= 1;
-        state <= ST_IDLE;
+        state <= ST_FINISH;
     end
     ST_AWAIT_ACQ: begin
         delay <= DELAY_LOAD;
@@ -155,6 +173,15 @@ always @(posedge evgClk) begin
     ST_SEND_START: begin
         evgEventCode <= EVCODE_ACQ_START;
         evgEventCodeValid <= 1;
+        state <= ST_FINISH;
+    end
+    ST_SEND_SYSCODE: begin
+        evgEventCode <= sysEventCode;
+        evgEventCodeValid <= 1;
+        state <= ST_FINISH;
+    end
+    ST_FINISH: begin
+        evgEventCodeValid <= 0;
         state <= ST_IDLE;
     end
     default: ;
