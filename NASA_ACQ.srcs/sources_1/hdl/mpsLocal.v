@@ -78,20 +78,20 @@ assign sysStatus = { {24-REG_SEL_WIDTH{1'b0}}, sysREGsel,
 // Event receiver clock domain
 // Stretch event strobe to ensure it's seen in the acquisition clock domain.
 reg [4:0] evrEventStretch = 0;
-wire evrClearMPS = evrEventStretch[4];
+wire evrClear = evrEventStretch[4];
 always @(posedge evrClk) begin
     if (evrClearMPSstrobe) begin
         evrEventStretch <= ~0;
     end
-    else if (evrClearMPS) begin
+    else if (evrClear) begin
         evrEventStretch <= evrEventStretch - 1;
     end
 end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock domain
-(*ASYN_REG="*true"*) reg acqClearMPS_m = 0;
-reg acqClearMPS_d0 = 0, acqClearMPS_d1 = 0, acqClearTrip = 0;
+(*ASYN_REG="*true"*) reg acqClear_m = 0;
+reg acqClear_d0 = 0, acqClear_d1 = 0, acqClearTrip = 0;
 
 reg [(4*ADC_COUNT)-1:0] acqLimitExcursionsLatched = 0;
 
@@ -100,10 +100,10 @@ always @(posedge acqClk) begin
         acqLimitExcursionsLatched <= acqLimitExcursions;
     end
 
-    acqClearMPS_m  <= evrClearMPS;
-    acqClearMPS_d0 <= acqClearMPS_m;
-    acqClearMPS_d1 <= acqClearMPS_d0;
-    acqClearTrip = (acqClearMPS_d0 != acqClearMPS_d1);
+    acqClear_m  <= evrClear;
+    acqClear_d0 <= acqClear_m;
+    acqClear_d1 <= acqClear_d0;
+    acqClearTrip <= (acqClear_d0 != acqClear_d1);
 end
 
 // Instantiate each of the MPS output handlers
@@ -127,7 +127,7 @@ for (i = 0 ; i < MPS_OUTPUT_COUNT ; i = i + 1) begin : mpsChan
         .mpsInputs_a(mpsInputStates_a),
         .acqLimitExcursions(acqLimitExcursionsLatched),
         .acqTripped(acqPerChannelTripped[i]),
-        .acqClearTrip(acqClearTrip && (sysMPSsel == i)));
+        .acqClearTrip(acqClearTrip));
 end
 endgenerate
 
@@ -238,12 +238,6 @@ wire [ADC_COUNT-1:0] faultsLO   = excursionsLO   & importantLO  ;
 wire [ADC_COUNT-1:0] faultsLOLO = excursionsLOLO & importantLOLO;
 wire [MPS_INPUT_COUNT-1:0] faultsDiscrete = (discrete & importantDiscrete);
 
-reg       [ADC_COUNT-1:0] firstFaultsHIHI = 0;
-reg       [ADC_COUNT-1:0] firstFaultsHI   = 0;
-reg       [ADC_COUNT-1:0] firstFaultsLO   = 0;
-reg       [ADC_COUNT-1:0] firstFaultsLOLO = 0;
-reg [MPS_INPUT_COUNT-1:0] firstFaultsDiscrete = 0;
-
 assign trip = (faultsHIHI     != 0)
            || (faultsHI       != 0)
            || (faultsLO       != 0)
@@ -258,7 +252,7 @@ always @(posedge acqClk) begin
     if (acqClearTrip && !trip) begin
         acqTripped <= 0;
     end
-    else if (trip & (acqClearTrip || !acqTripped)) begin
+    else if (trip && (acqClearTrip || !acqTripped)) begin
         firstFaultHIHI     <= faultsHIHI;
         firstFaultHI       <= faultsHI;
         firstFaultLO       <= faultsLO;

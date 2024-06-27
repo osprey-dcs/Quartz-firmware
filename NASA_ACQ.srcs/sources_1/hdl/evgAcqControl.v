@@ -111,8 +111,7 @@ localparam ST_IDLE         = 3'd0,
            ST_AWAIT_ACQ    = 3'd2,
            ST_DELAY        = 3'd3,
            ST_SEND_START   = 3'd4,
-           ST_SEND_SYSCODE = 3'd5,
-           ST_FINISH       = 3'd6;
+           ST_SEND_SYSCODE = 3'd5;
 (*MARK_DEBUG=DEBUG*) reg [2:0] state = ST_IDLE;
 
 localparam DELAY_LOAD = DELAY_TICKS - 1;
@@ -137,6 +136,7 @@ always @(posedge evgClk) begin
     // Send START code in gap between ADC data strobes
     case (state)
     ST_IDLE: begin
+        evgEventCodeValid <= 0;
         if (evgAcqToggle != evgAcqMatch) begin
             evgAcqMatch <= evgAcqToggle;
             if (sysAcqEnabled) begin
@@ -154,7 +154,7 @@ always @(posedge evgClk) begin
     ST_SEND_STOP: begin
         evgEventCode <= EVCODE_ACQ_STOP;
         evgEventCodeValid <= 1;
-        state <= ST_FINISH;
+        state <= ST_IDLE;
     end
     ST_AWAIT_ACQ: begin
         delay <= DELAY_LOAD;
@@ -173,15 +173,11 @@ always @(posedge evgClk) begin
     ST_SEND_START: begin
         evgEventCode <= EVCODE_ACQ_START;
         evgEventCodeValid <= 1;
-        state <= ST_FINISH;
+        state <= ST_IDLE;
     end
     ST_SEND_SYSCODE: begin
         evgEventCode <= sysEventCode;
         evgEventCodeValid <= 1;
-        state <= ST_FINISH;
-    end
-    ST_FINISH: begin
-        evgEventCodeValid <= 0;
         state <= ST_IDLE;
     end
     default: ;
