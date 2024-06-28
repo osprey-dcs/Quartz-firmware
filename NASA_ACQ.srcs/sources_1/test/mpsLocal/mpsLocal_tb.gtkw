@@ -1,0 +1,154 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Jun 28 02:21:44 2024
+[*]
+[dumpfile] "mpsLocal_tb.fst"
+[dumpfile_mtime] "Fri Jun 28 02:18:29 2024"
+[dumpfile_size] 27890
+[savefile] "mpsLocal_tb.gtkw"
+[timestart] 907
+[size] 1664 1067
+[pos] 1871 17
+*-2.236009 918 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] mpsLocal_tb.
+[treeopen] mpsLocal_tb.mpsLocal_i.
+[treeopen] mpsLocal_tb.mpsLocal_i.mpsChan[0].
+[sst_width] 253
+[signals_width] 234
+[sst_expanded] 1
+[sst_vpaned_height] 357
+@28
+mpsLocal_tb.sysClk
+mpsLocal_tb.sysCsrStrobe
+mpsLocal_tb.sysDataStrobe
+@22
+mpsLocal_tb.sysGPIO_OUT[31:0]
+@28
+mpsLocal_tb.evrClk
+mpsLocal_tb.evrClearMPSstrobe
+mpsLocal_tb.acqClk
+@22
+mpsLocal_tb.acqTimestamp[63:0]
+@28
+mpsLocal_tb.acqLimitExcursionsTVALID
+@22
+mpsLocal_tb.acqLimitExcursions[127:0]
+@28
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.acqClearTrip
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.acqTripped
+@c00022
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+@28
+(0)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(1)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(2)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(3)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(4)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(5)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(6)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(7)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+@1401200
+-group_end
+@22
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLOLO[31:0]
+@c00022
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+@28
+(0)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(1)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(2)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(3)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(4)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(5)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(6)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(7)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(8)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(9)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(10)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(11)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(12)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(13)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(14)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(15)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(16)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(17)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(18)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(19)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(20)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(21)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(22)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(23)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(24)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(25)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(26)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(27)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(28)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(29)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(30)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+(31)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantLO[31:0]
+@1401200
+-group_end
+@22
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantHIHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.importantDiscrete[7:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.excursionsLOLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.excursionsLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.excursionsHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.excursionsHIHI[31:0]
+@c00023
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+@29
+(0)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(1)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(2)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(3)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(4)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(5)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(6)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+(7)mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discreteGoodState[7:0]
+@1401201
+-group_end
+@22
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.discrete[7:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsLOLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsHIHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsDiscrete[7:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.firstFaultLOLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.firstFaultLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.firstFaultHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.firstFaultDiscrete[7:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsHIHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsHI[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsLOLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsLO[31:0]
+mpsLocal_tb.mpsLocal_i.mpsChan[0].mpsLocalChannel_i.faultsDiscrete[7:0]
+[pattern_trace] 1
+[pattern_trace] 0
