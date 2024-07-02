@@ -33,7 +33,8 @@
 #define _EYESCAN_H_
 
 #define EYESCAN_TRANSCEIVER_WIDTH 40
-#define EYESCAN_CHANNEL_NAMES   { "EVR", "EVF" }
+#define EYESCAN_CHANNEL_NAMES   {   "EVR", "EVF/MPS0", "MPS1", "MPS2",  \
+                                   "MPS3",     "MPS4", "MPS5", "MPS6" };
 
 void eyescanInit(void);
 int eyescanCrank(int cancel);

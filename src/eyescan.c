@@ -392,17 +392,19 @@ eyescanCommand(int argc, char **argv)
         }
         else {
             int c;
+            int l;
             if (strcmp(argv[i], "*") == 0) {
                 mgt = 0;
                 eyescanCrank(-1);
                 break;
             }
+            l = strlen(argv[i]);
             for (c = 0 ; ; c++) {
                 if (c == EYESCAN_CHANNEL_COUNT) {
                     printf("Invalid MGT argument\n");
                     return;
                 }
-                if (strcasecmp(argv[i], mgtNames[c]) == 0) {
+                if (strncasecmp(argv[i], mgtNames[c], l) == 0) {
                     mgt = c;
                     break;
                 }

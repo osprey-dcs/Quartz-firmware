@@ -426,6 +426,13 @@
     "data_width": 32,
     "sign": "unsigned"
   },
+  "MGT:status": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 324,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "ACQ:enable:XX": {
     "access": "rw",
     "addr_width": 5,

@@ -36,6 +36,7 @@
 #include "evg.h"
 #include "gpio.h"
 #include "iicFPGA.h"
+#include "mgt.h"
 #include "mmcMailbox.h"
 #include "mpsLocal.h"
 #include "mpsMerge.h"
@@ -228,6 +229,7 @@ readReg(int address)
         case 0x80:  return acqFetchSysmon(index);
         case 0xA0:  return clockAdjustFetchSysmon(index);
         case 0xC0:  return ad7768FetchSysmon(index);
+        case 0xE0:  return mgtFetchSysmon(index);
         }
         return 0;
     }

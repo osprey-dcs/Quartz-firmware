@@ -30,7 +30,7 @@
 
 void mgtInit(void);
 void mgtShowStatus(void);
-uint32_t *mgtFetchSysmon(uint32_t *buf);
+uint32_t mgtFetchSysmon(int index);
 
 void mgtDRPwrite(int mgtIndex, int drpAddress, int value);
 int mgtDRPread(int mgtIndex, int drpAddress);

@@ -162,11 +162,13 @@ mgtInit(void)
     microsecondSpin(100);
 }
 
-uint32_t *
-mgtFetchSysmon(uint32_t *buf)
+uint32_t
+mgtFetchSysmon(int index)
 {
-    *buf++ = GPIO_READ(GPIO_IDX_LINK_STATUS);
-    return buf;
+    switch (index) {
+    case 0: return GPIO_READ(GPIO_IDX_LINK_STATUS);
+    default: return 0;
+    }
 }
 
 void
