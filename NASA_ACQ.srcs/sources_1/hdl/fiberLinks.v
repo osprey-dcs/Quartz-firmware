@@ -24,8 +24,12 @@
 
 /*
  * Instantiate all multi-gigabit transceivers and the code associated with them.
- * FIXME: The event forwarding is good only for distributing time stamps
- *        and acquisition alignment to just a little better than 100 ns.
+ * MGT streams:
+ *      evrXXXX   -- Event receiver in
+ *      evfXXXX   -- Event fanout in
+ *      evsXXXX   -- Event source (generator or fanout) out
+ *      mpsXXXX   -- Machine protection out (EVR MGT)
+ *      mpfXXXX   -- Merged Machine protection out (EVF MGT)
  */
 `default_nettype none
 module fiberLinks #(
@@ -84,14 +88,31 @@ module fiberLinks #(
 
 localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
 
-wire [MGT_DATA_WIDTH-1:0] evrRxChars, evfRxChars;
-wire                      evrRxCharIsK, evfRxCharIsK;
-
-wire evrRxPPSmarker = 0;
+///////////////////////////////////////////////////////////////////////////////
+// Forward reference to MGT receivers
 wire [63:0] evrRxTimestamp;
-wire evrRxLinkUp, evfRxLinkUp;
-wire evrTimestampValid;
-assign sysLinkStatus = { evrTimestampValid, {29{1'b0}}, evfRxLinkUp, evrRxLinkUp};
+wire                  [MGT_COUNT-1:0] mgtRxClks;
+wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
+wire                  [MGT_COUNT-1:0] mgtRxCharIsK;
+wire                  [MGT_COUNT-1:0] mgtRxLinkUp;
+
+assign                    evrRxClk = mgtRxClks[0];
+wire                      evrRxLinkUp = mgtRxLinkUp[0];
+wire                      evrRxCharIsK = mgtRxCharIsK[0];
+wire [MGT_DATA_WIDTH-1:0] evrRxChars =
+                                   mgtRxChars[0*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
+wire                      evrTimestampValid;
+
+assign                    evfRxClk = mgtRxClks[1];
+wire                      evfRxLinkUp = mgtRxLinkUp[1];
+wire                      evfRxCharIsK = mgtRxCharIsK[1];
+wire [MGT_DATA_WIDTH-1:0] evfRxChars =
+                                   mgtRxChars[1*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
+
+// Lots of different clock domains, but races unimportant
+assign sysLinkStatus = { evrTimestampValid,
+                         {32-1-MGT_COUNT{1'b0}},
+                         mgtRxLinkUp};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the tiny event receiver
@@ -179,10 +200,6 @@ assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : evfTxCharIsK;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceivers
-wire                  [MGT_COUNT-1:0] mgtRxClks;
-wire                  [MGT_COUNT-1:0] mgtRxLinkUp;
-wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
-wire                  [MGT_COUNT-1:0] mgtRxCharIsK;
 mgtWrapper #(
     .MGT_COUNT(MGT_COUNT),
     .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
@@ -210,15 +227,6 @@ mgtWrapper #(
     .mpfTxCharIsK(mpfTxCharIsK),
     .evsTxChars(evsTxChars),
     .evsTxCharIsK(evsTxCharIsK));
-
-assign evrRxClk     = mgtRxClks[0];
-assign evrRxCharIsK = mgtRxCharIsK[0];
-assign evrRxChars   = mgtRxChars[0*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
-assign evrRxLinkUp  = mgtRxLinkUp[0];
-assign evfRxClk     = mgtRxClks[1];
-assign evfRxCharIsK = mgtRxCharIsK[1];
-assign evfRxChars   = mgtRxChars[1*MGT_DATA_WIDTH+:MGT_DATA_WIDTH];
-assign evfRxLinkUp  = mgtRxLinkUp[1];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event generator

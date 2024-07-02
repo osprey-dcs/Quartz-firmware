@@ -43,18 +43,18 @@ module mgtWrapper #(
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN,
 
-    output wire                  [MGT_COUNT-1:0] mgtRxClks,
-    output wire                  [MGT_COUNT-1:0] mgtRxLinkUp,
-    output wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars,
-    output wire                  [MGT_COUNT-1:0] mgtRxCharIsK,
-    output wire                                  mgtTxClk,
-    input  wire                                  mgtIsEVG,
-    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] mpsTxChars,
-    (*MARK_DEBUG=DEBUG*) input  wire                      mpsTxCharIsK,
-    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] mpfTxChars,
-    (*MARK_DEBUG=DEBUG*) input  wire                      mpfTxCharIsK,
-    (*MARK_DEBUG=DEBUG*) input  wire [MGT_DATA_WIDTH-1:0] evsTxChars,
-    (*MARK_DEBUG=DEBUG*) input  wire                      evsTxCharIsK);
+                        output wire                [MGT_COUNT-1:0] mgtRxClks,
+    (*MARK_DEBUG=DEBUG*)output wire                [MGT_COUNT-1:0] mgtRxLinkUp,
+    (*MARK_DEBUG=DEBUG*)output wire[(MGT_COUNT*MGT_DATA_WIDTH)-1:0]mgtRxChars,
+    (*MARK_DEBUG=DEBUG*)output wire                [MGT_COUNT-1:0] mgtRxCharIsK,
+                        output wire                               mgtTxClk,
+    (*MARK_DEBUG=DEBUG*)input  wire                               mgtIsEVG,
+    (*MARK_DEBUG=DEBUG*)input  wire          [MGT_DATA_WIDTH-1:0] mpsTxChars,
+    (*MARK_DEBUG=DEBUG*)input  wire                               mpsTxCharIsK,
+    (*MARK_DEBUG=DEBUG*)input  wire          [MGT_DATA_WIDTH-1:0] mpfTxChars,
+    (*MARK_DEBUG=DEBUG*)input  wire                               mpfTxCharIsK,
+    (*MARK_DEBUG=DEBUG*)input  wire          [MGT_DATA_WIDTH-1:0] evsTxChars,
+    (*MARK_DEBUG=DEBUG*)input  wire                               evsTxCharIsK);
 
 localparam MGT_STATUS_WIDTH = 4;
 localparam MGT_SEL_WIDTH = $clog2(MGT_COUNT);

@@ -211,7 +211,7 @@ fiberLinks #(
     .EVR_MPS_CLEAR_CODE(CFG_EVR_MPS_CLEAR_CODE),
     .DEBUG("false"),
     .DEBUG_MGT("true"),
-    .DEBUG_EVR("true"),
+    .DEBUG_EVR("false"),
     .DEBUG_EVF("false"),
     .DEBUG_EVG("false"))
   fiberLinks (
@@ -399,6 +399,7 @@ ad7768 #(
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
 
+// FIXME: For scope viewing to see where ADC SYNC shifts are arising!
 assign PMOD1_0 = AD7768_DCLK[0];
 assign PMOD1_1 = AD7768_DRDY[0];
 assign PMOD1_2 = acqStrobe;

@@ -71,13 +71,13 @@
     <Option Name="WTVcsLaunchSim" Val="0"/>
     <Option Name="WTRivieraLaunchSim" Val="0"/>
     <Option Name="WTActivehdlLaunchSim" Val="0"/>
-    <Option Name="WTXSimExportSim" Val="131"/>
-    <Option Name="WTModelSimExportSim" Val="131"/>
-    <Option Name="WTQuestaExportSim" Val="131"/>
+    <Option Name="WTXSimExportSim" Val="150"/>
+    <Option Name="WTModelSimExportSim" Val="150"/>
+    <Option Name="WTQuestaExportSim" Val="150"/>
     <Option Name="WTIesExportSim" Val="0"/>
-    <Option Name="WTVcsExportSim" Val="131"/>
-    <Option Name="WTRivieraExportSim" Val="131"/>
-    <Option Name="WTActivehdlExportSim" Val="131"/>
+    <Option Name="WTVcsExportSim" Val="150"/>
+    <Option Name="WTRivieraExportSim" Val="150"/>
+    <Option Name="WTActivehdlExportSim" Val="150"/>
     <Option Name="GenerateIPUpgradeLog" Val="TRUE"/>
     <Option Name="XSimRadix" Val="hex"/>
     <Option Name="XSimTimeUnit" Val="ns"/>
@@ -101,6 +101,9 @@
           <Attr Name="UsedIn" Val="implementation"/>
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
+        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_axi_intc_0/bd_microblaze_0_axi_intc_0.xci">
+          <Proxy FileSetName="bd_microblaze_0_axi_intc_0"/>
+        </CompFileExtendedInfo>
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_mdm_1_0/bd_mdm_1_0.xci">
           <Proxy FileSetName="bd_mdm_1_0"/>
         </CompFileExtendedInfo>
@@ -161,9 +164,6 @@
         <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_lmb_bram_0/bd_lmb_bram_0.xci">
           <Proxy FileSetName="bd_lmb_bram_0"/>
         </CompFileExtendedInfo>
-        <CompFileExtendedInfo CompFileName="bd.bd" FileRelPathName="ip/bd_microblaze_0_axi_intc_0/bd_microblaze_0_axi_intc_0.xci">
-          <Proxy FileSetName="bd_microblaze_0_axi_intc_0"/>
-        </CompFileExtendedInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/ad7768.v">
         <FileInfo>
@@ -194,13 +194,6 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/ethernetRxDelay.v">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <File Path="$PSRCDIR/sources_1/hdl/eventSystem.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -277,13 +270,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PSRCDIR/sources_1/hdl/mgt_common.v">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
       <File Path="$PSRCDIR/sources_1/hdl/mmcIO.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -341,6 +327,27 @@
         </FileInfo>
       </File>
       <File Path="$PSRCDIR/sources_1/hdl/mergeLimitExcursions.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/fiberLinks.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/mpsLocal.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PSRCDIR/sources_1/hdl/mpsMerge.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -535,19 +542,6 @@
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
-    <FileSet Name="MGT" Type="BlockSrcs" RelSrcDir="$PSRCDIR/MGT" RelGenDir="$PGENDIR/MGT">
-      <File Path="$PSRCDIR/sources_1/ip/MGT/MGT.xci">
-        <FileInfo>
-          <Attr Name="UsedIn" Val="synthesis"/>
-          <Attr Name="UsedIn" Val="implementation"/>
-          <Attr Name="UsedIn" Val="simulation"/>
-        </FileInfo>
-      </File>
-      <Config>
-        <Option Name="TopModule" Val="MGT"/>
-        <Option Name="UseBlackboxStub" Val="1"/>
-      </Config>
-    </FileSet>
     <FileSet Name="bd_clk_wiz_0_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/bd_clk_wiz_0_0" RelGenDir="$PGENDIR/bd_clk_wiz_0_0">
       <Config>
         <Option Name="TopModule" Val="bd_clk_wiz_0_0"/>
@@ -594,6 +588,19 @@
     <FileSet Name="bd_marbleBootFlash_0_0" Type="BlockSrcs" RelSrcDir="$PSRCDIR/bd_marbleBootFlash_0_0" RelGenDir="$PGENDIR/bd_marbleBootFlash_0_0">
       <Config>
         <Option Name="TopModule" Val="bd_marbleBootFlash_0_0"/>
+        <Option Name="UseBlackboxStub" Val="1"/>
+      </Config>
+    </FileSet>
+    <FileSet Name="mgtShared" Type="BlockSrcs" RelSrcDir="$PSRCDIR/mgtShared" RelGenDir="$PGENDIR/mgtShared">
+      <File Path="$PSRCDIR/sources_1/ip/mgtShared/mgtShared.xci">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <Config>
+        <Option Name="TopModule" Val="mgtShared"/>
         <Option Name="UseBlackboxStub" Val="1"/>
       </Config>
     </FileSet>
@@ -790,16 +797,6 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="MGT_synth_1" Type="Ft3:Synth" SrcSet="MGT" Part="xc7k160tffg676-2" ConstrsSet="MGT" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/MGT_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/MGT_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/MGT_synth_1">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
-        <Step Id="synth_design"/>
-      </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
-      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2023"/>
-      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
-      <RQSFiles/>
-    </Run>
     <Run Id="bd_clk_wiz_0_0_synth_1" Type="Ft3:Synth" SrcSet="bd_clk_wiz_0_0" Part="xc7k160tffg676-2" ConstrsSet="bd_clk_wiz_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/bd_clk_wiz_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/bd_clk_wiz_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/bd_clk_wiz_0_0_synth_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
@@ -861,6 +858,16 @@
       <RQSFiles/>
     </Run>
     <Run Id="bd_marbleBootFlash_0_0_synth_1" Type="Ft3:Synth" SrcSet="bd_marbleBootFlash_0_0" Part="xc7k160tffg676-2" ConstrsSet="bd_marbleBootFlash_0_0" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/bd_marbleBootFlash_0_0_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/bd_marbleBootFlash_0_0_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/bd_marbleBootFlash_0_0_synth_1">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
+        <Step Id="synth_design"/>
+      </Strategy>
+      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
+      <ReportStrategy Name="Vivado Synthesis Default Reports" Flow="Vivado Synthesis 2023"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="mgtShared_synth_1" Type="Ft3:Synth" SrcSet="mgtShared" Part="xc7k160tffg676-2" ConstrsSet="mgtShared" Description="Vivado Synthesis Defaults" AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" Dir="$PRUNDIR/mgtShared_synth_1" IncludeInArchive="true" IsChild="false" AutoIncrementalDir="$PSRCDIR/utils_1/imports/mgtShared_synth_1" AutoRQSDir="$PSRCDIR/utils_1/imports/mgtShared_synth_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2023"/>
         <Step Id="synth_design"/>
@@ -1160,23 +1167,6 @@
       <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
       <RQSFiles/>
     </Run>
-    <Run Id="MGT_impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="MGT" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="MGT_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/MGT_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/MGT_impl_1">
-      <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
-        <Step Id="init_design"/>
-        <Step Id="opt_design"/>
-        <Step Id="power_opt_design"/>
-        <Step Id="place_design"/>
-        <Step Id="post_place_power_opt_design"/>
-        <Step Id="phys_opt_design"/>
-        <Step Id="route_design"/>
-        <Step Id="post_route_phys_opt_design"/>
-        <Step Id="write_bitstream"/>
-      </Strategy>
-      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2023"/>
-      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
-      <RQSFiles/>
-    </Run>
     <Run Id="bd_clk_wiz_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="bd_clk_wiz_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="bd_clk_wiz_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/bd_clk_wiz_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/bd_clk_wiz_0_0_impl_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
@@ -1280,6 +1270,23 @@
       <RQSFiles/>
     </Run>
     <Run Id="bd_marbleBootFlash_0_0_impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="bd_marbleBootFlash_0_0" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="bd_marbleBootFlash_0_0_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/bd_marbleBootFlash_0_0_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/bd_marbleBootFlash_0_0_impl_1">
+      <Strategy Version="1" Minor="2">
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
+        <Step Id="init_design"/>
+        <Step Id="opt_design"/>
+        <Step Id="power_opt_design"/>
+        <Step Id="place_design"/>
+        <Step Id="post_place_power_opt_design"/>
+        <Step Id="phys_opt_design"/>
+        <Step Id="route_design"/>
+        <Step Id="post_route_phys_opt_design"/>
+        <Step Id="write_bitstream"/>
+      </Strategy>
+      <ReportStrategy Name="Vivado Implementation Default Reports" Flow="Vivado Implementation 2023"/>
+      <Report Name="ROUTE_DESIGN.REPORT_METHODOLOGY" Enabled="1"/>
+      <RQSFiles/>
+    </Run>
+    <Run Id="mgtShared_impl_1" Type="Ft2:EntireDesign" Part="xc7k160tffg676-2" ConstrsSet="mgtShared" Description="Default settings for Implementation." AutoIncrementalCheckpoint="false" WriteIncrSynthDcp="false" SynthRun="mgtShared_synth_1" IncludeInArchive="false" IsChild="false" GenFullBitstream="true" AutoIncrementalDir="$PSRCDIR/utils_1/imports/mgtShared_impl_1" AutoRQSDir="$PSRCDIR/utils_1/imports/mgtShared_impl_1">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2023"/>
         <Step Id="init_design"/>
