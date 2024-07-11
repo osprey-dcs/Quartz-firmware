@@ -164,7 +164,7 @@ sysClkCounters #(.CLK_RATE(CFG_SYSCLK_RATE), .DEBUG("false"))
 // DAC1 adjusts the 125 MHz MGT reference, DDR reference, and system clocks.
 // DAC2 adjusts the 20 MHz system clock.
 // If event generator sync to hardware PPS marker, otherwise the event.
-wire isEVG, hwPPSvalid, ppsMarker, evrPPSmarker;
+wire isEVG, ppsValid, ppsMarker, evrPPSmarker;
 marbleClockSync #(
     .CLK_RATE(CFG_ACQCLK_RATE),
     .DAC_COUNTS_PER_HZ(CFG_MARBLE_VCXO_COUNTS_PER_HZ),
@@ -182,7 +182,7 @@ marbleClockSync #(
     .ppsPrimary_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
     .ppsSecondary_a(isEVG ? PMOD2_3 : 1'b0),
     .isOffsetBinary(1'b0),
-    .hwPPSvalid(hwPPSvalid),
+    .hwPPSvalid(ppsValid),
     .ppsStrobe(),
     .ppsMarker(ppsMarker),
     .ppsToggle(),
@@ -229,7 +229,7 @@ fiberLinks #(
     .evrRxStopACQstrobe(evrRxStopACQstrobe),
     .evrRxClearMPSstrobe(evrRxClearMPSstrobe),
     .evfRxClk(evfRxClk),
-    .ppsValid(hwPPSvalid),
+    .ppsValid(ppsValid),
     .hwPPSmarker_a(ppsMarker),
     .evrPPSmarker(evrPPSmarker),
     .isEVG(isEVG),
@@ -276,7 +276,7 @@ frequencyCounters #(
                       evgClk,
                       acqClk,
                       sysClk }),
-    .acqMarker_a(hwPPSvalid && ppsMarker),
+    .acqMarker_a(ppsValid && ppsMarker),
     .useInternalAcqMarker(measuredUsingInteralAcqMarker),
     .channelSelect(frequencyChannelSelect),
     .frequency(measuredFrequency));
