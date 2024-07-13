@@ -191,6 +191,8 @@ wire [MGT_DATA_WIDTH-1:0] evfTxChars;
 wire                      evfTxCharIsK;
 wire [MGT_DATA_WIDTH-1:0] evsTxChars;
 wire                      evsTxCharIsK;
+wire [MGT_DATA_WIDTH-1:0] evgTxChars;
+wire [MGT_BYTE_COUNT-1:0] evgTxCharIsK;
 always @(posedge mgtTxClk) begin
     mgtIsEVG_m <= isEVG;
     mgtIsEVG   <= mgtIsEVG_m;
@@ -211,6 +213,7 @@ mgtWrapper #(
     .sysStatus(sysStatus),
     .gtRefClkP(gtRefClkP),
     .gtRefClkN(gtRefClkN),
+    .gtRefClkDiv2(),
     .rxP(rxP),
     .rxN(rxN),
     .txP(txP),
@@ -280,8 +283,6 @@ always @(posedge mgtTxClk) begin
         sysEVG_PPStoggle <= !sysEVG_PPStoggle;
     end
 end
-wire [MGT_DATA_WIDTH-1:0] evgTxChars;
-wire [MGT_BYTE_COUNT-1:0] evgTxCharIsK;
 tinyEVG #(.DEBUG(DEBUG_EVG))
   tinyEVG (
     .evgTxClk(mgtTxClk),
