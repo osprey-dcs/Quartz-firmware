@@ -45,6 +45,7 @@ module buildPacket #(
     output wire [31:0] sysStatus,
     output wire [31:0] sysActiveRbk,
     output wire [31:0] sysByteCountRbk,
+    output wire [31:0] sysThresholdRbk,
     output wire [31:0] sysLimitExcursions,
     input  wire        sysTimeValid,
 
@@ -86,6 +87,7 @@ buildPacketCore #(
     .sysStatus(sysStatus),
     .sysActiveRbk(sysActiveRbk),
     .sysByteCountRbk(sysByteCountRbk),
+    .sysThresholdRbk(sysThresholdRbk),
     .sysTimeValid(sysTimeValid),
     .acqClk(acqClk),
     .acqStrobe(acqStrobe),
@@ -156,6 +158,7 @@ module buildPacketCore #(
     output wire [31:0] sysStatus,
     output wire [31:0] sysActiveRbk,
     output wire [31:0] sysByteCountRbk,
+    output reg  [31:0] sysThresholdRbk,
     input  wire        sysTimeValid,
 
                          input  wire                          acqClk,
@@ -211,6 +214,10 @@ reg signed [ADC_WIDTH-1:0] sysThresholdLOLO [0:ADC_COUNT-1];
 reg signed [ADC_WIDTH-1:0] sysThresholdLO   [0:ADC_COUNT-1];
 reg signed [ADC_WIDTH-1:0] sysThresholdHI   [0:ADC_COUNT-1];
 reg signed [ADC_WIDTH-1:0] sysThresholdHIHI [0:ADC_COUNT-1];
+// Two-level multiplexer to make it easier to meet timing
+reg [(4*ADC_WIDTH)-1:0] sysThresholdRbkMux0;
+reg [ADC_SEL_WIDTH-1:0] sysThresholdRbkADCsel;
+reg               [1:0] sysThresholdRbkSel;
 
 always @(posedge sysClk) begin
     if (sysActiveBitmapStrobe) begin
@@ -232,12 +239,16 @@ always @(posedge sysClk) begin
         end
     end
     if (sysThresholdStrobe) begin
-        case (sysGPIO_OUT[31:30])
-        2'b00:  sysThresholdLOLO[sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
-        2'b01:  sysThresholdLO  [sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
-        2'b10:  sysThresholdHI  [sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
-        2'b11:  sysThresholdHIHI[sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
-        endcase
+        sysThresholdRbkADCsel <= sysADCsel;
+        sysThresholdRbkSel <= sysGPIO_OUT[31:30];
+        if (sysGPIO_OUT[29]) begin
+            case (sysGPIO_OUT[31:30])
+            2'b00:  sysThresholdLOLO[sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
+            2'b01:  sysThresholdLO  [sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
+            2'b10:  sysThresholdHI  [sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
+            2'b11:  sysThresholdHIHI[sysADCsel] <= sysGPIO_OUT[ADC_WIDTH-1:0];
+            endcase
+        end
     end
 
     // Forward values to ACQ clock domain
@@ -247,6 +258,17 @@ always @(posedge sysClk) begin
         sysForwardData <= {sysSubscriberPresent,sysByteCount,sysActiveChannels};
         sysForwardToggle <= !sysForwardToggle;
     end
+
+    // Threshold readback
+    sysThresholdRbkMux0 <= { sysThresholdHIHI[sysThresholdRbkADCsel],
+                             sysThresholdHI  [sysThresholdRbkADCsel],
+                             sysThresholdLO  [sysThresholdRbkADCsel],
+                             sysThresholdLOLO[sysThresholdRbkADCsel] };
+    sysThresholdRbk <= {
+               sysThresholdRbkSel,
+               {32-2-ADC_SEL_WIDTH-ADC_WIDTH{1'b0}},
+               sysThresholdRbkADCsel,
+               sysThresholdRbkMux0[(sysThresholdRbkSel*ADC_WIDTH)+:ADC_WIDTH] };
 end
 
 // Some in acqClk domain, but race condition to system clock domain unimportant.

@@ -508,6 +508,7 @@ buildPacket #(
     .sysStatus(GPIO_IN[GPIO_IDX_BUILD_PACKET_STATUS]),
     .sysActiveRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BITMAP]),
     .sysByteCountRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
+    .sysThresholdRbk(GPIO_IN[GPIO_IDX_ADC_THRESHOLDS]),
     .sysLimitExcursions(GPIO_IN[GPIO_IDX_ADC_EXCURSIONS]),
     .sysTimeValid(GPIO_IN[GPIO_IDX_LINK_STATUS][31]),
     .acqClk(acqClk),
