@@ -54,7 +54,10 @@
 #define THRESHOLD_CSR_SELECT_LO     0x40000000
 #define THRESHOLD_CSR_SELECT_HI     0x80000000
 #define THRESHOLD_CSR_SELECT_HIHI   0xC0000000
+#define THRESHOLD_CSR_WRITE_ENABLE  0x20000000
+#define THRESHOLD_CSR_CHANNEL_SHIFT 24
 #define THRESHOLD_CSR_VALUE_MASK    0xFFFFFF
+#define THRESHOLD_CSR_VALUE_SIGN    0x800000
 
 #if ((CFG_AD7768_CHIP_COUNT*CFG_AD7768_ADC_PER_CHIP) > 32)
 # error "Code needs some rework to handle that many ADC channels"
@@ -210,8 +213,9 @@ setThreshold(uint32_t select, int channel, int threshold)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return;
     }
-    GPIO_WRITE(GPIO_IDX_ADC_THRESHOLDS, select | (channel << 24) |
-                                        (threshold & THRESHOLD_CSR_VALUE_MASK));
+    GPIO_WRITE(GPIO_IDX_ADC_THRESHOLDS, select | THRESHOLD_CSR_WRITE_ENABLE |
+                                      (channel << THRESHOLD_CSR_CHANNEL_SHIFT) |
+                                      (threshold & THRESHOLD_CSR_VALUE_MASK));
 }
 
 void
@@ -236,6 +240,43 @@ void
 acqSetHIHIthreshold(int channel, int threshold)
 {
     setThreshold(THRESHOLD_CSR_SELECT_HIHI, channel, threshold);
+}
+
+static int
+getThreshold(uint32_t select, int channel)
+{
+    uint32_t val;
+    GPIO_WRITE(GPIO_IDX_ADC_THRESHOLDS, select |
+                                      (channel << THRESHOLD_CSR_CHANNEL_SHIFT));
+    val = GPIO_READ(GPIO_IDX_ADC_THRESHOLDS) & THRESHOLD_CSR_VALUE_MASK;
+    if (val & THRESHOLD_CSR_VALUE_SIGN) {
+        val -= THRESHOLD_CSR_VALUE_SIGN << 1;
+    }
+    return val;
+}
+
+int
+acqGetLOLOthreshold(int channel)
+{
+    return getThreshold(THRESHOLD_CSR_SELECT_LOLO, channel);
+}
+
+int
+acqGetLOthreshold(int channel)
+{
+    return getThreshold(THRESHOLD_CSR_SELECT_LO, channel);
+}
+
+int
+acqGetHIthreshold(int channel)
+{
+    return getThreshold(THRESHOLD_CSR_SELECT_HI, channel);
+}
+
+int
+acqGetHIHIthreshold(int channel)
+{
+    return getThreshold(THRESHOLD_CSR_SELECT_HIHI, channel);
 }
 
 uint32_t

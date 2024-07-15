@@ -39,6 +39,10 @@ void acqSetLOLOthreshold(int channel, int threshold);
 void acqSetLOthreshold(int channel, int threshold);
 void acqSetHIthreshold(int channel, int threshold);
 void acqSetHIHIthreshold(int channel, int threshold);
+int acqGetLOLOthreshold(int channel);
+int acqGetLOthreshold(int channel);
+int acqGetHIthreshold(int channel);
+int acqGetHIHIthreshold(int channel);
 void acqSetCalibrationValidity(int isCalibrated);
 uint32_t acqGetLimitExcursions(int type);
 

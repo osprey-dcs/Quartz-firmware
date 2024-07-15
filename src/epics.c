@@ -92,10 +92,10 @@ struct LEEPpacket {
 #define REG_ACQ_CHAN_COUPLING_BASE          500
 #define REG_CALIB_CHAN_OFFSET_BASE          800
 #define REG_CALIB_CHAN_GAIN_BASE            900
-#define REG_SET_LOLO_BASE                   1000
-#define REG_SET_LO_BASE                     1032
-#define REG_SET_HI_BASE                     1064
-#define REG_SET_HIHI_BASE                   1096
+#define REG_LOLO_THRESHOLD_BASE             1000
+#define REG_LO_THRESHOLD_BASE               1032
+#define REG_HI_THRESHOLD_BASE               1064
+#define REG_HIHI_THRESHOLD_BASE             1096
 #define REG_MPS_LOLO_BITMAP_BASE            1200
 #define REG_MPS_LO_BITMAP_BASE              1216
 #define REG_MPS_HI_BITMAP_BASE              1232
@@ -137,20 +137,20 @@ writeReg(int address, uint32_t value)
         acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
         return;
     }
-    if (MATCH(address, REG_SET_LOLO_BASE, CHANNEL_COUNT)) {
-        acqSetLOLOthreshold(address - REG_SET_LOLO_BASE, value);
+    if (MATCH(address, REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        acqSetLOLOthreshold(address - REG_LOLO_THRESHOLD_BASE, value);
         return;
     }
-    if (MATCH(address, REG_SET_LO_BASE, CHANNEL_COUNT)) {
-        acqSetLOthreshold(address - REG_SET_LO_BASE, value);
+    if (MATCH(address, REG_LO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        acqSetLOthreshold(address - REG_LO_THRESHOLD_BASE, value);
         return;
     }
-    if (MATCH(address, REG_SET_HI_BASE, CHANNEL_COUNT)) {
-        acqSetHIthreshold(address - REG_SET_HI_BASE, value);
+    if (MATCH(address, REG_HI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        acqSetHIthreshold(address - REG_HI_THRESHOLD_BASE, value);
         return;
     }
-    if (MATCH(address, REG_SET_HIHI_BASE, CHANNEL_COUNT)) {
-        acqSetHIHIthreshold(address - REG_SET_HIHI_BASE, value);
+    if (MATCH(address, REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        acqSetHIHIthreshold(address - REG_HIHI_THRESHOLD_BASE, value);
         return;
     }
     if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
@@ -247,6 +247,18 @@ readReg(int address)
     }
     if (MATCH(address, REG_CALIB_CHAN_GAIN_BASE, CHANNEL_COUNT)) {
         return ad7768GetGain(address - REG_CALIB_CHAN_GAIN_BASE);
+    }
+    if (MATCH(address, REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        return acqGetLOLOthreshold(address - REG_LOLO_THRESHOLD_BASE);
+    }
+    if (MATCH(address, REG_LO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        return acqGetLOthreshold(address - REG_LO_THRESHOLD_BASE);
+    }
+    if (MATCH(address, REG_HI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        return acqGetHIthreshold(address - REG_HI_THRESHOLD_BASE);
+    }
+    if (MATCH(address, REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+        return acqGetHIHIthreshold(address - REG_HIHI_THRESHOLD_BASE);
     }
     if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
         return mpsLocalGetLOLObitmap(address - REG_MPS_LOLO_BITMAP_BASE);
