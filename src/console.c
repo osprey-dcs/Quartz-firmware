@@ -324,14 +324,13 @@ cmdFMON(int argc, char **argv)
     int i;
     uint32_t csr, rate;
     static const char *names[] = { "System",
-                                   "Network",
-                                   "MGT Ref/2",
+                                   "Acquisition",
                                    "EVG",
                                    "EVR",
                                    "EVF",
                                    "AD7768 MCLK" };
     for (i = 0 ; i < sizeof names / sizeof names[0] ; i++) {
-        printf("   %15s clock: ", names[i]);
+        printf("%17s clock: ", names[i]);
         if (i < ((sizeof names / sizeof names[0]) - 1)) {
             GPIO_WRITE(GPIO_IDX_FREQUENCY_COUNTERS, i);
             csr = GPIO_READ(GPIO_IDX_FREQUENCY_COUNTERS);
