@@ -31,6 +31,7 @@
 
 void ad7768Init(void);
 void ad7768Reset(void);
+void ad7768Crank(void);
 void ad7768DumpReg(void);
 void ad7768StartAlignment(void);
 int ad7768SetOfst(int channel, int offset);

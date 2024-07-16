@@ -40,6 +40,7 @@
 #include "eyescan.h"
 #include "gpio.h"
 #include "iicFPGA.h"
+#include "mgt.h"
 #include "mgtClkSwitch.h"
 #include "mpsLocal.h"
 #include "systemParameters.h"

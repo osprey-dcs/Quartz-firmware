@@ -76,6 +76,7 @@ main()
     fastDataInit();
     for (;;) {
         clockAdjustCrank();
+        ad7768Crank();
         evgCrank();
         consoleCrank();
         ospreyUDPcrank();

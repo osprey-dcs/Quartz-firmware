@@ -176,10 +176,78 @@ ad7768DumpReg(void)
     }
 }
 
+/*
+ * ADC alignment state machine
+ * Alignment requires two START* cycles.
+ */
+static void
+ad7768step(int startAlignment)
+{
+    uint32_t now;
+    static uint32_t then;
+    static int alignmentRequested = 0;
+    static int passCount;
+    static enum { ST_IDLE,
+                  ST_START_ALIGN,
+                  ST_AWAIT_ALIGNMENT,
+                  ST_DELAY } state = ST_IDLE;
+
+    if (startAlignment) {
+        alignmentRequested = 1;
+        return;
+    }
+    switch (state) {
+    case ST_IDLE:
+        if (alignmentRequested) {
+            alignmentRequested = 0;
+            passCount = 0;
+            state = ST_START_ALIGN;
+        }
+        break;
+
+    case ST_START_ALIGN:
+        if (debugFlags & DEBUGFLAG_SHOW_AD7768_SYNCS) {
+            printf("AD7768 alignment started.\n");
+        }
+        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
+        then = microsecondsSinceBoot();
+        state = ST_AWAIT_ALIGNMENT;
+        break;
+
+    case ST_AWAIT_ALIGNMENT:
+        if (!(CSR_READ() & CSR_R_ALIGNMENT_ACTIVE)) {
+            now = microsecondsSinceBoot();
+            if (debugFlags & DEBUGFLAG_SHOW_AD7768_SYNCS) {
+                printf("AD7768 SYNC done after %d us.\n", now - then);
+            }
+            then = now;
+            state = ST_DELAY;
+        }
+        break;
+
+    case ST_DELAY:
+        if (((now = microsecondsSinceBoot()) - then) > 10000) {
+            if (++passCount < 2) {
+                state = ST_START_ALIGN;
+            }
+            else {
+                state = ST_IDLE;;
+            }
+        }
+        break;
+    }
+}
+
 void
 ad7768StartAlignment(void)
 {
-    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
+    ad7768step(1);
+}
+
+void
+ad7768Crank(void)
+{
+    ad7768step(0);
 }
 
 void
@@ -192,6 +260,7 @@ ad7768Reset(void)
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
     microsecondSpin(10000);
     if (firstTime) {
+        firstTime = 0;
         calibrationUpdate();
     }
     else {
