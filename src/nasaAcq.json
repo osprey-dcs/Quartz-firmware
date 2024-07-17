@@ -405,6 +405,13 @@
     "data_width": 32,
     "sign": "unsigned"
   },
+  "PPS:latency": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 262,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "DRDY:status": {
     "access": "r",
     "addr_width": 0,

@@ -78,6 +78,7 @@ clockAdjustFetchSysmon(int index)
                | (isEVG() ? HW_INTERVAL_IS_EVG : 0)
                | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
                                                      & HW_JITTER_R_JITTER_MASK);
+    case 2: return fetchRegister(GPIO_IDX_PPS_LATENCY);
     }
     return 0;
 }
