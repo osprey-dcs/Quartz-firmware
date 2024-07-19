@@ -41,12 +41,15 @@
 # define OP_CHIP_PINS_CONTROL_FAKE_ADC  0x8
 # define OP_CHIP_PINS_ASSERT_FAKE_ADC   0x4
 #define CSR_W_OP_SPI_TRANSFER   (0x2<<30)
-# define OP_SPI_CS_MASK                 (((1<<CFG_AD7768_CHIP_COUNT)-1)<<16)
+# define OP_SPI_CS_MASK         (((1<<CFG_AD7768_CHIP_COUNT)-1)<<16)
 #define CSR_R_SPI_ACTIVE        0x80000000
 #define CSR_R_ALIGNMENT_ACTIVE  0x40000000
 #define CSR_R_USING_FAKE_ADC    0x20000000
 #define CSR_R_RESET_ACTIVE      0x10000000
 #define CSR_R_SPI_READ_MASK     0xFFFF
+#define CSR_W_OP_HEADER_SELECT (0x3<<30)
+# define CSR_R_AD7768_HEADER_MASK   0xFF0000
+# define CSR_R_AD7768_HEADER_SHIFT  16
 
 #define DRDY_STATUS_MISALIGNED          0x80000000
 #define DRDY_STATUS_PPS_LATENCY_MASK    0xFFFFF
@@ -432,8 +435,15 @@ ad7768ShowAlignment(void)
                                                       DRDY_HISTORY_STATE_SHIFT);
     printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-        int r;
+        int c, r;
+        printf("AD7768[%d]\n", i);
         r = readReg(i, 0x09);
-        if (r != 0) printf("AD7768[%d] R9:%02X\n", i, r);
+        if (r != 0) printf("   R9:%02X\n", i, r);
+        for (c = 0 ; c < CFG_AD7768_ADC_PER_CHIP ; c++) {
+            CSR_WRITE(CSR_W_OP_HEADER_SELECT | ((i*CFG_AD7768_ADC_PER_CHIP)+c));
+            r = (CSR_READ() & CSR_R_AD7768_HEADER_MASK) >>
+                                                      CSR_R_AD7768_HEADER_SHIFT;
+            printf("  HDR[%d]: %02X\n", c, r);
+        }
     }
 }
