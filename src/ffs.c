@@ -31,6 +31,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include "ad7768recorder.h"
 #include "bootFlash.h"
 #include "config.h"
 #include "ffs.h"
@@ -40,9 +41,12 @@
 #define MiB(x) ((x)*1024*1024)
 #define KiB(x) ((x)*1024)
 #define IS_EEPROM   0x80000000
-#define IS_READONLY 0x40000000
-#define IS_ASCII    0x20000000
-#define BASE_MASK   0x1FFFFFFF
+#define IS_SPECIAL  0x40000000
+#define IS_READONLY 0x20000000
+#define IS_ASCII    0x10000000
+#define BASE_MASK   0x0FFFFFFF
+
+#define SPECIAL_AD7768_DRDY     0
 
 struct fileInfo {
     const char *name;
@@ -51,15 +55,18 @@ struct fileInfo {
 };
 /* Assume that largest sector in flash is no larger than 64 KiB. */
 static const struct fileInfo fileTable[] = {
-    { "BOOT.bin",         0,                                          MiB(7), },
-    { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,                  MiB(6), },
-    { "SYSPARAM.dat",     MiB(15),                                    KiB(4), },
-    { "Calibration.csv",  IS_ASCII|(MiB(15)+KiB(64)),                 KiB(4), },
-    { "FullFlash.bin",    0,                                         MiB(16), },
-    { "QSFP1_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP1,      256, },
-    { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP2,      256, },
-    { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,            256, },
-    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256, } };
+    { "BOOT.bin",         0,                                          MiB(7) },
+    { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,                  MiB(6) },
+    { "SYSPARAM.dat",     MiB(15),                                    KiB(4) },
+    { "Calibration.csv",  IS_ASCII|(MiB(15)+KiB(64)),                 KiB(4) },
+    { "FullFlash.bin",    0,                                         MiB(16) },
+    { "QSFP1_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP1,      256 },
+    { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP2,      256 },
+    { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,            256 },
+    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256 },
+    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256 },
+    { "AD7768_DRDY.bin",  IS_SPECIAL|IS_READONLY|SPECIAL_AD7768_DRDY, 
+                                       CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT }};
 
 static uint32_t offset = UINT32_MAX;
 static int activeMode;
@@ -104,7 +111,18 @@ f_read(FIL *fp, void *cbuf, unsigned int n, unsigned int *nread)
         n = nleft;
     }
     if (n != 0) {
-        if (f->base & IS_EEPROM) {
+        if (f->base & IS_SPECIAL) {
+            switch(f->base & BASE_MASK) {
+            case SPECIAL_AD7768_DRDY:
+                if (ad7768recorderRead(offset, n, cbuf) != n) {
+                    return FR_ERR;
+                }
+                break;
+            default:
+                return FR_ERR;
+            }
+        }
+        else if (f->base & IS_EEPROM) {
             unsigned int device = f->base & BASE_MASK;
             if (iicFPGAeepromRead(device, offset, n, cbuf) != n) {
                 return FR_ERR;

@@ -90,4 +90,9 @@
 #define CFG_MPS_INPUT_COUNT     8
 #define CFG_MPS_OUTPUT_COUNT    8
 
+/*
+ * AD7768 DRDY/DCLK recorder
+ */
+#define CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT 131072
+
 #endif /* _CONFIG_H_ */

@@ -66,6 +66,7 @@
 #define GPIO_IDX_MPS_CSR                   30 // Machine protection CSR
 #define GPIO_IDX_MPS_DATA                  31 // Machine protection data
 #define GPIO_IDX_MPS_MERGE_CSR             32 // MPS merge/forward CSR
+#define GPIO_IDX_AD7768_RECORDER_CSR       33 // AD7768 DCLK/DRDY recorder
 
 #define GPIO_IDX_COUNT                     64 // Number of GPIO registers
 

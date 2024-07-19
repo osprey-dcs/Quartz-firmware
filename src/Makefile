@@ -10,6 +10,8 @@ softwareBuildDate.h: JSONrom.h \
                      acq.h \
                      ad7768.c \
                      ad7768.h \
+                     ad7768recorder.c \
+                     ad7768recorder.h \
                      amc7823.c \
                      amc7823.h \
                      calibration.c \
