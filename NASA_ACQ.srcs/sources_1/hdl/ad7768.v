@@ -90,8 +90,9 @@ reg sysUseFakeAD7768 = 0;
 assign adcRESETn = !sysResetADC;
 
 wire [1:0] sysOpcode = sysGPIO_OUT[31:30];
-localparam CSR_W_OP_CHIP_PINS    = 2'h1,
-           CSR_W_OP_SPI_TRANSFER = 2'h2;
+localparam CSR_W_OP_CHIP_PINS     = 2'h1,
+           CSR_W_OP_SPI_TRANSFER  = 2'h2,
+           CSR_W_OP_AD7768_SELECT = 2'h3;
 
 always @(posedge sysClk) begin
     sysDoneAlignmentToggle_m <= doneAlignmentToggle;
@@ -178,13 +179,6 @@ assign adcSCLK = spiClk;
 assign adcCSn  = spiCSn;
 assign adcSDI = spiShiftReg[SPI_SHIFTREG_WIDTH-1];
 
-assign sysStatus = { spiActive,
-                     sysDoneAlignmentToggle ^ sysStartAlignmentToggle,
-                     sysUseFakeAD7768,
-                     sysResetADC,
-                     {32 - 4 - SPI_SHIFTREG_WIDTH{1'b0}},
-                     spiShiftReg };
-
 ///////////////////////////////////////////////////////////////////////////////
 // ADC MCLK domain
 ///////////////////////////////////////////////////////////////////////////////
@@ -217,18 +211,21 @@ assign muxDOUT_a = sysUseFakeAD7768 ? fakeDOUT : adcDOUT_a;
 // Get asynchronous DCLK and DRDY into acquisition clock domain.
 // Use delayed synchronized value to sample first DRDY and all data lines.
 (*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] dclk_m = 0, drdy_m = 0;
-reg [ADC_CHIP_COUNT-1:0] dclk = 0, dclk_d = 0, dclkRising = 0;
+(*MARK_DEBUG=DEBUG_DRDY*) reg [ADC_CHIP_COUNT-1:0] dclk = 0, dclk_d = 0;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [ADC_CHIP_COUNT-1:0] drdy = 0;
-reg drdyRising = 0;
+(*ASYNC_REG="true"*) reg [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] dout_m = 0;
+reg [(ADC_CHIP_COUNT * ADC_PER_CHIP)-1:0] dout = 0;
 
 always @(posedge acqClk) begin
     dclk_m <= muxDCLK_a;
     dclk   <= dclk_m;
     dclk_d <= dclk;
-    dclkRising <= dclk & ~dclk_d;
     drdy_m <= muxDRDY_a;
     drdy   <= drdy_m;
+    dout_m <= muxDOUT_a;
+    dout   <= dout_m;
 end
+wire [ADC_CHIP_COUNT-1:0] dclkFalling = ~dclk & dclk_d;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Check DRDY alignment
@@ -240,18 +237,19 @@ localparam [2:0] DRDY_STATE_AWAIT_LOW    = 3'd0,
                  DRDY_STATE_SKEW_3       = 3'd4;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [2:0] drdyState = DRDY_STATE_AWAIT_LOW;
 (*MARK_DEBUG=DEBUG_DRDY*) reg [(4*ADC_CHIP_COUNT)-1:0] drdySkewPattern = 0;
+reg anyDRDYrising = 0;
 
 always @(posedge acqClk) begin
     case (drdyState)
     DRDY_STATE_AWAIT_LOW: begin
-        drdyRising <= 0;
+        anyDRDYrising <= 0;
         if (drdy == 0) begin
             drdyState <= DRDY_STATE_AWAIT_RISING;
         end
     end
     DRDY_STATE_AWAIT_RISING: begin
         if (drdy != 0) begin
-            drdyRising <= 1;
+            anyDRDYrising <= 1;
             drdySkewPattern[0*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
             if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
                 // Aligned within about 8 ns
@@ -264,7 +262,7 @@ always @(posedge acqClk) begin
         end
     end
     DRDY_STATE_SKEW_1: begin
-        drdyRising <= 0;
+        anyDRDYrising <= 0;
         drdySkewPattern[1*ADC_CHIP_COUNT+:ADC_CHIP_COUNT] <= drdy;
         if (drdy == {ADC_CHIP_COUNT{1'b1}}) begin
             // Aligned within about 16 ns
@@ -297,17 +295,7 @@ end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Sample DRDY and DOUT
-// No need to stabilize them since they are should be stable when sampled.
-// The offset applied to SAMPLE_DELAY_LOAD was obtained emperically and
-// accounts for the latency in latching the DCLK lines.
-
-localparam SAMPLE_DELAY_TICKS = (ACQ_CLK_RATE + DCLK_MAX_RATE) /
-                                                            (2 * DCLK_MAX_RATE);
-localparam SAMPLE_DELAY_LOAD = SAMPLE_DELAY_TICKS - 5;
-localparam SAMPLE_DELAY_WIDTH = $clog2(SAMPLE_DELAY_LOAD+1) + 1;
-reg [SAMPLE_DELAY_WIDTH-1:0] sampleDelay = SAMPLE_DELAY_LOAD;
-(*MARK_DEBUG=DEBUG_ACQ*) wire sampleFlag = sampleDelay[SAMPLE_DELAY_WIDTH-1];
-reg delaying = 0;
+// This block samples all lines using the DCLK from the first AD7768.
 
 localparam ADC_BITCOUNT_LOAD = HEADER_WIDTH + ADC_WIDTH - 2;
 localparam ADC_BITCOUNT_WIDTH = $clog2(ADC_BITCOUNT_LOAD+1)+1;
@@ -316,27 +304,13 @@ reg [ADC_BITCOUNT_WIDTH-1:0] adcBitCount = ADC_BITCOUNT_LOAD;
 (*MARK_DEBUG=DEBUG_ACQ*) reg acqActive = 0;
 
 always @(posedge acqClk) begin
-    // Assert sampleFlag near center of shortest DCLK cycle
-    if (delaying) begin
-        if (sampleFlag) begin
-            sampleDelay <= SAMPLE_DELAY_LOAD;
-            delaying <= 0;
-        end
-        else begin
-            sampleDelay <= sampleDelay - 1;
-        end
-    end
-    else if (dclkRising[0] != 0) begin
-        delaying <= 1;
-    end
-
     // Enable shift register when framed by DRDY
     if (acqActive) begin
-        if (sampleFlag) begin
+        if (dclkFalling[0]) begin
             if (adcBitCountDone) begin
                 acqStrobe <= 1;
             end
-            if (muxDRDY_a[0]) begin
+            if (drdy[0]) begin
                 adcBitCount <= ADC_BITCOUNT_LOAD;
             end
             else if (!adcBitCountDone) begin
@@ -353,11 +327,9 @@ always @(posedge acqClk) begin
     else begin
         acqStrobe <= 0;
         adcBitCount <= ADC_BITCOUNT_LOAD;
-        if (sampleFlag) begin
-            if (muxDRDY_a[0]) begin
-                // FIXME: Should acqActive be set only if DRDY are aligned?
-                acqActive <= 1;
-            end
+        if (dclkFalling[0] && drdy[0]) begin
+            // FIXME: Should acqActive be set only if DRDY are aligned?
+            acqActive <= 1;
         end
     end
 end
@@ -366,17 +338,94 @@ generate
 for (i = 0 ; i < ADC_CHIP_COUNT * ADC_PER_CHIP ; i = i + 1) begin : adcDOUT
   (*MARK_DEBUG=DEBUG_ACQ*) reg [HEADER_WIDTH+ADC_WIDTH-1:0] shiftReg;
   wire [HEADER_WIDTH+ADC_WIDTH-1:0] shiftNext = {
-                           shiftReg[0+:HEADER_WIDTH+ADC_WIDTH-1], muxDOUT_a[i]};
+                                shiftReg[0+:HEADER_WIDTH+ADC_WIDTH-1], dout[i]};
   assign acqData[i*ADC_WIDTH+:ADC_WIDTH] = shiftReg[0+:ADC_WIDTH];
   assign acqHeaders[i*HEADER_WIDTH+:HEADER_WIDTH] =
-                                           shiftReg[ADC_WIDTH+:HEADER_WIDTH];
+                                              shiftReg[ADC_WIDTH+:HEADER_WIDTH];
   always @(posedge acqClk) begin
-    if (sampleFlag && acqActive) begin
+    if (dclkFalling[0] && acqActive) begin
         shiftReg <= shiftNext;
     end
   end
 end
 endgenerate
+
+///////////////////////////////////////////////////////////////////////////////
+// Fetch header using each AD7768's DCLK
+// This is done to try to gain insight as to what is happening when
+// the DRDY lines of one or more AD7768 chips decide to shift.
+
+reg [(ADC_CHIP_COUNT*ADC_PER_CHIP*HEADER_WIDTH)-1:0] perChipHeaders;
+// Multiplex headers back to processor.
+// Don't worry about clock crossing, the processor knows to check for races.
+localparam HEADER_MUX_SEL_WIDTH = $clog2(ADC_CHIP_COUNT * ADC_PER_CHIP);
+reg [HEADER_MUX_SEL_WIDTH-1:0] headerMuxSel = 0;
+reg [HEADER_WIDTH-1:0] headerMux = 0;
+always @(posedge sysClk) begin
+    if (sysCsrStrobe) begin
+        case (sysOpcode)
+        CSR_W_OP_AD7768_SELECT: begin
+            headerMuxSel <= sysGPIO_OUT[HEADER_MUX_SEL_WIDTH-1:0];
+        end
+        default: ;
+        endcase
+    end
+end
+always @(posedge acqClk) begin
+    headerMux <= perChipHeaders[headerMuxSel*HEADER_WIDTH+:HEADER_WIDTH];
+end
+
+genvar ad7768, c;
+generate
+for (ad7768 = 0 ; ad7768 < ADC_CHIP_COUNT ; ad7768 = ad7768 + 1) begin : perChip
+    localparam BITCOUNT_LOAD = HEADER_WIDTH - 2;
+    localparam BITCOUNT_WIDTH = $clog2(BITCOUNT_LOAD+1)+1;
+    reg [BITCOUNT_WIDTH-1:0] bitCount = BITCOUNT_LOAD;
+    (*MARK_DEBUG=DEBUG_ACQ*) wire bitCountDone = bitCount[BITCOUNT_WIDTH-1];
+    (*MARK_DEBUG=DEBUG_ACQ*) reg active = 0;
+    always @(posedge acqClk) begin
+        // Enable shift register when framed by DRDY
+        if (active) begin
+            if (dclkFalling[ad7768]) begin
+                if (!bitCountDone) begin
+                    bitCount <= bitCount - 1;
+                end
+                else begin
+                    active <= 0;
+                end
+            end
+        end
+        else begin
+            bitCount <= BITCOUNT_LOAD;
+            if (dclkFalling[ad7768] && drdy[ad7768]) begin
+                active <= 1;
+            end
+        end
+    end
+    for (c = 0 ; c < ADC_PER_CHIP ; c = c + 1) begin : perChan
+        integer idx = (ad7768 * ADC_PER_CHIP) + c;
+        (*MARK_DEBUG=DEBUG_ACQ*) reg [HEADER_WIDTH-1:0] shiftReg;
+        wire [HEADER_WIDTH-1:0] shiftNext = {
+                                         shiftReg[HEADER_WIDTH-2:0], dout[idx]};
+        always @(posedge acqClk) begin
+            if (dclkFalling[ad7768] && active) begin
+                shiftReg <= shiftNext;
+                if (bitCountDone) begin
+                    perChipHeaders[idx*HEADER_WIDTH+:HEADER_WIDTH] <= shiftNext;
+                end
+            end
+        end
+    end
+end
+endgenerate
+
+assign sysStatus = { spiActive,
+                     sysDoneAlignmentToggle ^ sysStartAlignmentToggle,
+                     sysUseFakeAD7768,
+                     sysResetADC,
+                     {32 - 4 - HEADER_WIDTH - SPI_SHIFTREG_WIDTH{1'b0}},
+                     headerMux,
+                     spiShiftReg };
 
 //////////////////////////////////////////////////////////////////////////////
 // Measure time beween PPS strobe and rising edge of first DRDY
@@ -389,7 +438,7 @@ wire ppsDrdyOverflow = ppsDrdyCount[PPS_DRDY_COUNT_WIDTH-1];
 reg ppsDrdyActive = 0;
 always @(posedge acqClk) begin
     if (ppsDrdyActive) begin
-        if (drdyRising) begin
+        if (anyDRDYrising) begin
             ppsDrdyTicks <= ppsDrdyCount;
             ppsDrdyActive <= 0;
         end
