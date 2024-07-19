@@ -210,7 +210,7 @@ fiberLinks #(
     .EVR_ACQ_STOP_CODE(CFG_EVR_ACQ_STOP_CODE),
     .EVR_MPS_CLEAR_CODE(CFG_EVR_MPS_CLEAR_CODE),
     .DEBUG("false"),
-    .DEBUG_MGT("true"),
+    .DEBUG_MGT("false"),
     .DEBUG_EVR("false"),
     .DEBUG_EVF("false"),
     .DEBUG_EVG("false"))
@@ -370,7 +370,7 @@ ad7768 #(
     .SYSCLK_RATE(CFG_SYSCLK_RATE),
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_MAX_RATE(CFG_MCLK_MAX_RATE),
-    .DEBUG_DRDY("false"),
+    .DEBUG_DRDY("true"),
     .DEBUG_ALIGN("false"),
     .DEBUG_ACQ("false"),
     .DEBUG_PINS("false"),
@@ -421,6 +421,20 @@ mclkSelect #(.DEBUG("false"))
     .clk64(clk64),
     .MCLK(mclk));
 OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
+
+// Investigate odd DRDY behaviour
+ad7768recorder #(
+    .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
+    .SAMPLE_COUNT(CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT),
+    .DEBUG("false"))
+  ad7768recorder (
+    .sysClk(sysClk),
+    .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_AD7768_RECORDER_CSR]),
+    .sysGPIO_OUT(GPIO_OUT),
+    .sysStatus(GPIO_IN[GPIO_IDX_AD7768_RECORDER_CSR]),
+    .acqClk(acqClk),
+    .adcDCLK_a(AD7768_DCLK),
+    .adcDRDY_a(AD7768_DRDY));
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
