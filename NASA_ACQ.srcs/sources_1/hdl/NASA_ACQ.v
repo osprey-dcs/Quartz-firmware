@@ -370,7 +370,7 @@ ad7768 #(
     .SYSCLK_RATE(CFG_SYSCLK_RATE),
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_MAX_RATE(CFG_MCLK_MAX_RATE),
-    .DEBUG_DRDY("true"),
+    .DEBUG_DRDY("false"),
     .DEBUG_ALIGN("false"),
     .DEBUG_ACQ("false"),
     .DEBUG_PINS("false"),
