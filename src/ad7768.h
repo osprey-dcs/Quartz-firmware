@@ -41,6 +41,7 @@ int ad7768GetGain(int channel);
 void ad7768SetSamplingRate(int rate);
 
 uint32_t ad7768FetchSysmon(int index);
+uint32_t ad7768GetHeader(int index);
 
 void ad7768ShowAlignment(void);
 

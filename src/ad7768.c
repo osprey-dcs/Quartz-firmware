@@ -435,15 +435,25 @@ ad7768ShowAlignment(void)
                                                       DRDY_HISTORY_STATE_SHIFT);
     printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-        int c, r;
-        printf("AD7768[%d]\n", i);
+        int r;
         r = readReg(i, 0x09);
-        if (r != 0) printf("   R9:%02X\n", i, r);
-        for (c = 0 ; c < CFG_AD7768_ADC_PER_CHIP ; c++) {
-            CSR_WRITE(CSR_W_OP_HEADER_SELECT | ((i*CFG_AD7768_ADC_PER_CHIP)+c));
-            r = (CSR_READ() & CSR_R_AD7768_HEADER_MASK) >>
-                                                      CSR_R_AD7768_HEADER_SHIFT;
-            printf("  HDR[%d]: %02X\n", c, r);
-        }
+        if (r != 0) printf("AD7768[%d] R9:%02X\n", i, r);
+    }
+}
+
+/*
+ * Read AD7768 header
+ * Handle possible race condiions
+ */
+uint32_t
+ad7768GetHeader(int index)
+{
+    int o, n;
+    CSR_WRITE(CSR_W_OP_HEADER_SELECT | index);
+    o = (CSR_READ() & CSR_R_AD7768_HEADER_MASK) >> CSR_R_AD7768_HEADER_SHIFT;
+    for (;;) {
+        n = (CSR_READ() & CSR_R_AD7768_HEADER_MASK)>>CSR_R_AD7768_HEADER_SHIFT;
+        if (n == o) return n;
+        o = n;
     }
 }

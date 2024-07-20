@@ -586,5 +586,12 @@
     "base_addr": 72,
     "data_width": 8,
     "sign": "unsigned"
+  },
+  "ADC:headers": {
+    "access": "r",
+    "addr_width": 5,
+    "base_addr": 1440,
+    "data_width": 8,
+    "sign": "unsigned"
   }
 }

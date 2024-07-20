@@ -110,6 +110,7 @@ struct LEEPpacket {
 #define REG_MPS_FIRST_FAULT_SECONDS_BASE    1376
 #define REG_MPS_FIRST_FAULT_TICKS_BASE      1392
 #define REG_MPS_STATUS_BASE                 1408
+#define REG_AD7768_HEADERS_BASE             1440
 #define REG_JSON_ROM_BASE                   0x800
 
 #define MATCH(addr, base, size) (((addr)>=(base)) && ((addr)<((base)+(size))))
@@ -300,6 +301,9 @@ readReg(int address)
     }
     if (MATCH(address, REG_MPS_STATUS_BASE, CFG_MPS_OUTPUT_COUNT)) {
         return mpsLocalGetStatus(address - REG_MPS_STATUS_BASE);
+    }
+    if (MATCH(address, REG_AD7768_HEADERS_BASE, CHANNEL_COUNT)) {
+        return ad7768GetHeader(address - REG_AD7768_HEADERS_BASE);
     }
     return 0;
 }
