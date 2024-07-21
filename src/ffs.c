@@ -64,7 +64,6 @@ static const struct fileInfo fileTable[] = {
     { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP2,      256 },
     { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,            256 },
     { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256 },
-    { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256 },
     { "AD7768_DRDY.bin",  IS_SPECIAL|IS_READONLY|SPECIAL_AD7768_DRDY, 
                                        CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT }};
 
