@@ -48,6 +48,7 @@ int
 ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
 {
     int i;
+    uint32_t then = microsecondsSinceBoot();
     if (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) {
         return -1;
     }
@@ -57,7 +58,11 @@ ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
          * Waiting here ties things up for a little over a millisecond,
          * but precludes the need for an explicit 'start' command.
          */
-        while (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) continue;
+        while (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) {
+            if ((microsecondsSinceBoot() - then) > 2000) {
+                return -1;
+            }
+        }
     }
     for (i = 0 ; i < n ; i++) {
         GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, offset + i);
