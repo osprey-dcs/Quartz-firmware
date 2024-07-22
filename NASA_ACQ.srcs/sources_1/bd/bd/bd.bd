@@ -1,7 +1,7 @@
 {
   "design": {
     "design_info": {
-      "boundary_crc": "0x5FC455433392BBB9",
+      "boundary_crc": "0xD5937EA8BCA90CEF",
       "device": "xc7k160tffg676-2",
       "gen_directory": "../../../../NASA_ACQ.gen/sources_1/bd/bd",
       "name": "bd",
@@ -541,6 +541,15 @@
       },
       "startupEOS": {
         "direction": "I"
+      },
+      "clk51p2locked": {
+        "direction": "O"
+      },
+      "clk40p96locked": {
+        "direction": "O"
+      },
+      "clk64locked": {
+        "direction": "O"
       }
     },
     "components": {
@@ -1994,7 +2003,7 @@
             "value": "Global_buffer"
           },
           "USE_LOCKED": {
-            "value": "false"
+            "value": "true"
           }
         }
       },
@@ -2035,7 +2044,7 @@
             "value": "Global_buffer"
           },
           "USE_LOCKED": {
-            "value": "false"
+            "value": "true"
           }
         }
       },
@@ -2085,7 +2094,7 @@
             "value": "Global_buffer"
           },
           "USE_LOCKED": {
-            "value": "false"
+            "value": "true"
           }
         }
       },
@@ -2329,6 +2338,12 @@
           "clk51p2"
         ]
       },
+      "clk_wiz_0_locked": {
+        "ports": [
+          "clk_wiz_0/locked",
+          "clk51p2locked"
+        ]
+      },
       "clk_wiz_1_clk32": {
         "ports": [
           "clk_wiz_1/clk32",
@@ -2349,6 +2364,12 @@
           "clk40p96"
         ]
       },
+      "clk_wiz_2_locked": {
+        "ports": [
+          "clk_wiz_2/locked",
+          "clk40p96locked"
+        ]
+      },
       "clk_wiz_3_clk_out1": {
         "ports": [
           "clk_wiz_3/clk_out1",
@@ -2359,6 +2380,12 @@
         "ports": [
           "clk_wiz_3/clk_out2",
           "clk64"
+        ]
+      },
+      "clk_wiz_3_locked": {
+        "ports": [
+          "clk_wiz_3/locked",
+          "clk64locked"
         ]
       },
       "clk_wiz_4_clk_out1": {
