@@ -76,9 +76,9 @@ module NASA_ACQ #(
     output wire PMOD1_2,
     output wire PMOD1_3,
     output wire PMOD1_4,
-    input  wire PMOD1_5,
-    input  wire PMOD1_6,
-    input  wire PMOD1_7,
+    output wire PMOD1_5,
+    output wire PMOD1_6,
+    output wire PMOD1_7,
 
     input  wire PMOD2_0,
     input  wire PMOD2_1,
@@ -117,7 +117,7 @@ module NASA_ACQ #(
     input  wire                                  AMC7823_SPI_DOUT,
     output wire                                  AMC7823_SPI_DIN,
 
-    input  wire                                 MCLKfanoutValid,
+    input  wire                                 MCLKfanoutFault,
     input  wire                                 HARDWARE_PPS
     );
 
@@ -400,11 +400,14 @@ ad7768 #(
     .adcRESETn(AD7768_RESET_n));
 
 // FIXME: For scope viewing to see where ADC SYNC shifts are arising!
-assign PMOD1_0 = AD7768_DCLK[0];
-assign PMOD1_1 = AD7768_DRDY[0];
-assign PMOD1_2 = acqStrobe;
-assign PMOD1_3 = acqPPSstrobe;
-assign PMOD1_4 = AD7768_START_n;
+assign PMOD1_0 = AD7768_DRDY[0];
+assign PMOD1_1 = AD7768_DRDY[1];
+assign PMOD1_2 = AD7768_DRDY[2];
+assign PMOD1_3 = AD7768_DRDY[3];
+assign PMOD1_4 = AD7768_DCLK[0];
+assign PMOD1_5 = AD7768_DCLK[1];
+assign PMOD1_6 = acqStrobe;
+assign PMOD1_7 = AD7768_START_n;
 
 // Need different MCLK values to get the sampling rates we need.
 mclkSelect #(.DEBUG("false"))
@@ -421,6 +424,27 @@ mclkSelect #(.DEBUG("false"))
     .clk64(clk64),
     .MCLK(mclk));
 OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
+
+/////////////////////////////////////////////////////////////////////////////
+// FIXME: Count clock faults -- maybe this should be permanent?
+wire clk40p96locked, clk51p2locked, clk64locked;
+countErrors countFanoutErrors(
+    .clk(sysClk),
+    .errorSignal_a(MCLKfanoutFault),
+    .status(GPIO_IN[GPIO_IDX_MCLK_FANOUT_ERROR_COUNT]));
+countErrors countClk40p96errors(
+    .clk(sysClk),
+    .errorSignal_a(!clk40p96locked),
+    .status(GPIO_IN[GPIO_IDX_MCLK_CLK20P48_ERROR_COUNT]));
+countErrors countClk51p2errors(
+    .clk(sysClk),
+    .errorSignal_a(!clk51p2locked),
+    .status(GPIO_IN[GPIO_IDX_MCLK_CLK25P60_ERROR_COUNT]));
+countErrors countClk64errors(
+    .clk(sysClk),
+    .errorSignal_a(!clk64locked),
+    .status(GPIO_IN[GPIO_IDX_MCLK_CLK32P00_ERROR_COUNT]));
+/////////////////////////////////////////////////////////////////////////////
 
 // Investigate odd DRDY behaviour
 ad7768recorder #(
@@ -633,6 +657,10 @@ bd bd_i (
     .clk40p96(clk40p96),
     .clk51p2(clk51p2),
     .clk64(clk64),
+
+    .clk40p96locked(clk40p96locked),
+    .clk51p2locked(clk51p2locked),
+    .clk64locked(clk64locked),
 
     .FLASH_SPI_sclk(BOOT_SCLK),
     .FLASH_SPI_csb(BOOT_CS_B),

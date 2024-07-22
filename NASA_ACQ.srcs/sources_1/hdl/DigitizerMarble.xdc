@@ -151,7 +151,7 @@ set_property -dict {PACKAGE_PIN A10 IOSTANDARD LVCMOS25} [get_ports {AD7768_DCLK
 set_property PACKAGE_PIN AA23 [get_ports HARDWARE_PPS]
 set_property IOSTANDARD LVCMOS25 [get_ports HARDWARE_PPS]
 set_property PULLUP true [get_ports HARDWARE_PPS]
-set_property -dict {PACKAGE_PIN AB24 IOSTANDARD LVCMOS25} [get_ports MCLKfanoutValid]
+set_property -dict {PACKAGE_PIN AB24 IOSTANDARD LVCMOS25} [get_ports MCLKfanoutFault]
 
 # FMC2 LA02 -- FMC2 H7/H8
 set_property -dict {PACKAGE_PIN AE22 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT[24]}]
