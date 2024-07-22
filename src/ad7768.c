@@ -256,12 +256,24 @@ ad7768Crank(void)
 void
 ad7768Reset(void)
 {
+    int chip;
     static int firstTime = 1;
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
     microsecondSpin(10);
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
     microsecondSpin(10000);
+
+    /*
+     * Confirm that reset actually occurred
+     */
+    for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
+        int r3 = readReg(chip, 0x03);
+        int r4 = readReg(chip, 0x04);
+        if ((r3 != 0) || (r4 != 0)) {
+            printf("Warning -- AD7768 %d R3:%02X R4:%02X\n", chip, r3, r4);
+        }
+    }
     if (firstTime) {
         firstTime = 0;
         calibrationUpdate();
@@ -441,6 +453,36 @@ ad7768ShowAlignment(void)
     }
 }
 
+void
+ad7768TestRAM(void)
+{
+    int chip, r;
+    uint32_t then;
+    for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
+        writeReg(chip, 0x08, 0x01);
+        printf("AD7768 %d: ", chip);
+        then = microsecondsSinceBoot();
+        for (;;) {
+            uint32_t now = microsecondsSinceBoot();
+            int duration = now - then;
+            if (((r = readReg(chip, 0x09)) & 0x01) == 0) {
+                if (r == 0x02) {
+                    printf("RAM BIST PASS.\n");
+                }
+                else {
+                    printf("R9: %02x!\n", r);
+                }
+                break;
+            }
+            if (duration > 1000) {
+                printf("BIST incomplete!\n");
+                break;
+            }
+        }
+    }
+    ad7768StartAlignment();
+}
+    
 /*
  * Read AD7768 header
  * Handle possible race condiions

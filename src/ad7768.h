@@ -44,5 +44,6 @@ uint32_t ad7768FetchSysmon(int index);
 uint32_t ad7768GetHeader(int index);
 
 void ad7768ShowAlignment(void);
+void ad7768TestRAM(void);
 
 #endif /* _AD7768_H_ */

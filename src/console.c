@@ -312,6 +312,10 @@ cmdDEBUG(int argc, char **argv)
         ad7768StartAlignment();
         debugFlags &= ~DEBUGFLAG_START_AD7768_ALIGN;
     }
+    if (debugFlags & DEBUGFLAG_TEST_AD7768_RAM) {
+        ad7768TestRAM();
+        debugFlags &= ~DEBUGFLAG_TEST_AD7768_RAM;
+    }
     if (debugFlags & DEBUGFLAG_DUMP_MPS_REG) {
         mpsLocalDumpReg();
         debugFlags &= ~DEBUGFLAG_DUMP_MPS_REG;
