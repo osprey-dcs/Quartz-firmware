@@ -59,7 +59,7 @@ ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
          * but precludes the need for an explicit 'start' command.
          */
         while (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) {
-            if ((microsecondsSinceBoot() - then) > 2000) {
+            if ((microsecondsSinceBoot() - then) > 3000) {
                 return -1;
             }
         }
