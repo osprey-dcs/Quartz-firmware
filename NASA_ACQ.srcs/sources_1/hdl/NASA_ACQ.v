@@ -428,22 +428,26 @@ OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: Count clock faults -- maybe this should be permanent?
 wire clk40p96locked, clk51p2locked, clk64locked;
-countErrors countFanoutErrors(
-    .clk(sysClk),
-    .errorSignal_a(MCLKfanoutFault),
+countRisingEdges countFanoutFaults(
+    .clk(fixedClk200),
+    .signal_a(MCLKfanoutFault),
     .status(GPIO_IN[GPIO_IDX_MCLK_FANOUT_ERROR_COUNT]));
-countErrors countClk40p96errors(
-    .clk(sysClk),
-    .errorSignal_a(!clk40p96locked),
+countRisingEdges countClk40p96unlocks(
+    .clk(fixedClk200),
+    .signal_a(!clk40p96locked),
     .status(GPIO_IN[GPIO_IDX_MCLK_CLK20P48_ERROR_COUNT]));
-countErrors countClk51p2errors(
-    .clk(sysClk),
-    .errorSignal_a(!clk51p2locked),
+countRisingEdges countClk51p2unlocks(
+    .clk(fixedClk200),
+    .signal_a(!clk51p2locked),
     .status(GPIO_IN[GPIO_IDX_MCLK_CLK25P60_ERROR_COUNT]));
-countErrors countClk64errors(
-    .clk(sysClk),
-    .errorSignal_a(!clk64locked),
+countRisingEdges countClk64unlocks(
+    .clk(fixedClk200),
+    .signal_a(!clk64locked),
     .status(GPIO_IN[GPIO_IDX_MCLK_CLK32P00_ERROR_COUNT]));
+countRisingEdges countADCstarts(
+    .clk(fixedClk200),
+    .signal_a(!AD7768_START_n),
+    .status(GPIO_IN[GPIO_IDX_ADC_STARTCOUNT]));
 /////////////////////////////////////////////////////////////////////////////
 
 // Investigate odd DRDY behaviour
