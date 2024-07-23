@@ -72,6 +72,7 @@
 #define GPIO_IDX_MCLK_CLK32P00_ERROR_COUNT  41
 #define GPIO_IDX_MCLK_CLK25P60_ERROR_COUNT  42
 #define GPIO_IDX_MCLK_CLK20P48_ERROR_COUNT  43
+#define GPIO_IDX_ADC_STARTCOUNT             44
 
 #define GPIO_IDX_COUNT                     64 // Number of GPIO registers
 
