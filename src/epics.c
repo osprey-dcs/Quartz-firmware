@@ -29,6 +29,7 @@
 #include <ospreyUDP.h>
 #include "acq.h"
 #include "ad7768.h"
+#include "ad7768recorder.h"
 #include "amc7823.h"
 #include "calibration.h"
 #include "clockAdjust.h"
@@ -75,6 +76,7 @@ struct LEEPpacket {
 #define REG_SECONDS_SINCE_BOOT              40
 #define REG_FMC1_SERIAL_NUMBER              50
 #define REG_FMC2_SERIAL_NUMBER              51
+#define REG_AD7768_RECORDER                 60
 #define REG_MPS_CLEAR                       70
 #define REG_MPS_MERGE_TRIPPED               71
 #define REG_MPS_MERGE_REQUIRED              72
@@ -127,6 +129,7 @@ writeReg(int address, uint32_t value)
     case REG_SAMPLING_RATE:     ad7768SetSamplingRate(value);            return;
     case REG_RESET_ADCS:        if (value == 40)  ad7768Reset();         return;
     case REG_SET_VCXO_DAC:      clockAdjustSet(value);                   return;
+    case REG_AD7768_RECORDER:   ad7768recorderStart();                   return;
     case REG_MPS_CLEAR: if(isEVG()) evgSendEvent(CFG_EVR_MPS_CLEAR_CODE);return;
     case REG_MPS_MERGE_REQUIRED:mpsMergeSetRequiredLinks(value);         return;
     }
@@ -215,6 +218,7 @@ readReg(int address)
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
+    case REG_AD7768_RECORDER:     return ad7768recorderIsBusy();
     case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
     case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
     }

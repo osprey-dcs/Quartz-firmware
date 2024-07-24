@@ -30,7 +30,7 @@
 #define _AD7768_RECORDER_H_
 
 void ad7768recorderStart(void);
+int ad7768recorderIsBusy(void);
 int ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf);
-
 
 #endif /* _AD7768_RECORDER_H_ */

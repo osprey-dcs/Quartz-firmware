@@ -593,5 +593,19 @@
     "base_addr": 1440,
     "data_width": 8,
     "sign": "unsigned"
+  },
+  "ADC:WFR:start": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 60,
+    "data_width": 1,
+    "sign": "unsigned"
+  },
+  "ADC:WFR:busy": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 60,
+    "data_width": 1,
+    "sign": "unsigned"
   }
 }

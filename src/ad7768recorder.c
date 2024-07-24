@@ -32,41 +32,44 @@
 #include "gpio.h"
 #include "util.h"
 
-#define CSR_W_START     0x80000000
-#define CSR_R_ACTIVE    0x80000000
-#define CSR_R_DATA_MASK ((1 << (2 * CFG_AD7768_CHIP_COUNT)) - 1)
+#define CSR_W_START         0x80000000
+#define CSR_R_ACTIVE        0x80000000
+#define CSR_ADDRESS_SHIFT   (2 * (CFG_AD7768_CHIP_COUNT))
+#define CSR_ADDRESS_MASK    ((CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT-1) < \
+                                                            (CSR_ADDRESS_SHIFT))
+#define CSR_DATA_MASK       ((1 << CSR_ADDRESS_SHIFT) - 1)
+
+#if ((CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT & (CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT-1)) != 0)
+# error "CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT must be a power of two!"
+#endif
 
 void
 ad7768recorderStart(void)
 {
-    if ((GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) == 0) {
-        GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, CSR_W_START);
-    }
+    GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, CSR_W_START);
+}
+
+int
+ad7768recorderIsBusy(void)
+{
+    return ((GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) != 0);
 }
 
 int
 ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
 {
     int i;
-    uint32_t then = microsecondsSinceBoot();
-    if (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) {
+    unsigned int base;
+    uint32_t csr = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR);
+
+    if (csr & CSR_R_ACTIVE) {
         return -1;
     }
-    if (offset == 0) {
-        ad7768recorderStart();
-        /*
-         * Waiting here ties things up for a little over a millisecond,
-         * but precludes the need for an explicit 'start' command.
-         */
-        while (GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_ACTIVE) {
-            if ((microsecondsSinceBoot() - then) > 3000) {
-                return -1;
-            }
-        }
-    }
+    base = (csr & CSR_ADDRESS_MASK) >> CSR_ADDRESS_SHIFT;
     for (i = 0 ; i < n ; i++) {
-        GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, offset + i);
-        *cbuf++ = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_R_DATA_MASK;
+        unsigned int address = (offset + i + base) & CSR_ADDRESS_MASK;
+        GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, address);
+        *cbuf++ = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_DATA_MASK;
     }
     return n;
 }
