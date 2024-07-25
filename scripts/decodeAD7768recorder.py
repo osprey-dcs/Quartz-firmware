@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import struct
 import sys
 
 parser = argparse.ArgumentParser(description='Display contents of AD7768 DCLK/DRDY recorder data file.',
@@ -18,16 +19,23 @@ if args.ifile == None:
 b=args.ifile.read()
 
 ns = 0
-for c in b:
-    bit = 0x80
+offset = 0
+while (offset < len(b)):
+    t = struct.unpack_from("<H", b, offset)
+    v = t[0]
+    offset += 2
     print("%d" %(ns), file=args.ofile, end='')
     ns += 8
     yOffset = 8
+    bit = 0x100
     while bit != 0:
         if (args.gnuplot):
-            print(" %d.%d" % (0 if ((c & bit) == 0) else 1, yOffset), file=args.ofile, end='')
-            yOffset -= 1
+            if (bit == 0x100):
+                print(" %s" % ("0.95" if ((v & bit) == 0) else "1.05"), file=args.ofile, end='')
+            else:
+                print(" %d.%d" % (0 if ((v & bit) == 0) else 1, yOffset), file=args.ofile, end='')
+                yOffset -= 1
         else:
-            print(" %d" % (0 if ((c & bit) == 0) else 1), file=args.ofile, end='')
+            print(" %d" % (0 if ((v & bit) == 0) else 1), file=args.ofile, end='')
         bit >>= 1
     print("", file=args.ofile)
