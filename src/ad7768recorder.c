@@ -32,10 +32,12 @@
 #include "gpio.h"
 #include "util.h"
 
+#define DATA_WIDTH    (1 + (2 * CFG_AD7768_CHIP_COUNT))
+
 #define CSR_W_START         0x80000000
 #define CSR_R_ACTIVE        0x80000000
-#define CSR_ADDRESS_SHIFT   (2*(CFG_AD7768_CHIP_COUNT))
-#define CSR_DATA_MASK       ((1 << (2*(CFG_AD7768_CHIP_COUNT))) - 1)
+#define CSR_ADDRESS_SHIFT   DATA_WIDTH
+#define CSR_DATA_MASK       (((1 << DATA_WIDTH)) - 1)
 
 #if ((CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT & \
                                 (CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT-1)) != 0)
@@ -57,7 +59,7 @@ ad7768recorderIsBusy(void)
 int
 ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
 {
-    int i;
+    int i, nShort;
     unsigned int base;
     uint32_t csr = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR);
 
@@ -65,11 +67,16 @@ ad7768recorderRead(unsigned int offset, unsigned int n, char *cbuf)
         return -1;
     }
     base = (csr>>CSR_ADDRESS_SHIFT) & (CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT-1);
-    for (i = 0 ; i < n ; i++) {
+    nShort = n / 2;
+    offset /= 2;
+    for (i = 0 ; i < nShort ; i++) {
+        uint32_t v;
         unsigned int address = (base + offset + i) &
                                       (CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT-1);
         GPIO_WRITE(GPIO_IDX_AD7768_RECORDER_CSR, address);
-        *cbuf++ = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_DATA_MASK;
+        v = GPIO_READ(GPIO_IDX_AD7768_RECORDER_CSR) & CSR_DATA_MASK;
+        *cbuf++ = v;
+        *cbuf++ = v >> 8;
     }
     return n;
 }

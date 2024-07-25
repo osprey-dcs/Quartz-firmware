@@ -65,7 +65,7 @@ static const struct fileInfo fileTable[] = {
     { "FMC1_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC1_EEPROM,            256 },
     { "FMC2_EEPROM.bin",  IS_EEPROM|IIC_FPGA_IDX_FMC2_EEPROM,            256 },
     { "AD7768_DRDY.bin",  IS_SPECIAL|IS_READONLY|SPECIAL_AD7768_DRDY, 
-                                       CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT }};
+                                   2 * CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT }};
 
 static uint32_t offset = UINT32_MAX;
 static int activeMode;
