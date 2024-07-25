@@ -461,6 +461,7 @@ ad7768recorder #(
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_RECORDER_CSR]),
     .acqClk(acqClk),
+    .adcMCLK_a(mclk),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY));
 

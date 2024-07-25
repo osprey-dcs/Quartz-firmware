@@ -38,17 +38,19 @@ module ad7768recorder #(
     output wire [31:0] sysStatus,
 
     input  wire                      acqClk,
+    input  wire                      adcMCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDRDY_a);
 
-localparam ADDRESS_WIDTH = $clog2(SAMPLE_COUNT);
+localparam DATA_WIDTH         = 1 + (2 * ADC_CHIP_COUNT);
+localparam ADDRESS_WIDTH      = $clog2(SAMPLE_COUNT);
 localparam POST_TRIGGER_COUNT = SAMPLE_COUNT / 8;
-localparam TRIGGER_THRESHOLD = 3;
+localparam TRIGGER_THRESHOLD  = 3;
 
 //
 // Simple dual-port RAM
 //
-reg [(2*ADC_CHIP_COUNT)-1:0] dpram [0:SAMPLE_COUNT-1];
+reg [DATA_WIDTH-1:0] dpram [0:SAMPLE_COUNT-1];
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock (sysClk) domain
@@ -56,7 +58,7 @@ reg [(2*ADC_CHIP_COUNT)-1:0] dpram [0:SAMPLE_COUNT-1];
 
 reg sysArmToggle = 0;
 reg [ADDRESS_WIDTH-1:0] sysReadAddress;
-reg [(2*ADC_CHIP_COUNT)-1:0] sysReadQ;
+reg [DATA_WIDTH-1:0] sysReadQ;
 
 always @(posedge sysClk) begin
     sysReadQ <= dpram[sysReadAddress];
@@ -74,10 +76,12 @@ end
 
 // Get asynchronous DCLK and DRDY into acquisition clock domain.
 // Use delayed synchronized value to sample first DRDY and all data lines.
-(*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] dclk_m = 0, drdy_m = 0;
-(*MARK_DEBUG=DEBUG*) reg [ADC_CHIP_COUNT-1:0] drdy = 0, dclk = 0;
+(*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] mclk_m=0, dclk_m=0, drdy_m=0;
+(*MARK_DEBUG=DEBUG*) reg [ADC_CHIP_COUNT-1:0] mclk = 0, drdy = 0, dclk = 0;
 
 always @(posedge acqClk) begin
+    mclk_m <= adcMCLK_a;
+    mclk   <= mclk_m;
     dclk_m <= adcDCLK_a;
     dclk   <= dclk_m;
     drdy_m <= adcDRDY_a;
@@ -119,7 +123,7 @@ always @(posedge acqClk) begin
     acqArmToggle   <= acqArmToggle_m;
     acqArmToggle_d <= acqArmToggle;
     if (acqAcquisitionActive) begin
-        dpram[acqWriteAddress] <= {dclk, drdy};
+        dpram[acqWriteAddress] <= {mclk, dclk, drdy};
         acqWriteAddress <= acqWriteAddress + 1;
     end
 
@@ -164,7 +168,7 @@ end
 
 // Some values in acquisition clock domain, but races unimportant
 assign sysStatus = { acqAcquisitionActive,
-                     {32-1-ADDRESS_WIDTH-(2*ADC_CHIP_COUNT){1'b0}},
+                     {32-1-ADDRESS_WIDTH-DATA_WIDTH{1'b0}},
                      acqWriteAddress,
                      sysReadQ };
 
