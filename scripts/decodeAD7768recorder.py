@@ -6,12 +6,14 @@ import sys
 parser = argparse.ArgumentParser(description='Display contents of AD7768 DCLK/DRDY recorder data file.',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 parser.add_argument('-g', '--gnuplot', action = 'store_true', help='GNUPLOT-friendly format')
-parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'),
-                                                             default=sys.stdin)
+parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'), default=None)
 parser.add_argument('-o', '--ofile', type=argparse.FileType('w'),
                                                              default=sys.stdout)
 
 args = parser.parse_args()
+if args.ifile == None:
+    print("Input file must be specified.", file=sys.stderr)
+    sys.exit(1)
 
 b=args.ifile.read()
 
