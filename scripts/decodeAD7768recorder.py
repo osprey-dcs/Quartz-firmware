@@ -6,11 +6,14 @@ import sys
 
 parser = argparse.ArgumentParser(description='Display contents of AD7768 DCLK/DRDY recorder data file.',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument('-b', '--binary', action = 'store_true', help='Show data as 1/0 rather than GNUPLOT-friendly format')
-parser.add_argument('-m', '--mclk', action = 'store_true', help='Provide fake MCLK (old 8-bit data file)')
-parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'), default=None)
+parser.add_argument('-b', '--binary', action = 'store_true',
+                    help='Show data as 1/0 rather than GNUPLOT-friendly format')
+parser.add_argument('-m', '--mclk', action = 'store_true',
+                                 help='Provide fake MCLK (old 8-bit data file)')
+parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'), default=None,
+                                                              help='Input file')
 parser.add_argument('-o', '--ofile', type=argparse.FileType('w'),
-                                                             default=sys.stdout)
+                                         default=sys.stdout, help='Output file')
 
 args = parser.parse_args()
 if args.ifile == None:
