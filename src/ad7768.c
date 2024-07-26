@@ -402,7 +402,18 @@ ad7768SetSamplingRate(int rate)
     GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
 
     // Mode A: Wideband, Decimate by N
-    broadcastReg(0x01, dp->channelMode);
+    if (debugFlags & DEBUGFLAG_ENABLE_DRDY_FAULT) {
+        /*
+         * Do chips one at a time to try to induce a DRDY misalignment
+         */
+        int chip;
+        for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
+            writeReg(chip, 0x01, dp->channelMode);
+        }
+    }
+    else {
+        broadcastReg(0x01, dp->channelMode);
+    }
 
     // Mode B: Sinc5, Decimate by 32
     broadcastReg(0x02, 0x08);

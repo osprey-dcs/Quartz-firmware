@@ -52,6 +52,7 @@
 #define DEBUGFLAG_START_AD7768_ALIGN    0x40000
 #define DEBUGFLAG_ENABLE_PPS_JITTER     0x80000
 #define DEBUGFLAG_TEST_AD7768_RAM       0x100000
+#define DEBUGFLAG_ENABLE_DRDY_FAULT     0x200000
 extern int debugFlags;
 
 #define ntohl(x) __builtin_bswap32(x)
