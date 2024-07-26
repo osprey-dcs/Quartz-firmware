@@ -376,6 +376,8 @@ eyescanCommand(int argc, char **argv)
     int mgt = 0;
     int prescale = ES_PRESCALE_FAST;
     int dumpRegisters = 0;
+    /* Missing from string.h */
+    extern const char *strcasestr(const char *haystack, const char *needle);
 
     for (i = 1 ; i < argc ; i++) {
         if (argv[i][0] == '-') {
@@ -392,19 +394,17 @@ eyescanCommand(int argc, char **argv)
         }
         else {
             int c;
-            int l;
             if (strcmp(argv[i], "*") == 0) {
                 mgt = 0;
                 eyescanCrank(-1);
                 break;
             }
-            l = strlen(argv[i]);
             for (c = 0 ; ; c++) {
                 if (c == EYESCAN_CHANNEL_COUNT) {
                     printf("Invalid MGT argument\n");
                     return;
                 }
-                if (strncasecmp(argv[i], mgtNames[c], l) == 0) {
+                if (strcasestr(mgtNames[c], argv[i]) != NULL) {
                     mgt = c;
                     break;
                 }
