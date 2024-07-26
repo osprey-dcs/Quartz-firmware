@@ -1,6 +1,8 @@
 set style data lines
 set xlabel "Time (ns)"
 set yrange [0:2]
+set xrange[900000:950000]
+
 plot \
     filename using 1:2 with steps title "MCLK", \
     filename using 1:3 with steps title "DCLK[3]", \

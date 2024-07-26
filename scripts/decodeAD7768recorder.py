@@ -10,8 +10,8 @@ parser.add_argument('-b', '--binary', action = 'store_true',
                     help='Show data as 1/0 rather than GNUPLOT-friendly format')
 parser.add_argument('-m', '--mclk', action = 'store_true',
                                  help='Provide fake MCLK (old 8-bit data file)')
-parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'), default=None,
-                                                              help='Input file')
+parser.add_argument('-i', '--ifile', type=argparse.FileType('rb'),
+                                   default='AD7768_DRDY.bin', help='Input file')
 parser.add_argument('-o', '--ofile', type=argparse.FileType('w'),
                                          default=sys.stdout, help='Output file')
 
