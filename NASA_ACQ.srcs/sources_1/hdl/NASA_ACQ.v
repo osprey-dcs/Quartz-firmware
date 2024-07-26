@@ -399,16 +399,6 @@ ad7768 #(
     .adcSTARTn(AD7768_START_n),
     .adcRESETn(AD7768_RESET_n));
 
-// FIXME: For scope viewing to see where ADC SYNC shifts are arising!
-assign PMOD1_0 = AD7768_DRDY[0];
-assign PMOD1_1 = AD7768_DRDY[1];
-assign PMOD1_2 = AD7768_DRDY[2];
-assign PMOD1_3 = AD7768_DRDY[3];
-assign PMOD1_4 = AD7768_DCLK[0];
-assign PMOD1_5 = AD7768_DCLK[1];
-assign PMOD1_6 = acqStrobe;
-assign PMOD1_7 = AD7768_START_n;
-
 // Need different MCLK values to get the sampling rates we need.
 mclkSelect #(.DEBUG("false"))
   mclkSelect (
@@ -448,9 +438,10 @@ countRisingEdges countADCstarts(
     .clk(fixedClk200),
     .signal_a(!AD7768_START_n),
     .status(GPIO_IN[GPIO_IDX_ADC_STARTCOUNT]));
-/////////////////////////////////////////////////////////////////////////////
 
+/////////////////////////////////////////////////////////////////////////////
 // Investigate odd DRDY behaviour
+wire acqMisalignedMarker;
 ad7768recorder #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .SAMPLE_COUNT(CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT),
@@ -463,7 +454,18 @@ ad7768recorder #(
     .acqClk(acqClk),
     .adcMCLK_a(mclk),
     .adcDCLK_a(AD7768_DCLK),
-    .adcDRDY_a(AD7768_DRDY));
+    .adcDRDY_a(AD7768_DRDY),
+    .acqMisalignedMarker(acqMisalignedMarker));
+
+// FIXME: For scope viewing to see where ADC SYNC shifts are arising!
+assign PMOD1_0 = AD7768_DRDY[0];
+assign PMOD1_1 = AD7768_DRDY[1];
+assign PMOD1_2 = AD7768_DRDY[2];
+assign PMOD1_3 = AD7768_DRDY[3];
+assign PMOD1_4 = AD7768_DCLK[0];
+assign PMOD1_5 = AD7768_DCLK[1];
+assign PMOD1_6 = AD7768_START_n;
+assign PMOD1_7 = acqMisalignedMarker;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling

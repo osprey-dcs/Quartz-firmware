@@ -40,7 +40,9 @@ module ad7768recorder #(
     input  wire                      acqClk,
     input  wire                      adcMCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDCLK_a,
-    input  wire [ADC_CHIP_COUNT-1:0] adcDRDY_a);
+    input  wire [ADC_CHIP_COUNT-1:0] adcDRDY_a,
+    
+    output wire                      acqMisalignedMarker);
 
 localparam DATA_WIDTH         = 1 + (2 * ADC_CHIP_COUNT);
 localparam ADDRESS_WIDTH      = $clog2(SAMPLE_COUNT);
@@ -113,7 +115,11 @@ localparam MISALIGN_COUNT_LOAD = TRIGGER_THRESHOLD - 2;
 localparam MISALIGN_COUNTER_WIDTH = $clog2(MISALIGN_COUNT_LOAD+1) + 1;
 (*MARK_DEBUG=DEBUG*)
 reg [MISALIGN_COUNTER_WIDTH-1:0] misalignCount = MISALIGN_COUNT_LOAD;
-wire misaligned = misalignCount[MISALIGN_COUNTER_WIDTH-1];
+wire misalignCountDone = misalignCount[MISALIGN_COUNTER_WIDTH-1];
+
+localparam STRETCH_COUNTER_WIDTH = 8;
+(*MARK_DEBUG=DEBUG*) reg [STRETCH_COUNTER_WIDTH-1:0] stretchCounter = 0;
+assign acqMisalignedMarker = stretchCounter[STRETCH_COUNTER_WIDTH-1];
 
 (*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] acqArmToggle_m = 0;
 (*MARK_DEBUG=DEBUG*) reg acqArmToggle = 0, acqArmToggle_d = 0;
@@ -125,6 +131,23 @@ always @(posedge acqClk) begin
     if (acqAcquisitionActive) begin
         dpram[acqWriteAddress] <= {mclk, dclk, drdy};
         acqWriteAddress <= acqWriteAddress + 1;
+    end
+
+    if ((drdy == {ADC_CHIP_COUNT{1'b0}})
+     || (drdy == {ADC_CHIP_COUNT{1'b1}})) begin
+        misalignCount <= MISALIGN_COUNT_LOAD;
+        if (acqMisalignedMarker) begin
+            stretchCounter <= stretchCounter - 1;
+        end
+    end
+    else begin
+        misalignCount <= misalignCount - 1;
+        if (misalignCountDone) begin
+            stretchCounter <= ~0;
+        end
+        else if (acqMisalignedMarker) begin
+            stretchCounter <= stretchCounter - 1;
+        end
     end
 
     case (acqState)
@@ -144,14 +167,7 @@ always @(posedge acqClk) begin
         end
     end
     ST_AWAIT_TRIGGER: begin
-        if ((drdy == {ADC_CHIP_COUNT{1'b0}})
-         || (drdy == {ADC_CHIP_COUNT{1'b1}})) begin
-            misalignCount <= MISALIGN_COUNT_LOAD;
-        end
-        else begin
-            misalignCount <= misalignCount - 1;
-        end
-        if (misaligned || (acqArmToggle != acqArmToggle_d)) begin
+        if (acqMisalignedMarker || (acqArmToggle != acqArmToggle_d)) begin
             acqState <= ST_POST_TRIGGER;
         end
     end
