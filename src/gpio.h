@@ -57,7 +57,7 @@
 #define GPIO_IDX_BUILD_PACKET_STATUS       21 // Packet builder status (R)
 #define GPIO_IDX_BUILD_PACKET_BITMAP       22 // Packet builder active channels
 #define GPIO_IDX_BUILD_PACKET_BYTECOUNT    23 // Packet builder packet size
-#define GPIO_IDX_ADC_THRESHOLDS            24 // ADC limits (W)
+#define GPIO_IDX_ADC_THRESHOLDS            24 // ADC limits
 #define GPIO_IDX_ADC_EXCURSIONS            25 // ADC excursions beyond threshold
 #define GPIO_IDX_INPUT_COUPLING_CLR        26 // Input coupling RESET coils (AC)
 #define GPIO_IDX_INPUT_COUPLING_SET_START  27 // SET coils (DC) and start SPI
