@@ -274,6 +274,17 @@ ad7768Reset(void)
             printf("Warning -- AD7768 %d R3:%02X R4:%02X\n", chip, r3, r4);
         }
     }
+
+    /*
+     * Configure all GPIO pins as outputs, driven low.
+     * GPIO[3:0] -- Unused, open pins.  Set as output to avoid open inputs.
+     * GPIO[4]   -- Pulled low externally.  Set as output to allow LVDS MCLK.
+     */
+    broadcastReg(0x0E, 0x9F);
+
+    /*
+     * Restore calibration and set sampling rate
+     */
     if (firstTime) {
         firstTime = 0;
         calibrationUpdate();
