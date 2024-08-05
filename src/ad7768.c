@@ -234,7 +234,7 @@ ad7768step(int startAlignment)
                 state = ST_START_ALIGN;
             }
             else {
-                state = ST_IDLE;;
+                state = ST_IDLE;
             }
         }
         break;
@@ -296,22 +296,6 @@ ad7768Reset(void)
     ad7768SetSamplingRate(0);
     return;
 }
-void
-ad7768Init(void)
-{
-    int i;
-    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_FAKE_ADC |
-                                    ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
-                                                 OP_CHIP_PINS_ASSERT_FAKE_ADC :
-                                                 0));
-    ad7768Reset();
-    for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
-        int r = readReg(i, 0x0A);
-        if (r != 0x06) {
-            printf("AD7768 %d: Warning -- unexpected revision %02X.\n", i, r);
-        }
-    }
-}
 
 /*
  * There is not a 1:1 mapping of input channel number to ADC channel number.
@@ -320,9 +304,41 @@ ad7768Init(void)
 static int
 mapChannel(int inputChannel)
 {
-    static const uint8_t chipChannel[CFG_AD7768_ADC_PER_CHIP] = { 
+    static const uint8_t chipChannel[CFG_AD7768_ADC_PER_CHIP] = {
                                                        3, 2, 1, 0, 4, 5, 6, 7 };
     return chipChannel[inputChannel % CFG_AD7768_ADC_PER_CHIP];
+}
+
+static int factoryGainAdjust[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
+void
+ad7768Init(void)
+{
+    int chip, channel, i;
+    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_FAKE_ADC |
+                                    ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
+                                                 OP_CHIP_PINS_ASSERT_FAKE_ADC :
+                                                 0));
+    ad7768Reset();
+    for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
+        int r = readReg(chip, 0x0A);
+        if (r != 0x06) {
+            printf("AD7768 %d: Warning -- unexpected revision %02X.\n", chip,r);
+        }
+    }
+    for (channel = 0 ; channel < CFG_AD7768_CHIP_COUNT ; channel++) {
+        int reg  = (mapChannel(channel) * 3) + 0x36;
+        int factoryGain = 0;
+        chip = channel / CFG_AD7768_ADC_PER_CHIP;
+        for (i = 0 ; i < 3 ; i++) {
+            int r = readReg(chip, reg);
+            factoryGain = (factoryGain << 8) | r;
+            reg++;
+        }
+        factoryGainAdjust[channel] = factoryGain;
+        if (debugFlags & DEBUGFLAG_CALIBRATION) {
+            printf("AD7768[%d] gain adjust:%0x%X\n", channel, factoryGain);
+        }
+    }
 }
 
 static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
@@ -373,9 +389,9 @@ ad7768SetGain(int channel, int gain)
         printf("AD7768[%d] gain %d\n", channel, gain);
     }
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
-    reg  = (mapChannel(channel) * 3) + 0x338;
+    reg  = (mapChannel(channel) * 3) + 0x38;
     gains[channel] = gain;
-    gain+= 0x555555;
+    gain += factoryGainAdjust[channel];
     for (i = 0 ; i < 3 ; i++) {
         writeReg(chip, reg, gain & 0xFF);
         gain >>= 8;
@@ -504,7 +520,7 @@ ad7768TestRAM(void)
     }
     ad7768StartAlignment();
 }
-    
+
 /*
  * Read AD7768 header
  * Handle possible race condiions
