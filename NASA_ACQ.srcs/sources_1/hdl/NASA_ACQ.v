@@ -461,11 +461,11 @@ ad7768recorder #(
 assign PMOD1_0 = AD7768_DRDY[0];
 assign PMOD1_1 = AD7768_DRDY[1];
 assign PMOD1_2 = AD7768_DRDY[2];
-assign PMOD1_3 = AD7768_DRDY[3];
+assign PMOD1_3 = acqMisalignedMarker;
 assign PMOD1_4 = AD7768_DCLK[0];
 assign PMOD1_5 = AD7768_DCLK[1];
-assign PMOD1_6 = AD7768_START_n;
-assign PMOD1_7 = acqMisalignedMarker;
+assign PMOD1_6 = AD7768_DCLK[2];
+assign PMOD1_7 = AD7768_DCLK[0] ^ AD7768_DCLK[1];
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling

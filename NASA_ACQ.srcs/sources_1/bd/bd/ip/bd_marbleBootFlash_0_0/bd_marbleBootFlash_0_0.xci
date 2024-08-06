@@ -4,7 +4,7 @@
     "xci_name": "bd_marbleBootFlash_0_0",
     "cell_name": "marbleBootFlash",
     "component_reference": "user.org:user:marbleBootFlash:1.0",
-    "ip_revision": "19",
+    "ip_revision": "20",
     "gen_directory": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_marbleBootFlash_0_0",
     "parameters": {
       "component_parameters": {
@@ -35,7 +35,7 @@
       },
       "runtime_parameters": {
         "IPCONTEXT": [ { "value": "IP_Integrator" } ],
-        "IPREVISION": [ { "value": "19" } ],
+        "IPREVISION": [ { "value": "20" } ],
         "MANAGED": [ { "value": "TRUE" } ],
         "OUTPUTDIR": [ { "value": "../../../../../../NASA_ACQ.gen/sources_1/bd/bd/ip/bd_marbleBootFlash_0_0" } ],
         "SELECTEDSIMMODEL": [ { "value": "" } ],

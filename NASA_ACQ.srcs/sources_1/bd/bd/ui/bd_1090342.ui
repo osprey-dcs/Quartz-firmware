@@ -1,7 +1,7 @@
 {
    "ActiveEmotionalView":"Default View",
    "Default View_ScaleFactor":"0.934018",
-   "Default View_TopLeft":"1139,104",
+   "Default View_TopLeft":"1139,900",
    "ExpandedHierarchyInLayout":"",
    "guistr":"# # String gsaved with Nlview 7.5.8 2022-09-21 7111 VDI=41 GEI=38 GUI=JA:10.0 TLS
 #  -string -flagsOSRD
@@ -59,11 +59,14 @@ preplace netloc axi_lite_generic_reg_0_GPIO_STROBES 1 6 1 NJ 580
 preplace netloc clk_in1_0_1 1 0 6 NJ 60 NJ 60 NJ 60 NJ 60 NJ 60 NJ
 preplace netloc clk_in1_0_2 1 0 6 NJ 1720 NJ 1720 NJ 1720 NJ 1720 1420 1860 1720J
 preplace netloc clk_wiz_0_clk_out1 1 6 1 NJ 1800
+preplace netloc clk_wiz_0_locked 1 6 1 N 1820
 preplace netloc clk_wiz_1_clk32 1 5 2 1760 1520 2180J
 preplace netloc clk_wiz_1_locked 1 1 5 180 1710 NJ 1710 NJ 1710 NJ 1710 1720
 preplace netloc clk_wiz_2_clk_out1 1 6 1 NJ 300
+preplace netloc clk_wiz_2_locked 1 6 1 N 320
 preplace netloc clk_wiz_3_clk_out1 1 6 1 NJ 160
 preplace netloc clk_wiz_3_clk_out2 1 6 1 NJ 180
+preplace netloc clk_wiz_3_locked 1 6 1 N 200
 preplace netloc clk_wiz_4_clk_out1 1 5 2 1840 1540 NJ
 preplace netloc clk_wiz_5_clk_out1 1 6 1 NJ 60
 preplace netloc eos_in_0_1 1 0 6 NJ 1860 NJ 1860 NJ 1860 890J 1550 1400J 1540 1820J
@@ -77,9 +80,6 @@ preplace netloc rst_clk_wiz_1_100M_bus_struct_reset 1 2 3 580 1670 NJ 1670 1390J
 preplace netloc rst_clk_wiz_1_100M_mb_reset 1 2 2 600 1650 880J
 preplace netloc rst_clk_wiz_1_100M_peripheral_aresetn 1 2 4 570 1250 NJ 1250 1390 770 1830
 preplace netloc rst_clk_wiz_1_100M_peripheral_reset 1 2 5 550J 1880 NJ 1880 NJ 1880 NJ 1880 NJ
-preplace netloc clk_wiz_0_locked 1 6 1 N 1820
-preplace netloc clk_wiz_2_locked 1 6 1 N 320
-preplace netloc clk_wiz_3_locked 1 6 1 N 200
 preplace netloc axi_iic_0_IIC 1 6 1 NJ 420
 preplace netloc axi_uartlite_0_UART 1 6 1 NJ 730
 preplace netloc fastTx_0_1 1 0 6 NJ 790 NJ 790 NJ 790 NJ 790 NJ 790 1820J
