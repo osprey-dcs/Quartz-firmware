@@ -318,7 +318,7 @@ ad7768Reset(void)
             }
             factoryGainAdjust[channel] = factoryGain;
             if (debugFlags & DEBUGFLAG_CALIBRATION) {
-                printf("AD7768[%d] gain adjust:%0x%X\n", channel, factoryGain);
+                printf("AD7768[%d] gain adjust:0x%06X\n", channel,factoryGain);
             }
         }
         calibrationUpdate();
