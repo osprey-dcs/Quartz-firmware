@@ -307,7 +307,9 @@ ad7768Reset(void)
                 printf("AD7768 %d: Warning -- revision %02X.\n", chip, r);
             }
         }
-        for (channel = 0 ; channel < CFG_AD7768_CHIP_COUNT ; channel++) {
+        for (channel = 0 ;
+             channel < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP;
+             channel++) {
             int reg  = (mapChannel(channel) * 3) + 0x36;
             int factoryGain = 0;
             chip = channel / CFG_AD7768_ADC_PER_CHIP;
