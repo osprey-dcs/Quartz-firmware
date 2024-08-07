@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <xparameters.h>
 #include <xiic.h>
+#include "bootFlash.h"
 #include "gpio.h"
 #include "iicFPGA.h"
 #include "util.h"
