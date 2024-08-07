@@ -251,6 +251,9 @@ iicFPGAinit(void)
     }
     else {
         printf("Boot flash write %sed.\n", (cbuf[0]&0x80)?"enabl":"protect");
+        if ((cbuf[0] & 0x80) == 0) {
+            bootFlashProtectGolden();
+        }
     }
 }
 
