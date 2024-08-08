@@ -60,6 +60,8 @@
 #define HW_INTERVAL_IS_EVG              0x08000000
 #define HW_JITTER_R_JITTER_MASK         0x000FFFFF
 
+#define PPS_LATENCY_R_PPS_TOGGLE        0x40000000
+
 void
 clockAdjustInit(void)
 {
@@ -78,7 +80,8 @@ clockAdjustFetchSysmon(int index)
                | (isEVG() ? HW_INTERVAL_IS_EVG : 0)
                | (((fetchRegister(GPIO_IDX_ACQCLK_HW_JITTER) * 5) / 8)
                                                      & HW_JITTER_R_JITTER_MASK);
-    case 2: return fetchRegister(GPIO_IDX_PPS_LATENCY);
+    case 2: return fetchRegister(GPIO_IDX_PPS_LATENCY &
+                                                     ~PPS_LATENCY_R_PPS_TOGGLE);
     }
     return 0;
 }
