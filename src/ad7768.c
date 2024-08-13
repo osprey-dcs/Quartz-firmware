@@ -539,3 +539,23 @@ ad7768GetHeader(int index)
         o = n;
     }
 }
+
+/*
+ * Return a summary of header values for each chip
+ */
+uint32_t
+ad7768GetHeaderSummary(void)
+{
+    int chip, chan;
+    uint32_t value = 0;
+    int index = 0;
+    for (chip = 0 ; chip < CFG_AD7768_CHIP_COUNT ; chip++) {
+        int hbits = 0;
+        for (chan = 0 ; chan < CFG_AD7768_ADC_PER_CHIP; chan++) {
+            hbits |= ad7768GetHeader(index) & 0xF8;
+            index++;
+        }
+        value = (value << 8) | (hbits & 0xFF);
+    }
+    return value;
+}

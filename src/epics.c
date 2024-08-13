@@ -77,6 +77,7 @@ struct LEEPpacket {
 #define REG_FMC1_SERIAL_NUMBER              50
 #define REG_FMC2_SERIAL_NUMBER              51
 #define REG_AD7768_RECORDER                 60
+#define REG_AD7768_HEADER_SUMMARY           65
 #define REG_MPS_CLEAR                       70
 #define REG_MPS_MERGE_TRIPPED               71
 #define REG_MPS_MERGE_REQUIRED              72
@@ -219,6 +220,7 @@ readReg(int address)
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
     case REG_AD7768_RECORDER:     return ad7768recorderIsBusy();
+    case REG_AD7768_HEADER_SUMMARY:   return ad7768GetHeaderSummary();
     case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
     case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
     }

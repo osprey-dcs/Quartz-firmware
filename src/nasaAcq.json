@@ -594,6 +594,13 @@
     "data_width": 8,
     "sign": "unsigned"
   },
+  "ADC:headerSummary": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 65,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "ADC:WFR:start": {
     "access": "w",
     "addr_width": 0,
