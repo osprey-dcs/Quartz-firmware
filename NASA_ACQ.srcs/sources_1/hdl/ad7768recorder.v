@@ -42,6 +42,7 @@ module ad7768recorder #(
     input  wire [ADC_CHIP_COUNT-1:0] adcDCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDRDY_a,
     
+    output wire                      acqDCLKshifted,
     output wire                      acqMisalignedMarker);
 
 localparam DATA_WIDTH         = 1 + (2 * ADC_CHIP_COUNT);
@@ -121,6 +122,9 @@ localparam STRETCH_COUNTER_WIDTH = 8;
 (*MARK_DEBUG=DEBUG*) reg [STRETCH_COUNTER_WIDTH-1:0] stretchCounter = 0;
 assign acqMisalignedMarker = stretchCounter[STRETCH_COUNTER_WIDTH-1];
 
+reg [1:0] dclkShiftCount = 0;
+assign acqDCLKshifted = dclkShiftCount[1];
+
 (*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] acqArmToggle_m = 0;
 (*MARK_DEBUG=DEBUG*) reg acqArmToggle = 0, acqArmToggle_d = 0;
 
@@ -131,6 +135,14 @@ always @(posedge acqClk) begin
     if (acqAcquisitionActive) begin
         dpram[acqWriteAddress] <= {mclk, dclk, drdy};
         acqWriteAddress <= acqWriteAddress + 1;
+    end
+
+    if ((dclk == {ADC_CHIP_COUNT{1'b0}})
+     || (dclk == {ADC_CHIP_COUNT{1'b1}})) begin
+        dclkShiftCount <= 0;
+    end
+    else if (!acqDCLKshifted) begin
+        dclkShiftCount <= dclkShiftCount + 1;
     end
 
     if ((drdy == {ADC_CHIP_COUNT{1'b0}})

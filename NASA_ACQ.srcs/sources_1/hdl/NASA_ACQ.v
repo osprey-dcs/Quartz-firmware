@@ -455,6 +455,7 @@ ad7768recorder #(
     .adcMCLK_a(mclk),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
+    .acqDCLKshifted(PMOD1_7),
     .acqMisalignedMarker(acqMisalignedMarker));
 
 // FIXME: For scope viewing to see where ADC SYNC shifts are arising!
@@ -465,7 +466,6 @@ assign PMOD1_3 = acqMisalignedMarker;
 assign PMOD1_4 = AD7768_DCLK[0];
 assign PMOD1_5 = AD7768_DCLK[1];
 assign PMOD1_6 = AD7768_DCLK[2];
-assign PMOD1_7 = AD7768_DCLK[0] ^ AD7768_DCLK[1];
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
