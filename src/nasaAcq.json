@@ -594,7 +594,7 @@
     "data_width": 8,
     "sign": "unsigned"
   },
-  "ADC:headerSummary": {
+  "ADC:statuses": {
     "access": "r",
     "addr_width": 0,
     "base_addr": 65,
