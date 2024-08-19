@@ -48,29 +48,11 @@ localparam CLOCK_COUNT = 4;
 localparam SLOWEST_CLOCK = 32768000;
 localparam CLOCK_MUXSEL_WIDTH = $clog2(CLOCK_COUNT);
 
-/*
- * Delay for at least 3 cycles of slowest clock.
- * This ensures glitch-freee transitions between clocks.
- */
-localparam DELAY_TICKS = (SYSCLK_RATE+(SLOWEST_CLOCK/3)-1)/(SLOWEST_CLOCK/3);
-localparam DELAY_LOAD = DELAY_TICKS - 2;
-localparam DELAY_COUNTER_WIDTH = $clog2(DELAY_LOAD+1) + 1;
-reg [DELAY_COUNTER_WIDTH-1:0] delayCounter = DELAY_LOAD;
-wire delayCounterDone = delayCounter [DELAY_COUNTER_WIDTH-1];
-
-(*MARK_DEBUG=DEBUG*) reg [CLOCK_COUNT-1:0] activeClock = 1, newClock = 0;
+(*MARK_DEBUG=DEBUG*) reg [CLOCK_COUNT-1:0] activeClock = 0;
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        newClock <= 1 << sysGPIO_OUT[CLOCK_MUXSEL_WIDTH-1:0];
-        activeClock <= 0;
-        delayCounter <= DELAY_LOAD;
-    end
-    else if (!delayCounterDone) begin
-        delayCounter <= delayCounter - 1;
-    end
-    else begin
-        activeClock <= newClock;
+        activeClock <= sysGPIO_OUT[CLOCK_COUNT-1:0];
     end
 end
 
