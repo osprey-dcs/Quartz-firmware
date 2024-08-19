@@ -1,4 +1,5 @@
 set style data lines
+set title filename
 set xlabel "Time (ns)"
 set yrange [0:2]
 set xrange[900000:950000]

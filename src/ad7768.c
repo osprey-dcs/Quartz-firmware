@@ -65,10 +65,11 @@
 
 #define CHANNEL_RESTORE -1000
 
-#define MCLK_CSR_W_32p000   0x0
-#define MCLK_CSR_W_25p600   0x1
-#define MCLK_CSR_W_20p480   0x2
-#define MCLK_CSR_W_16p384   0x3
+#define MCLK_CSR_W_DISABLE  0x00
+#define MCLK_CSR_W_32p000   0x01
+#define MCLK_CSR_W_25p600   0x02
+#define MCLK_CSR_W_20p480   0x04
+#define MCLK_CSR_W_16p384   0x08
 
 #define CHAN_MODE_DEC_32    0x00
 #define CHAN_MODE_DEC_64    0x01
@@ -273,6 +274,7 @@ ad7768Reset(void)
     static int firstTime = 1;
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
     microsecondSpin(10);
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
     microsecondSpin(10000);
@@ -427,7 +429,19 @@ ad7768SetSamplingRate(int rate)
     struct downSampleInfo const *dp = downsampleInfo(rate);
     if (dp == NULL) return;
 
-    // Select hardware clock
+    /*
+     * Fast mode, LVDS, MCLK divide by N
+     * Do this first so that on startup, or after an AD7768 reset, the
+     * LVDS_ENABLE bit has been set before any clock is applied.
+     */
+    broadcastReg(0x04, POWER_MODE_LVDS | dp->powerMode);
+
+    /*
+     * Select hardware clock
+     * Ensure glitch-free change by disabling before changing.
+     */
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
+    microsecondSpin(1);
     GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
 
     // Mode A: Wideband, Decimate by N
@@ -446,9 +460,6 @@ ad7768SetSamplingRate(int rate)
 
     // Mode B: Sinc5, Decimate by 32
     broadcastReg(0x02, 0x08);
-
-    // Fast mode, LVDS, MCLK divide by N
-    broadcastReg(0x04, POWER_MODE_LVDS | dp->powerMode);
 
     // No CRC, DCLK_DIV=4
     broadcastReg(0x07, 0x01);
