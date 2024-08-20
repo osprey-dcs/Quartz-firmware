@@ -123,7 +123,9 @@ localparam STRETCH_COUNTER_WIDTH = 8;
 assign acqMisalignedMarker = stretchCounter[STRETCH_COUNTER_WIDTH-1];
 
 reg [1:0] dclkShiftCount = 0;
-assign acqDCLKshifted = dclkShiftCount[1];
+wire dlkcShiftCountOverflow = dclkShiftCount[1];
+reg [3:0] dclkShiftStretchCount = 0;
+assign acqDCLKshifted = dclkShiftStretchCount[3];
 
 (*ASYNC_REG="true"*) reg [ADC_CHIP_COUNT-1:0] acqArmToggle_m = 0;
 (*MARK_DEBUG=DEBUG*) reg acqArmToggle = 0, acqArmToggle_d = 0;
@@ -141,8 +143,14 @@ always @(posedge acqClk) begin
      || (dclk == {ADC_CHIP_COUNT{1'b1}})) begin
         dclkShiftCount <= 0;
     end
-    else if (!acqDCLKshifted) begin
+    else if (!dlkcShiftCountOverflow) begin
         dclkShiftCount <= dclkShiftCount + 1;
+    end
+    if (dlkcShiftCountOverflow) begin
+        dclkShiftStretchCount <= ~0;
+    end
+    else if (acqDCLKshifted) begin
+        dclkShiftStretchCount <= dclkShiftStretchCount - 1;
     end
 
     if ((drdy == {ADC_CHIP_COUNT{1'b0}})
