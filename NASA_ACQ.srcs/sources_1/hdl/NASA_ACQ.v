@@ -80,14 +80,14 @@ module NASA_ACQ #(
     output wire PMOD1_6,
     output wire PMOD1_7,
 
-    input  wire PMOD2_0,
-    input  wire PMOD2_1,
-    input  wire PMOD2_2,
-    input  wire PMOD2_3,  // PMOD-GPS PPS
+    output wire PMOD2_0,
+    output wire PMOD2_1,
+    output wire PMOD2_2,
+    output wire PMOD2_3,
     input  wire PMOD2_4,
     input  wire PMOD2_5,
     input  wire PMOD2_6,
-    input  wire PMOD2_7,
+    input  wire PMOD2_7,  // PMOD-GPS PPS
 
     // Osprey Quad AD7768 FMC Digitizer
     output wire                                 AD7768_MCLK_P,
@@ -180,7 +180,7 @@ marbleClockSync #(
     .stableClk200(fixedClk200),
     .clk(acqClk),
     .ppsPrimary_a(isEVG ? HARDWARE_PPS : evrPPSmarker),
-    .ppsSecondary_a(isEVG ? PMOD2_3 : 1'b0),
+    .ppsSecondary_a(isEVG ? PMOD2_7 : 1'b0),
     .isOffsetBinary(1'b0),
     .hwPPSvalid(ppsValid),
     .ppsStrobe(),
@@ -455,17 +455,19 @@ ad7768recorder #(
     .adcMCLK_a(mclk),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
-    .acqDCLKshifted(PMOD1_7),
+    .acqDCLKshifted(PMOD2_0),
     .acqMisalignedMarker(acqMisalignedMarker));
 
 // FIXME: For scope viewing to see where ADC SYNC shifts are arising!
 assign PMOD1_0 = AD7768_DRDY[0];
 assign PMOD1_1 = AD7768_DRDY[1];
 assign PMOD1_2 = AD7768_DRDY[2];
-assign PMOD1_3 = acqMisalignedMarker;
+assign PMOD1_3 = AD7768_DRDY[3];
 assign PMOD1_4 = AD7768_DCLK[0];
 assign PMOD1_5 = AD7768_DCLK[1];
 assign PMOD1_6 = AD7768_DCLK[2];
+assign PMOD1_7 = AD7768_DCLK[3];
+assign PMOD2_1 = acqMisalignedMarker;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
