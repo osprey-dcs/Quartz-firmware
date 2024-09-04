@@ -85,6 +85,7 @@ struct LEEPpacket {
 #define REG_SAMPLING_RATE                   81
 #define REG_RESET_ADCS                      82
 #define REG_SET_VCXO_DAC                    83
+#define REG_GET_PACKET_SEQNO                85
 #define REG_GET_LOLO                        90
 #define REG_GET_LO                          91
 #define REG_GET_HI                          92
@@ -223,6 +224,7 @@ readReg(int address)
     case REG_AD7768_STATUSES:    return ad7768GetStatuses();
     case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
     case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
+    case REG_GET_PACKET_SEQNO:    return fetchRegister(GPIO_IDX_ADC_SEQNO);
     }
     if (MATCH(address, REG_SYSMON_BASE, SYSMON_SIZE)) {
         int offset = address - REG_SYSMON_BASE;

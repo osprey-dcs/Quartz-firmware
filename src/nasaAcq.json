@@ -76,6 +76,13 @@
     "data_width": 16,
     "sign": "unsigned"
   },
+  "ACQ:seqno": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 85,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "ACQ:LOLOlimXX": {
     "access": "rw",
     "addr_width": 5,
