@@ -557,6 +557,7 @@ buildPacket #(
     .sysByteCountRbk(GPIO_IN[GPIO_IDX_BUILD_PACKET_BYTECOUNT]),
     .sysThresholdRbk(GPIO_IN[GPIO_IDX_ADC_THRESHOLDS]),
     .sysLimitExcursions(GPIO_IN[GPIO_IDX_ADC_EXCURSIONS]),
+    .sysSequenceNumber(GPIO_IN[GPIO_IDX_ADC_SEQNO]),
     .sysTimeValid(GPIO_IN[GPIO_IDX_LINK_STATUS][31]),
     .acqClk(acqClk),
     .acqStrobe(acqStrobe),

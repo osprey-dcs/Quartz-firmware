@@ -47,6 +47,7 @@ module buildPacket #(
     output wire [31:0] sysByteCountRbk,
     output wire [31:0] sysThresholdRbk,
     output wire [31:0] sysLimitExcursions,
+    output wire [31:0] sysSequenceNumber,
     input  wire        sysTimeValid,
 
     input  wire                                               acqClk,
@@ -88,6 +89,7 @@ buildPacketCore #(
     .sysActiveRbk(sysActiveRbk),
     .sysByteCountRbk(sysByteCountRbk),
     .sysThresholdRbk(sysThresholdRbk),
+    .sysSequenceNumber(sysSequenceNumber),
     .sysTimeValid(sysTimeValid),
     .acqClk(acqClk),
     .acqStrobe(acqStrobe),
@@ -159,6 +161,7 @@ module buildPacketCore #(
     output wire [31:0] sysActiveRbk,
     output wire [31:0] sysByteCountRbk,
     output reg  [31:0] sysThresholdRbk,
+    output wire [31:0] sysSequenceNumber,
     input  wire        sysTimeValid,
 
                          input  wire                          acqClk,
@@ -334,6 +337,8 @@ reg sendChecksumLo = 0;
 localparam HEADER_SHIFT_REG_WIDTH = HEADER_BYTE_COUNT * 8;
 reg [HEADER_SHIFT_REG_WIDTH-1:0] headerShiftReg;
 reg [63:0] sequenceNumber = 1;
+// C code knows that there are clock-domain race conditions:
+assign sysSequenceNumber = sequenceNumber[31:0];
 
 // Threshold detection
 (*MARK_DEBUG=DEBUG*)wire [ADC_COUNT-1:0] belowLOLO, belowLO, aboveHI, aboveHIHI;
