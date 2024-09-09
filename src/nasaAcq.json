@@ -62,8 +62,8 @@
     "data_width": 32,
     "sign": "unsigned"
   },
-  "ADC:reset": {
-    "access": "w",
+  "AD7768:reset": {
+    "access": "rw",
     "addr_width": 0,
     "base_addr": 82,
     "data_width": 1,

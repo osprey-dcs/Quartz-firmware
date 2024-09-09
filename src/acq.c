@@ -84,7 +84,7 @@ acqSetActiveChannels(void)
     uint32_t active = activeChannels, countActive;
     int adcsPerSample = 0;
     /*
-     * Always provide at least *some* data in the fast stream.
+     * Always provide at least *some* data to the packet builder.
      */
     if (active == 0) active = 1;
 
@@ -182,7 +182,8 @@ acqGetCoupling(int channel)
 void
 acqSubscriptionChange(int subscriberPresent)
 {
-    GPIO_WRITE(GPIO_IDX_BUILD_PACKET_BYTECOUNT, subscriberPresent ?
+    GPIO_WRITE(GPIO_IDX_BUILD_PACKET_BYTECOUNT,
+                                  (subscriberPresent && (activeChannels != 0)) ?
                                                 BYTECOUNT_W_SUBSCRIBER_PRESENT :
                                                 BYTECOUNT_W_SUBSCRIBER_ABSENT);
 }

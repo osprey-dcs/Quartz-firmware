@@ -47,6 +47,7 @@ callback(ospreyUDPendpoint endpoint,
     whenSubscribed = GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     static int oldFarAddress;
     static int oldFarPort;
+/* FIXME -- should we look at the buffer contents and see if this is a subscribe or unsubscrivbe request? */
     if ((farAddress != oldFarAddress)
      || (farPort != oldFarPort)) {
         printf("Fast data subscriber %d.%d.%d.%d:%d at %d.\n",

@@ -266,16 +266,27 @@ mapChannel(int inputChannel)
     return chipChannel[inputChannel % CFG_AD7768_ADC_PER_CHIP];
 }
 
+int
+ad7768IsReset(void)
+{
+    return ((CSR_READ() & CSR_R_RESET_ACTIVE) != 0);
+}
+
 static int factoryGainAdjust[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 void
-ad7768Reset(void)
+ad7768Reset(int reset)
 {
     int chip;
     static int firstTime = 1;
-    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
+    if (reset) {
+        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
-    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
-    microsecondSpin(10);
+        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
+        return;
+    }
+    if (!ad7768IsReset()) {
+        return;
+    }
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET);
     microsecondSpin(10000);
 
@@ -342,7 +353,7 @@ ad7768Init(void)
                                     ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
                                                  OP_CHIP_PINS_ASSERT_FAKE_ADC :
                                                  0));
-    ad7768Reset();
+    ad7768Reset(0);
 }
 
 static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
@@ -427,7 +438,10 @@ void
 ad7768SetSamplingRate(int rate)
 {
     struct downSampleInfo const *dp = downsampleInfo(rate);
-    if (dp == NULL) return;
+    if ((dp == NULL)
+     || (CSR_READ() & CSR_R_RESET_ACTIVE)) {
+        return;
+    }
 
     /*
      * Fast mode, LVDS, MCLK divide by N

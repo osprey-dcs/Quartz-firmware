@@ -83,7 +83,7 @@ struct LEEPpacket {
 #define REG_MPS_MERGE_REQUIRED              72
 #define REG_ACQ_ENABLE                      80
 #define REG_SAMPLING_RATE                   81
-#define REG_RESET_ADCS                      82
+#define REG_AD7768_RESET                    82
 #define REG_SET_VCXO_DAC                    83
 #define REG_GET_PACKET_SEQNO                85
 #define REG_GET_LOLO                        90
@@ -129,7 +129,7 @@ writeReg(int address, uint32_t value)
     case REG_FPGA_REBOOT:       if (value == 100) resetFPGA(0);          return;
     case REG_ACQ_ENABLE:        if (isEVG())      evgAcqControl(value);  return;
     case REG_SAMPLING_RATE:     ad7768SetSamplingRate(value);            return;
-    case REG_RESET_ADCS:        if (value == 40)  ad7768Reset();         return;
+    case REG_AD7768_RESET:      ad7768Reset(value);                      return;
     case REG_SET_VCXO_DAC:      clockAdjustSet(value);                   return;
     case REG_AD7768_RECORDER:   ad7768recorderStart();                   return;
     case REG_MPS_CLEAR: if(isEVG()) evgSendEvent(CFG_EVR_MPS_CLEAR_CODE);return;
@@ -220,8 +220,9 @@ readReg(int address)
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
+    case REG_AD7768_RESET:        return ad7768IsReset();
     case REG_AD7768_RECORDER:     return ad7768recorderIsBusy();
-    case REG_AD7768_STATUSES:    return ad7768GetStatuses();
+    case REG_AD7768_STATUSES:     return ad7768GetStatuses();
     case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
     case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
     case REG_GET_PACKET_SEQNO:    return fetchRegister(GPIO_IDX_ADC_SEQNO);
