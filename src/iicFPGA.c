@@ -110,7 +110,6 @@ showIPMI(int device)
     uint8_t cbuf[128];
     int i, field;
     int offset, length;
-    uint32_t number;
     int index = device - IIC_FPGA_IDX_FMC1_EEPROM;
     uint8_t sum;
     if (iicFPGAeepromRead(device, 0, sizeof cbuf, cbuf) != sizeof cbuf) {
@@ -140,6 +139,7 @@ showIPMI(int device)
         uint8_t type_length = cbuf[offset];
         int fieldLength;
         const char *cp;
+        uint32_t number = 0;
         if (((type_length & 0xC0) != 0xC0)
          || (((fieldLength = (type_length & 0x3F)) + offset) > length)) {
             printf("WARNING -- FMC EEPROM has bad board information.\n");
@@ -151,7 +151,6 @@ showIPMI(int device)
         case 2: cp = "Serial Number";       break;
         }
         printf("%15s: ", cp);
-        number = 0;
         offset++;
         while (fieldLength--) {
             char c = cbuf[offset++];
@@ -159,9 +158,9 @@ showIPMI(int device)
             number = (number * 10) + (c - '0');
         }
         printf("\n");
-    }
-    if ((index >= 0) && (index < FMC_COUNT)) {
-        serialNumber[index] = number;
+        if ((index >= 0) && (index < FMC_COUNT)) {
+            if (field == 2) serialNumber[index] = number;
+        }
     }
 }
 
