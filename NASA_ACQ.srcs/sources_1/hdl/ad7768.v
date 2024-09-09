@@ -85,7 +85,7 @@ reg doneAlignmentToggle = 0; /* acqClk domain, but needed here */
 (*ASYNC_REG="true"*) reg sysDoneAlignmentToggle_m = 0;
 reg sysDoneAlignmentToggle = 0;
 
-reg sysResetADC = 0;
+reg sysResetADC = 1;
 reg sysUseFakeAD7768 = 0;
 assign adcRESETn = !sysResetADC;
 
