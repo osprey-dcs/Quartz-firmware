@@ -1,0 +1,709 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Osprey UDP</title>
+  </head>
+  <body>
+    <span style="font-weight: bold;"><span style="font-family: Times New
+        Roman, Times, serif;"></span></span>
+    <h1><span style="font-family: Times New Roman, Times, serif;">Osprey
+        UDP</span></h1>
+    <span style="font-family: Times New Roman, Times, serif;">Vivado
+      block design component and driver providing very light-weight UDP
+      I/O. </span><span style="font-family: Times New Roman, Times,
+      serif;"><br>
+    </span>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Firmware</span><span
+        style="font-family: Times New Roman, Times, serif;"><br>
+      </span></h2>
+    <div style="margin-left: 40px;"><span style="font-family: Times New
+        Roman, Times, serif;"><a name="BlockDesignFigure"></a></span><span
+        style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Times New Roman, Times, serif;"><img
+          moz-do-not-send="true" src="BlockDesign.svg" alt="" style="
+          width: 370px; height: 230px;"><br>
+      </span></div>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-weight: bold;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br>
+    </span><span style="font-family: Times New Roman, Times, serif;"><br>
+    </span>
+    <table style=" text-align: left; width: 60%;" cellspacing="2"
+      cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;"><span style="font-weight:
+                bold;">Name</span></span><span style="font-family: Times
+              New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="vertical-align: middle; text-align: center;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-weight: bold;">Description</span></span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">S_AXI_LITE</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">AXI4-Lite port.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: middle; text-align: center;"><span
+              style="font-family: Times New Roman, Times, serif;"></span><span
+              style="font-family: Times New Roman, Times, serif;"><a
+                name="fastTx"></a>fastTx<br>
+            </span></td>
+          <td style="vertical-align: middle; text-align: left;"><span
+              style="font-family: Times New Roman, Times, serif;">Optional
+
+
+
+              AXI4-Stream receiver.&nbsp; Faster transfer to subscriber.</span><span
+              style="font-family: Times New Roman, Times, serif;">&nbsp;
+              Data should be sent to this receiver only after the
+              publisher has been <a moz-do-not-send="true"
+                href="#Fast_data_stream_configuration">configured</a>.<br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_lite_aclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Clock for AXI4-lite port.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_lite_aresetn</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Active-low reset input.&nbsp;
+              Resets all firmware and asserts phy_reset_n.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="vertical-align: middle; text-align: center;"><span
+              style="font-family: Times New Roman, Times, serif;">rxIRQ</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="vertical-align: middle; text-align: left;"><span
+              style="font-family: Times New Roman, Times, serif;">Active-high
+
+
+
+
+
+              'received packet ready' interrupt request output.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">clk125</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">125 MHz clock input.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span><span style="font-family: Times New Roman, Times,
+              serif;">Drives UDP firmware, including the fastTx AXI4-Stream receiver and provides PHY transmitter
+              clock.</span><span style="font-family: Times New Roman,
+              Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">RGMII</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Connection to PHY.&nbsp; Must
+              connect directly to FPGA pins.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span><span style="font-family: Times New Roman, Times,
+              serif;">PHY must accept in-phase transmitter clock.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">phy_reset_n</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Active-low reset output to PHY.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+      </tbody>
+    </table>
+    <span style="font-family: Times New Roman, Times, serif;"><br>
+    </span><span style="font-family: Times New Roman, Times, serif;">To
+      add support for ICMP ECHO (ping) packets check the
+      ENABLE_ICMP_ECHO box in the 'Configure IP' window.<br>
+      The size of the receiver FIFO is configurable to 4k, 8k or 16k
+      bytes.<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"><br>
+    </span>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Software</span></h2>
+    <h3><span style="font-family: Times New Roman, Times, serif;"> Data
+        Types</span></h3>
+    <p>
+      <meta charset="UTF-8">
+    </p>
+    <ul style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;">
+      <li><span style="font-family: Times New Roman, Times, serif;"><span
+            style="font-weight: bold;">ospreyUDPendpoint</span></span><span
+          style="font-family: Times New Roman, Times, serif;"><br>
+        </span><span style="font-family: Times New Roman, Times, serif;">An
+
+
+
+
+
+
+
+          ospreyUDPendpoint is an opaque value that should be used only
+          as an initial argument to ospreyUDPsendto().&nbsp; An endpoint
+          is returned by ospreyUDPregisterEndpoint() and is provided as
+          the first argument to the callback functions.</span></li>
+      <li><span style="font-family: Times New Roman, Times, serif;">IPv4
+          addreses are handled as </span><span style="font-family:
+          Times New Roman, Times, serif;"><span style="font-weight:
+            bold;">uint32_t</span></span><span style="font-family: Times
+          New Roman, Times, serif;"> values in host (not network) byte
+          order.</span><span style="font-family: Times New Roman, Times,
+          serif;"><br>
+        </span></li>
+      <li><span style="font-family: Times New Roman, Times, serif;">Ethernet
+
+
+
+
+
+
+
+          MAC addresses are handled as 6-element arrays of </span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-weight: bold;">uint8_t</span></span><span
+          style="font-family: Times New Roman, Times, serif;">
+          values.&nbsp; The least significant bit of the first element
+          is the Ethernet broadcast/multicast indicator and the
+          next-to-least significant bit of the first element is the
+          'locally administered address' indicator.</span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            class="Apple-converted-space"></span></span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-weight: bold;"></span></span><span
+          style="font-family: Times New Roman, Times, serif;"><br>
+        </span></li>
+    </ul>
+    <meta charset="UTF-8">
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;"><a
+          name="Callback_functions"></a></span><span style="font-family:
+        Times New Roman, Times, serif;">Callback functions</span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">An application provides one callback function per
+        endpoint (server or client instance).&nbsp; The function is
+        invoked when data arrive from that server or client.&nbsp;
+        Callback functions have the prototype</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">void </span><span style="font-weight: bold;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-style: italic;">callback</span></span></span><span
+        style="font-family: Times New Roman, Times, serif;">(ospreyUDPendpoint
+
+
+
+
+
+
+
+        endpoint, uint32_t farAddress, int farPort, const char *buf, int
+        length);</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The buffer contains only the UDP payload of the
+        incoming packet so the length can vary from 1 to 1472,
+        inclusive.&nbsp; The firmware does not support 0-length UDP
+        payloads.&nbsp; The buffer contents are valid only until return
+        from the callback so applications must not retain pointers to
+        buffer contents after that time.</span><span style="font-family:
+        Times New Roman, Times, serif;"></span><span style="font-family:
+        Times New Roman, Times, serif;"><br>
+      </span><span style="font-family: Times New Roman, Times, serif;">It
+
+
+
+
+
+
+
+        is safe, and in fact very common, for a callback function to
+        call </span><span style="font-family: Times New Roman, Times,
+        serif;"><a moz-do-not-send="true" href="#Sending_data">ospreyUDPsendto</a></span><span
+        style="font-family: Times New Roman, Times, serif;">() to reply
+        to an incoming packet.</span><span style="font-family: Times New
+        Roman, Times, serif;"><br>
+      </span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Registering
+        an interface</span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">An application must register
+        each hardware interface before endpoints can be created on
+        it.&nbsp; Interface registration is performed by invoking</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">int <span style="font-weight:
+          bold;">ospreyUDPregisterInterface</span>(uint32_t baseAddress,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+
+
+
+
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp;&nbsp; uint32_t
+        address, uint32_t gateway, uint32_t netmask,<br>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;
+        &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+        &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+
+
+
+
+
+
+        uint8_t macAddress[6]);</span></span><span style="font-family:
+      Times New Roman, Times, serif;"><span style="caret-color: rgb(0,
+        0, 0); color: rgb(0, 0, 0); font-size: medium; font-style:
+        normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none; display: inline !important; float: none;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">The return value is the
+        interface index if the registration succeeded and -1 otherwise.</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;">&nbsp; If the
+      block design component name is ospreyUDP</span><span
+      style="font-family: Times New Roman, Times, serif;"></span><span
+      style="font-family: Times New Roman, Times, serif;"> the
+      memory-mapped I/O base address to pass as the first argument will
+      be defined in the board support xparameters.h file as
+      XPAR_OSPREYUDP_S_AXI_LITE_BASEADDR.</span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Registering
+        an endpoint</span><span style="font-family: Times New Roman,
+        Times, serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">Endpoints (UDP server or client) are created and
+        registered by invoking</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">ospreyUDPendpoint </span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;">ospreyUDPregisterEndpoint</span></span><span
+        style="font-family: Times New Roman, Times, serif;">(int port,
+        ospreyUDPcallback callback);</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The port argument specifies the UDP port (in host
+        byte order) </span><span style="font-family: Times New Roman,
+        Times, serif;"><span class="Apple-converted-space"></span></span><span
+        style="font-family: Times New Roman, Times, serif;">of the
+        endpoint local UDP port.&nbsp; The return value is the endpoint
+        if the registration succeeded and NULL otherwise.&nbsp; If the
+        application is configured with</span><span style="font-family:
+        Times New Roman, Times, serif;"><span
+          class="Apple-converted-space">&nbsp;</span></span><span
+        style="font-family: Times New Roman, Times, serif;"><a
+          moz-do-not-send="true" href="#OSPREY_UDP_INTERFACE_CAPACITY">more
+
+
+
+
+
+
+
+          than one interface</a></span><span style="font-family: Times
+        New Roman, Times, serif;"><span class="Apple-converted-space">&nbsp;</span></span><span
+        style="font-family: Times New Roman, Times, serif;">this
+        function takes an additional initial 'int' argument whose value
+        is the index (0 to N-1) of the interface with which the endpoint
+        will be associated.&nbsp; The specified </span><span
+        style="font-family: Times New Roman, Times, serif;"><a
+          moz-do-not-send="true" href="#Callback_functions">callback</a></span><span
+        style="font-family: Times New Roman, Times, serif;"> function
+        will be invoked when a UDP packet with the corresponding
+        destination port arrives.</span><span style="font-family: Times
+        New Roman, Times, serif;"><br>
+      </span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Polling for
+        incoming packets</span><span style="font-family: Times New
+        Roman, Times, serif;"><br>
+      </span> </h3>
+    <span style="font-family: Times New Roman, Times, serif;"> </span>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;">
+      <meta charset="UTF-8">
+      <span style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;"><span
+            class="Apple-converted-space">An </span>application must
+          invoke</span></span><span style="font-family: Times New Roman,
+        Times, serif;"><span style="caret-color: rgb(0, 0, 0); color:
+          rgb(0, 0, 0); font-style: normal; font-variant-caps: normal;
+          font-weight: 400; letter-spacing: normal; text-align: start;
+          text-indent: 0px; text-transform: none; white-space: normal;
+          word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+            class="Apple-converted-space"> </span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;"><span
+            style="font-weight: bold;">ospreyUDPcrank</span>() regularly
+          to check for and handle incoming packets.&nbsp; Callback
+          functions are invoked from within this function.</span></span><br>
+      <span style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;">
+          <meta charset="UTF-8">
+        </span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;"><a
+          name="Sending_data"></a></span><span style="font-family: Times
+        New Roman, Times, serif;">Sending data</span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">To send data invoke</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">void </span><span style="font-family: Times New
+        Roman, Times, serif;"><span style="font-weight: bold;">ospreyUDPsendto</span></span><span
+        style="font-family: Times New Roman, Times, serif;">(ospreyUDPendpoint
+
+
+
+
+
+
+
+        endpoint, uint32_t farAddress, int farPort, const char *buf, int
+        length);</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The buffer contains only the UDP payload so the
+        length can vary from 1 to 1472, inclusive.</span><span
+        style="font-family: Times New Roman, Times, serif;">&nbsp; The
+        firmware does not support 0-length UDP payloads.&nbsp; The
+        buffer contents can be modified as soon as this routine
+        returns.&nbsp; The buffer is assumed to begin on a four-byte
+        boundary.</span><span style="font-family: Times New Roman,
+        Times, serif;"></span><br>
+    </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><a
+        name="Fast_data_stream_configuration"></a><span
+        style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Times New Roman, Times, serif;">Fast data
+        stream configuration<br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">To configure the fast data stream publisher
+        invoke<br>
+      </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">int </span><span style="font-family: Times New
+        Roman, Times, serif;"><span style="font-weight: bold;">ospreyUDPregisterFastSubscriber</span></span><span
+        style="font-family: Times New Roman, Times, serif;">(uint32_t
+        subscriberAddress, int publisherPort, int subscriberPort);</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">This function is typically invoked from a <a
+          moz-do-not-send="true" href="#Callback_functions">callback</a>
+        invoked on receipt of a packet from a client requesting a
+        subscription to the fast data stream.&nbsp; It should be invoked
+        only when the <a moz-do-not-send="true" href="#fastTx">fastTx</a>
+        AXI stream is idle.&nbsp; </span><span style="font-family:
+        Times New Roman, Times, serif;"><span style="font-family: Times
+          New Roman, Times, serif;">If the application is configured
+          with</span><span style="font-family: Times New Roman, Times,
+          serif;"><span class="Apple-converted-space">&nbsp;</span></span><span
+          style="font-family: Times New Roman, Times, serif;"><a
+            moz-do-not-send="true"
+href="file:///Users/eric/src/Osprey/src/ip_repo/ospreyUDP/ospreyUDP_1.0/documentation/OspreyUDP.html#OSPREY_UDP_INTERFACE_CAPACITY">more
+
+
+
+
+
+
+
+            than one interface</a></span><span style="font-family: Times
+          New Roman, Times, serif;"><span class="Apple-converted-space">&nbsp;</span></span><span
+          style="font-family: Times New Roman, Times, serif;">this
+          function takes an additional initial 'int' argument whose
+          value is the index (0 to N-1) of the interface whose fast data
+          stream publisher is to be configured.&nbsp; </span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;">The
+            return value is 0 on success and -1 on failure.&nbsp;
+            Failure results if the optional interface argument is
+            invalid or if the interface has not yet been registered.</span><span
+            style="font-family: Times New Roman, Times, serif;"> <br>
+          </span></span></span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"> </span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Configuration</span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"> </span>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The default configuration (one interface, five
+        endpoints) can be overridden by providing command line arguments
+        when compiling the driver:</span><span style="font-family: Times
+        New Roman, Times, serif;"><br>
+      </span></p>
+    <ul>
+      <li><span style="font-family: Times New Roman, Times, serif;"><a
+            name="OSPREY_UDP_INTERFACE_CAPACITY"></a></span><span
+          style="font-family: Times New Roman, Times, serif;">-DOSPREY_UDP_INTERFACE_CAPACITY=</span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-style: italic;">N</span></span></li>
+      <li><span style="font-family: Times New Roman, Times, serif;">-DOSPREY_UDP_ENDPOINT_CAPACITY=</span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-style: italic;">N</span></span><span
+          style="font-family: Times New Roman, Times, serif;"><br>
+        </span><span style="font-family: Times New Roman, Times, serif;"><span
+            style=" font-style: italic;"></span></span></li>
+    </ul>
+    <span style="font-family: Times New Roman, Times, serif;"> </span>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Resources</span></h2>
+    <p><span style="font-family: Times New Roman, Times, serif;">On an
+        Artix7 the firmware consumes about 3586 slice flip-flops, 2240
+        slice LUTs, and 6 BRAM blocks.&nbsp; The driver memory footprint
+        is about 1 kilobyte of code and 1.5 kilobytes of data (bss).</span><span
+        style="font-family: Times New Roman, Times, serif;">&nbsp;
+        Enabling ICMP ECHO support consumes a additional 149 flip-flops
+        and 127 LUTs plus 8 LUTRAMs.<br>
+      </span></p>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Caveats</span></h2>
+    <ul>
+      <li><span style="font-family: Times New Roman, Times, serif;">The
+        </span><span style="font-family: Times New Roman, Times, serif;">UDP-in-fabric
+
+
+
+
+
+
+
+          firmware does not handle UDP packets with zero-length
+          payloads.</span></li>
+      <li><span style="font-family: Times New Roman, Times, serif;">Operation
+
+
+
+
+          with jumbo packets has not been tested.</span></li>
+    </ul>
+  </body>
+</html>

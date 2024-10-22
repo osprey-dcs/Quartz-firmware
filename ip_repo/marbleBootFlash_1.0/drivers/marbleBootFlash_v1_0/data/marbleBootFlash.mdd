@@ -1,0 +1,10 @@
+
+
+OPTION psf_version = 2.1;
+
+BEGIN DRIVER marbleBootFlash
+	OPTION supported_peripherals = (marbleBootFlash);
+	OPTION copyfiles = all;
+	OPTION VERSION = 1.0;
+	OPTION NAME = marbleBootFlash;
+END DRIVER

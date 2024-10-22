@@ -1,0 +1,362 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>MarbleBootFlash</title>
+  </head>
+  <body>
+    <h1><span style="font-family: Times New Roman, Times, serif;">Marble
+        Boot Flash</span></h1>
+    <p><span style="font-family: Times New Roman, Times, serif;">Vivado
+        block design component and driver providing bit-bashing I/O to
+        on-board bootstrap flash memory.</span><span style="font-family:
+        Times New Roman, Times, serif;"></span><span style="font-family:
+        Times New Roman, Times, serif;"></span><span style="font-family:
+        Times New Roman, Times, serif;">&nbsp; Marble and Marble Mini
+        boards are both supported.<br>
+      </span></p>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Firmware</span><span
+        style="font-family: Times New Roman, Times, serif;"><br>
+      </span> </h2>
+    <div style="margin-left: 40px;"><span style="font-family: Times New
+        Roman, Times, serif;"><a name="bdImage"></a><img
+          moz-do-not-send="true" src="marbleBootFlash.svg" alt=""
+          style=" width: 438px; height: 258px;"></span><span
+        style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Times New Roman, Times, serif;"></span><br>
+      <span style="font-family: Times New Roman, Times, serif;"></span></div>
+    <span style="font-family: Times New Roman, Times, serif;"> </span><span
+      style="font-family: Times New Roman, Times, serif;"><br>
+    </span><span style="font-family: Times New Roman, Times, serif;"> </span>
+    <table style=" text-align: left; width: 60%;" cellspacing="2"
+      cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <th style=" text-align: center;" rowspan="1" colspan="1"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-weight: bold;">Name</span></span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </th>
+          <th style=" vertical-align: middle; text-align: center;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-weight: bold;">Description</span></span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </th>
+        </tr>
+        <tr>
+          <td style="text-align: center;" rowspan="1" colspan="1"><span
+              style="font-family: Times New Roman, Times, serif;">S_AXI_LITE</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">AXI4-Lite port.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;" rowspan="1" colspan="1"><span
+              style="font-family: Times New Roman, Times, serif;">s_axi_aclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Clock for AXI4-Lite port and
+              associated firmware.</span><span style="font-family: Times
+              New Roman, Times, serif;"><br>
+            </span> </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;" rowspan="1" colspan="1"><span
+              style="font-family: Times New Roman, Times, serif;">s_axi_aresetn</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Active-low reset signal.&nbsp;
+              Resets all firmware.</span><span style="font-family: Times
+              New Roman, Times, serif;"><br>
+            </span> </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">FLASH_SPI</span><span
+              style="font-family: Times New Roman, Times, serif;">_sclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span> </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">SPI clock from FPGA to flash
+              memory.</span><span style="font-family: Times New Roman,
+              Times, serif;"><br>
+            </span> </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">FLASH_SPI</span><span
+              style="font-family: Times New Roman, Times, serif;">_csb</span>
+          </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Active-low chip select signal
+              from FPGA to flash memory.</span><span style="font-family:
+              Times New Roman, Times, serif;"><br>
+            </span> </td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">FLASH_SPI</span><span
+              style="font-family: Times New Roman, Times, serif;">_so</span></td>
+          <td style="vertical-align: top;"><span style="font-family:
+              Times New Roman, Times, serif;">Serial data from FPGA to
+              flash memory.</span><span style="font-family: Times New
+              Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">FLASH_SPI</span><span
+              style="font-family: Times New Roman, Times, serif;">_si</span></td>
+          <td style="vertical-align: top;"><span style="font-family:
+              Times New Roman, Times, serif;">Serial data from flash
+              memory to FPGA.</span><span style="font-family: Times New
+              Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+      </tbody>
+    </table>
+    <span style="font-family: Times New Roman, Times, serif;"> </span><span
+      style="font-family: Times New Roman, Times, serif;"><br>
+    </span><span style="font-family: Times New Roman, Times, serif;">
+      The only configuration parameter is the Boolean DEBUG which
+      enables the MARK_DEBUG attribute on selected nets.<br>
+      <br>
+      Note that it is not acceptable to connect the component
+      FLASH_SPI_sclk port directly to a top-level pin.&nbsp; Instead you
+      must instantiate a STARTUPE2 block and drive its </span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"> USRCCLKO
+        port with an net from the </span>FLASH_SPI_sclk port as
+      follows:<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"></span>
+    <pre>//////////////////////////////////////////////////////////////////////////////<br>// Drive boot flash SCLK from block design FLASH_SPI_sclk after initialization.<br>wire BOOT_SCLK;<br>STARTUPE2 aspiClkPin<br>     (.CLK(1'b0),<br>      .GSR(1'b0),<br>      .GTS(1'b0),<br>      .KEYCLEARB(1'b1),<br>      .PACK(1'b0),<br>      .PREQ(),<br>      .USRCCLKO(BOOT_SCLK),<br>      .USRCCLKTS(1'b0),<br>      .USRDONEO(1'b0),<br>      .USRDONETS(1'b1),<br>      .CFGCLK(),<br>      .CFGMCLK(),<br>      .EOS());<br></pre>
+    <span style="font-family: monospace;"></span><span
+      style="font-family: Times New Roman, Times, serif;">Thus only the
+    </span><span style="font-family: Times New Roman, Times, serif;">nets
+
+
+      attached to the FLASH_SPI</span><span style="font-family: Times
+      New Roman, Times, serif;">_csb, </span><span style="font-family:
+      Times New Roman, Times, serif;">FLASH_SPI</span><span
+      style="font-family: Times New Roman, Times, serif;">_so, </span><span
+      style="font-family: Times New Roman, Times, serif;">FLASH_SPI</span><span
+      style="font-family: Times New Roman, Times, serif;">_si ports
+      appear in the top-level port list:<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"></span>
+    <pre>    output wire BOOT_CS_B,<br>    output wire BOOT_MOSI,<br>    input  wire BOOT_MISO,<br></pre>
+    <span style="font-family: Times New Roman, Times, serif;">and in the
+      application constraints:<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"></span>
+    <pre># SPI Boot Flash<br>set_property -dict {PACKAGE_PIN C23 IOSTANDARD LVCMOS25} [get_ports BOOT_CS_B]<br>set_property -dict {PACKAGE_PIN B24 IOSTANDARD LVCMOS25} [get_ports BOOT_MOSI]<br>set_property -dict {PACKAGE_PIN A25 IOSTANDARD LVCMOS25} [get_ports BOOT_MISO]<br><br></pre>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Software</span></h2>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Preparation<br>
+      </span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">An application must configure
+        the driver and initialize communication with the flash memory
+        before performing any other operations</span></span><span
+      style="font-family: Times New Roman, Times, serif;">:<br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+      void</span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0, 0,
+        0); font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;"> <span style="font-weight:
+          bold;">bootFlashInit</span>(uint32_t baseAddress);</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;">If
+      the block design component was named marbleBootFlash as shown in
+      the </span><span style="font-family: Times New Roman, Times,
+      serif;"><a moz-do-not-send="true" href="#bdImage">figure</a></span><span
+      style="font-family: Times New Roman, Times, serif;"> above, the
+      memory-mapped I/O base address to pass as the argument will be
+      defined in the board support xparameters.h file as
+      XPAR_MARBLEBOOTFLASH_S_AXI_LITE_BASEADDR.</span><span
+      style="font-family: Times New Roman, Times, serif;"><br>
+    </span><br>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;">void</span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;"> <span
+            style="font-weight: bold;">bootFlashProtectGolden</span>(void);</span></span><span
+        style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Times New Roman, Times, serif;"><br
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-style: normal; font-variant-caps: normal; font-weight:
+          400; letter-spacing: normal; text-align: start; text-indent:
+          0px; text-transform: none; white-space: normal; word-spacing:
+          0px; -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+          0px; text-decoration: none;">
+      </span><span style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;"></span></span><span
+        style="font-family: Times New Roman, Times, serif;">Sets the
+        Status Register 1 SRWD, BP2 and BP1 bits if they are not already
+        set.&nbsp; This protects the golden image in the flash memory
+        from erasure or overwriting.<br>
+        <br>
+      </span><span style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Times New Roman, Times, serif;"></span> </span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-weight: bold;">Reading<br>
+      </span></span> <span style="font-family: Times New Roman, Times,
+      serif;"><br>
+      int <span style="font-weight: bold;">bootFlashRead</span>(uint32_t
+
+
+
+
+
+
+
+      address, uint32_t length, void *buf);<br>
+    </span><span style="font-family: Times New Roman, Times, serif;">The
+      first argument is the offset within the flash memory at which
+      reading will begin.&nbsp; The return value is the number of bytes
+      read (equal to the length argument) on success or -1 on failure.<br>
+    </span><br>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;">Writing<br>
+          <br>
+        </span></span>int <span style="font-weight: bold;">bootFlashWrite</span>(uint32_t
+
+
+
+
+
+
+
+      address, uint32_t length, const void *buf);<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;">The first
+        argument is the offset within the flash memory at which writing
+        will begin.&nbsp; </span>The return value is the number of
+      bytes written (equal to the length argument) on success or -1 on
+      failure.&nbsp; The simple-minded approach to flash memory
+      operations imposes some constraints on the use of this function:<br>
+    </span>
+    <ul>
+      <li><span style="font-family: Times New Roman, Times, serif;">The
+          first write to a sector must begin at the first address of the
+          sector.&nbsp; Sectors are 64k or 4k long.</span></li>
+      <li><span style="font-family: Times New Roman, Times, serif;">Writes
+
+
+
+
+
+
+
+          must not span a sector boundary.</span></li>
+    </ul>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-weight: bold;">Diagnostics<br>
+          </span></span></span></p>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;">void <span
+              style="font-weight: bold;">bootFlashEnableEraseConfirmation</span>(int
+
+            enable);</span></span></span></span><br>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"></span></span></span></span>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;">
+              Enable/Disable checking that erase operations succeeded.</span></span></span></span></p>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"></span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;">void <span
+                style="font-weight: bold;">bootFlashEnableWriteConfirmation</span>(int
+
+              enable);<br>
+              Enable/Disable checking that write operations succeeded.</span></span></span></span><br>
+      <span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"></span></span></span></span></span></span></p>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"></span></span></span></span>void
+
+          <span style="font-weight: bold;">bootFlashSetVerbose</span>(int
+
+
+          verboseFlag);<br>
+          Enable/Disable diagnostic messages showing all values sent to
+          and received from the flash memory.<br>
+        </span></span></p>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;">void <span
+            style="font-weight: bold;">bootFlashShowStatus</span>(void);<br>
+          Show the value of assorted flash memory registers.<br>
+        </span></span></p>
+    <span style="font-family: Times New Roman, Times, serif;"> </span>
+    <span style="font-family: Times New Roman, Times, serif;"></span>
+    <p><span style="font-family: Times New Roman, Times, serif;"> </span></p>
+  </body>
+</html>
