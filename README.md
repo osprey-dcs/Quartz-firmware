@@ -8,21 +8,9 @@
         source /path_to_Vivado_installation/2023.1/settings64.sh
 
 
-## Fetch the required support modules
-
-The following support modules must be cloned from their github repositories.  This can be done as follows.
-
-    mkdir -p ~/src/ip_repo
-    cd ~/src/ip_repo
-    git clone git@github.com:osprey-dcs/axi-lite-generic-reg.git
-    git clone git@github.com:osprey-dcs/marble-boot-flash.git
-    git clone git@github.com:osprey-dcs/marble-clock-sync-PLL.git
-    git clone git@github.com:osprey-dcs/osprey-series7-downsampler.git
-    git clone git@github.com:osprey-dcs/ospreyUDP.git
-
 ## Fetch the application firmware repository
 
-1. Clone the Vivado project.  Typically this is done from the directory where the **ip_repo** directory created above resides:
+1. Clone the Vivado project.  Typically this is done from the directory where a **src** directory:
 
         cd ~/src
         git clone git@github.com:osprey-dcs/nasa-fpga-fw.git NASA_ACQ
@@ -30,11 +18,8 @@ The following support modules must be cloned from their github repositories.  Th
 ## Application firmware – part 1
 
 1. Start Vivado and in the **Quick Start** pane click the `Open Project` link.  In the window that pops up navigate to the **NASA_ACQ** directory created in the previous step.  Select the `NASA_ACQ.xpr` project file and click `OK`.  A window with ominous 'Critical Warnings' may pop up.  Don't worry, the following step fixes them.
-1. In the **Project Manager** pane click `Settings`.  In the **Project Settings** of the window that pops up expand the IP entry and ensure that the **IP Repositories** values match the locations of the support modules.  If not, select the incorrect entries and click the `-` button, then click the `+` button and navigate to and select the correct locations.
- Note that if all the support modules were checked out into a
-single directory (e.g. ip_repo in the above section) it is
-necessary to specify only that directory.
-Once all the repository paths are correct, click `OK` to close the window.
+1. In the **Project Manager** pane click `Settings`.  In the **Project Settings** of the window that pops up expand the IP entry and ensure that an **IP Repositories** value identifies the locations of the support modules in the ip_repo directory in the project top-level directory.  If not, select the incorrect entries and click the `-` button, then click the `+` button and navigate to and select the correct location.
+Once the repository path is correct, click `OK` to close the window.
 1. Click the `Reports` menu item and click `Report IP Status`.  In the **IP Status** pane at the bottom of the window click `Upgrade Selected` if it is not greyed out (i.e. if any of the support modules has changed).
 1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....  When the block design has been generated a green check mark will appear between the right angle bracket and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
 2. In the menu bar, click `File`, then select`Export`, then click `Export Hardware...`.
@@ -49,7 +34,7 @@ Once all the repository paths are correct, click `OK` to close the window.
 1. In the window that pops up showing a **Create a New Application Project** page, click `Next`.
 1. In the **Platform** page that appears, select the `Create a new platform from hardware (XSA)` tab.
 1. Browse to the top directory of the Vivado project, select the `NASA_ACQ.xsa` file there, and click `Open`.
-1. Set the `Platform name:` to **NASA_ACQ_platform** and click `Next`.
+1. Set the `Platform name:` to **NASA\_ACQ\_platform** and click `Next`.
 1. In the **Application Project Details** page that apears, set the **Application project name:** to `NASA_ACQ, then click `Next`.
 1. Confirm that the Domain is for a standalone microblaze system, then click `Next`.
 1. In the **Templates** page that appears, select `Empty application(C)` and click `Finish`.
