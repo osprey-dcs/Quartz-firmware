@@ -38,7 +38,7 @@ Once the repository path is correct, click `OK` to close the window.
 1. In the **Application Project Details** page that apears, set the **Application project name:** to `NASA_ACQ, then click `Next`.
 1. Confirm that the Domain is for a standalone microblaze system, then click `Next`.
 1. In the **Templates** page that appears, select `Empty application(C)` and click `Finish`.
-1. The **Explorer** tab in the main Vitis window should now show **NASA\_ACQ\_platform** and **NASA\_ACQ_system**, and within the latter, **NASA\_ACQ**.  Select both the platform and the system and ensure that the active target in the **Application Project Settings** pane is set to **Release**, not **Debug**.
+1. The **Explorer** tab in the main Vitis window should now show **NASA\_ACQ\_platform** and **NASA\_ACQ_system**, and within the latter, **NASA\_ACQ**.  Highlight the NASA\_ACQ\_platform then the NASA\_ACQ\_systrem and ensure that the Active build configuration in the **Application Project Settings** pane is set to **Release**, not **Debug**.
 1. In a shell window, check out the application software repository and place its contents into the **NASA\_ACQ** directory:
 
         cd xxxxx/NASA_ACQ/Workspace
@@ -48,8 +48,8 @@ Once the repository path is correct, click `OK` to close the window.
         cd ..
         rm -rf tmp
 
-1. Change to the **Workspace/NASA\_ACQ/src** directory and run the `createVerilogHeader.sh` script.  This creates a configuration source file in the Vivado project and ensures that the firmware and software have the same perspective of various configuration values.
-1. Right click on `NASA_ACQ_platform` and select `Build Project`.  Wait....
+1. In the shell window, change to the **Workspace/NASA\_ACQ/src** directory and run the `createVerilogHeader.sh` script.  This creates a configuration source file in the Vivado project and ensures that the firmware and software have the same perspective of various configuration values.
+1. Back in the Vitis window, right click on `NASA_ACQ_platform` and select `Build Project`.  Wait....
 1. Right click on `NASA_ACQ_system` and select `Build Project`.  Wait....
 
 ## Application firmware – part 2
