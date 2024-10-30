@@ -48,7 +48,7 @@ Once the repository path is correct, click `OK` to close the window.
         cd ..
         rm -rf tmp
 
-1. In the shell window, change to the **Workspace/NASA\_ACQ/src** directory and run the `createVerilogHeader.sh` script.  This creates a configuration source file in the Vivado project and ensures that the firmware and software have the same perspective of various configuration values.
+1. In the shell window, change to the **Workspace/NASA\_ACQ/src** directory and run the `createVerilogHeader.sh` script.  This creates a configuration source file in the Vivado project and ensures that the firmware and software have the same perspective of various configuration values.  Then run 'make' to create some header files.
 1. Back in the Explorer tab of the Vitis window, right click on `NASA_ACQ_platform` and select `Build Project`.  Wait....
 1. Right click on `NASA_ACQ_system` and select `Build Project`.  Wait....
 
