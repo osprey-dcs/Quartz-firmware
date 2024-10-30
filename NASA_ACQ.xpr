@@ -231,7 +231,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip_repo/dsp/iirHighpass/iirHighpass.v">
+      <File Path="$PPRDIR/ip_repo/iirHighpass/iirHighpass.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -245,7 +245,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip_repo/marbleClockSync/head/marbleClockSync.v">
+      <File Path="$PPRDIR/ip_repo/marbleClockSync/marbleClockSync.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
