@@ -38,7 +38,7 @@ Once the repository path is correct, click `OK` to close the window.
 1. In the **Application Project Details** page that apears, set the **Application project name:** to `NASA_ACQ, then click `Next`.
 1. Confirm that the Domain is for a standalone microblaze system, then click `Next`.
 1. In the **Templates** page that appears, select `Empty application(C)` and click `Finish`.
-1. The **Explorer** tab in the main Vitis window should now show **NASA\_ACQ\_platform** and **NASA\_ACQ_system**, and within the latter, **NASA\_ACQ**.  Highlight the NASA\_ACQ\_platform then the NASA\_ACQ\_systrem and ensure that the Active build configuration in the **Application Project Settings** pane is set to **Release**, not **Debug**.
+1. The **Explorer** tab in the main Vitis window should now show **NASA\_ACQ\_platform** and **NASA\_ACQ_system**, and within the latter, **NASA\_ACQ**.  Highlight the NASA\_ACQ\_platform then the NASA\_ACQ\_system and ensure that the Active build configuration in the **Application Project Settings** pane is set to **Release**, not **Debug**.
 1. In a shell window, check out the application software repository and place its contents into the **NASA\_ACQ** directory:
 
         cd xxxxx/NASA_ACQ/Workspace

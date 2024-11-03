@@ -1,8 +1,0 @@
-for i in `find ../../../NASA_ACQ_MPS -name bootFlash.c -print`
-do
-    if [ -r "$i" ]
-    then
-        echo "$i"
-        cp drivers/marbleBootFlash_v1_0/src/bootFlash.c "$i"
-    fi
-done
