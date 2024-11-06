@@ -25,6 +25,7 @@
 #include <stdio.h>
 #include <xparameters.h>
 #include <xiic.h>
+#include "ad7768.h"
 #include "bootFlash.h"
 #include "gpio.h"
 #include "iicFPGA.h"
@@ -108,10 +109,12 @@ static void
 showIPMI(int device)
 {
     uint8_t cbuf[128];
+    char strBuf[64];
     int i, field;
     int offset, length;
     int index = device - IIC_FPGA_IDX_FMC1_EEPROM;
     uint8_t sum;
+    int hardwareMatches = 1;
     if (iicFPGAeepromRead(device, 0, sizeof cbuf, cbuf) != sizeof cbuf) {
         printf("WARNING -- Can't read FMC EEPROM.\n");
         return;
@@ -135,7 +138,7 @@ showIPMI(int device)
         return;
     }
     offset += 6;    /* Skip over language and date/time */
-    for (field = 0 ; field < 3 ; field++) {
+    for (field = 0 ; field < 4 ; field++) {
         uint8_t type_length = cbuf[offset];
         int fieldLength;
         const char *cp;
@@ -149,18 +152,49 @@ showIPMI(int device)
         case 0: cp = "Manufacturer";        break;
         case 1: cp = "Name";                break;
         case 2: cp = "Serial Number";       break;
+        case 3: cp = "Part Number";         break;
         }
         printf("%15s: ", cp);
         offset++;
+        i = 0;
         while (fieldLength--) {
             char c = cbuf[offset++];
             printf("%c", c);
             number = (number * 10) + (c - '0');
+            if (i < 63) {
+                strBuf[i++] = c;
+            }
         }
+        strBuf[i] = '\0';
         printf("\n");
         if ((index >= 0) && (index < FMC_COUNT)) {
-            if (field == 2) serialNumber[index] = number;
+            switch (field) {
+            case 0:
+                if (strcmp(strBuf, "Osprey") != 0) {
+                    hardwareMatches = 0;
+                    criticalWarning("Unexpected manufacturer ID");
+                }
+                break;
+            case 1:
+                if (strcmp(strBuf, "Quartz") != 0) {
+                    hardwareMatches = 0;
+                    criticalWarning("Unexpected name");
+                }
+                break;
+            case 2:
+                serialNumber[index] = number;
+                break;
+            case 3:
+                if (strncmp(strBuf, "v1", 2) != 0) {
+                    hardwareMatches = 0;
+                    criticalWarning("Firmware requires Quartz V1");
+                }
+                break;
+            }
         }
+    }
+    if (hardwareMatches) {
+        ad7768EnableFMC();
     }
 }
 
@@ -339,7 +373,7 @@ iicFPGAeepromRead(int idx, uint32_t address, uint32_t length, void *buf)
 }
 
 /*
- * Write n bytes at beginning of EEPROM
+ * Write n bytes to EEPROM
  */
 int iicFPGAeepromWrite(int idx, uint32_t address, uint32_t length,
                                                                 const void *buf)

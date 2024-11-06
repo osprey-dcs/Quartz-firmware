@@ -64,5 +64,6 @@ void microsecondSpin(int microseconds);
 uint32_t fetchRegister(int idx);
 void showIPv4address(const char *name, uint32_t address);
 void resetFPGA(int bootAlternateImage);
+void criticalWarning(const char *msg);
 
 #endif /* _UTIL_H_ */

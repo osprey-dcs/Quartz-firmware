@@ -40,6 +40,7 @@
 # define OP_CHIP_PINS_ASSERT_RESET      0x1
 # define OP_CHIP_PINS_CONTROL_FAKE_ADC  0x8
 # define OP_CHIP_PINS_ASSERT_FAKE_ADC   0x4
+# define OP_CHIP_PINS_ENABLE_FMC_OUT    0x80
 #define CSR_W_OP_SPI_TRANSFER   (0x2<<30)
 # define OP_SPI_CS_MASK         (((1<<CFG_AD7768_CHIP_COUNT)-1)<<16)
 #define CSR_R_SPI_ACTIVE        0x80000000
@@ -354,6 +355,12 @@ ad7768Init(void)
                                                  OP_CHIP_PINS_ASSERT_FAKE_ADC :
                                                  0));
     ad7768Reset(0);
+}
+
+void
+ad7768EnableFMC(void)
+{
+    CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_ENABLE_FMC_OUT);
 }
 
 static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];

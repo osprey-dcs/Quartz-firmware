@@ -69,6 +69,12 @@ showIPv4address(const char *name, uint32_t address)
     printf("\n");
 }
 
+void
+criticalWarning(const char *msg)
+{
+    printf("CRITICAL WARNING -- %s!\n", msg);
+}
+
 /*
  * Write to the ICAP instance to force a warm reboot
  * Command sequence from UG470
