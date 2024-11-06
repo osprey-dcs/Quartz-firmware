@@ -90,32 +90,32 @@ module NASA_ACQ #(
     output wire PMOD2_7,
 
     // Osprey Quad AD7768 FMC Digitizer
-    output wire                                 AD7768_MCLK_P,
-    output wire                                 AD7768_MCLK_N,
-    output wire                                 AD7768_RESET_n,
-    output wire                                 AD7768_SCLK,
-    output wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n,
-    output wire                                 AD7768_SDI,
+    output wire                                 AD7768_MCLK_P_io,
+    output wire                                 AD7768_MCLK_N_io,
+    output wire                                 AD7768_RESET_n_io,
+    output wire                                 AD7768_SCLK_io,
+    output wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n_io,
+    output wire                                 AD7768_SDI_io,
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_SDO,
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DCLK,
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DRDY,
     input  wire [(CFG_AD7768_CHIP_COUNT *
                   CFG_AD7768_ADC_PER_CHIP)-1:0] AD7768_DOUT,
-    output wire                                 AD7768_START_n,
+    output wire                                 AD7768_START_n_io,
     input  wire                                 AD7768_SYNC_IN_n,
     input  wire                                 AD7768_SYNC_OUT_n,
 
-    output wire                                 COIL_CONTROL_SPI_CLK,
-    output wire                                 COIL_CONTROL_SPI_CS_n,
+    output wire                                 COIL_CONTROL_SPI_CLK_io,
+    output wire                                 COIL_CONTROL_SPI_CS_n_io,
     input  wire                                 COIL_CONTROL_SPI_DOUT,
-    output wire                                 COIL_CONTROL_SPI_DIN,
-    output wire                                 COIL_CONTROL_RESET_n,
+    output wire                                 COIL_CONTROL_SPI_DIN_io,
+    output wire                                 COIL_CONTROL_RESET_n_io,
     input  wire                                 COIL_CONTROL_FLAGS_n,
 
-    output wire                                  AMC7823_SPI_CLK,
-    output wire                                  AMC7823_SPI_CS_n,
+    output wire                                  AMC7823_SPI_CLK_io,
+    output wire                                  AMC7823_SPI_CS_n_io,
     input  wire                                  AMC7823_SPI_DOUT,
-    output wire                                  AMC7823_SPI_DIN,
+    output wire                                  AMC7823_SPI_DIN_io,
 
     input  wire                                 MCLKfanoutFault,
     input  wire                                 HARDWARE_PPS
@@ -134,12 +134,75 @@ wire refClk125;
 IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
 ///////////////////////////////////////////////////////////////////////////////
+// Tri-state FMC outputs until we know that we're running
+// on hardware that matches the firmware.
+wire disableFMCoutputs;
+wire                             AD7768_RESET_n;
+wire                             AD7768_SCLK;
+wire [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n;
+wire                             AD7768_SDI;
+wire                             AD7768_START_n;
+wire                             COIL_CONTROL_SPI_CLK;
+wire                             COIL_CONTROL_SPI_CS_n;
+wire                             COIL_CONTROL_SPI_DIN;
+wire                             COIL_CONTROL_RESET_n;
+wire                             AMC7823_SPI_CLK;
+wire                             AMC7823_SPI_CS_n;
+wire                             AMC7823_SPI_DIN;
+
+genvar i;
+generate
+for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i = i + 1) begin
+    IOBUF CS_n_BUF(.I(AD7768_CS_n[i]),
+                   .IO(AD7768_CS_n_io[i]),
+                   .T(disableFMCoutputs));
+end
+endgenerate;
+// Can't tri-state the MCLK lines since that requires an IOSTANDARD of BLVDS,
+// which requires source termination, which the board doesn't have.
+OBUFDS MCLK_BUF(.I(mclk),
+                .O(AD7768_MCLK_P_io),
+                .OB(AD7768_MCLK_N_io));
+IOBUF RESET_n_BUF(.I(AD7768_RESET_n),
+                  .IO(AD7768_RESET_n_io),
+                  .T(disableFMCoutputs));
+IOBUF SCLK_BUF(.I(AD7768_SCLK),
+               .IO(AD7768_SCLK_io),
+               .T(disableFMCoutputs));
+IOBUF SDI_BUF(.I(AD7768_SDI),
+              .IO(AD7768_SDI_io),
+              .T(disableFMCoutputs));
+IOBUF START_n_BUF(.I(AD7768_START_n),
+                  .IO(AD7768_START_n_io),
+                  .T(disableFMCoutputs));
+IOBUF COIL_CONTROL_SPI_CLK_BUF(.I(COIL_CONTROL_SPI_CLK),
+                               .IO(COIL_CONTROL_SPI_CLK_io),
+                               .T(disableFMCoutputs));
+IOBUF COIL_CONTROL_SPI_CS_n_BUF(.I(COIL_CONTROL_SPI_CS_n),
+                                .IO(COIL_CONTROL_SPI_CS_n_io),
+                                .T(disableFMCoutputs));
+IOBUF COIL_CONTROL_SPI_DIN_BUF(.I(COIL_CONTROL_SPI_DIN),
+                               .IO(COIL_CONTROL_SPI_DIN_io),
+                               .T(disableFMCoutputs));
+IOBUF COIL_CONTROL_RESET_n_BUF(.I(COIL_CONTROL_RESET_n),
+                               .IO(COIL_CONTROL_RESET_n_io),
+                               .T(disableFMCoutputs));
+IOBUF AMC7823_SPI_CLK_BUF(.I(AMC7823_SPI_CLK),
+                          .IO(AMC7823_SPI_CLK_io),
+                          .T(disableFMCoutputs));
+IOBUF AMC7823_SPI_CS_BUF(.I(AMC7823_SPI_CS_n),
+                         .IO(AMC7823_SPI_CS_n_io),
+                         .T(disableFMCoutputs));
+IOBUF AMC7823_SPI_DIN_BUF(.I(AMC7823_SPI_DIN),
+                          .IO(AMC7823_SPI_DIN_io),
+                          .T(disableFMCoutputs));
+
+///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
 wire [31:0] GPIO_OUT;
 wire [GPIO_IDX_COUNT-1:0] GPIO_STROBES;
 wire [31:0] GPIO_IN [0:GPIO_IDX_COUNT-1];
 wire [(GPIO_IDX_COUNT*32)-1:0] GPIO_IN_FLATTENED;
-genvar i;
 generate
 for (i = 0 ; i < GPIO_IDX_COUNT ; i = i + 1) begin
     assign GPIO_IN_FLATTENED[i*32+:32] = GPIO_IN[i];
@@ -413,7 +476,6 @@ mclkSelect #(.DEBUG("false"))
     .clk51p2(clk51p2),
     .clk64(clk64),
     .MCLK(mclk));
-OBUFDS AD7768_MCLK_OBUF(.I(mclk), .O(AD7768_MCLK_P), .OB(AD7768_MCLK_N));
 
 /////////////////////////////////////////////////////////////////////////////
 // FIXME: Count clock faults -- maybe this should be permanent?

@@ -46,6 +46,7 @@ module ad7768 #(
     output wire [31:0] sysDRDYstatus,
     output wire [31:0] sysDRDYhistory,
     output wire [31:0] sysAlignCount,
+    output reg         sysDisableFMCoutputs = 1,
 
     input  wire        clk32,
 
@@ -105,6 +106,9 @@ always @(posedge sysClk) begin
             end
             if (sysGPIO_OUT[3]) begin
                 sysUseFakeAD7768 <= sysGPIO_OUT[2];
+            end
+            if (sysGPIO_OUT[7]) begin
+                sysDisableFMCoutputs <= 0;
             end
             if (sysGPIO_OUT[8]) begin
                 /*
