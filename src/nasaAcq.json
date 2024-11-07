@@ -20,17 +20,38 @@
     "data_width": 32,
     "sign": "unsigned"
   },
+  "calibrationOffset": {
+    "access": "rw",
+    "addr_width": 5,
+    "base_addr": 1100,
+    "data_width": 32,
+    "sign": "signed"
+  },
+  "calibrationGain": {
+    "access": "rw",
+    "addr_width": 5,
+    "base_addr": 1132,
+    "data_width": 32,
+    "sign": "signed"
+  },
   "calibrationDate": {
-    "access": "r",
+    "access": "rw",
     "addr_width": 0,
-    "base_addr": 22,
+    "base_addr": 1164,
     "data_width": 32,
     "sign": "unsigned"
   },
   "calibrationStatus": {
     "access": "r",
     "addr_width": 0,
-    "base_addr": 23,
+    "base_addr": 25,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
+  "calibrationWrite": {
+    "access": "w",
+    "addr_width": 0,
+    "base_addr": 26,
     "data_width": 32,
     "sign": "unsigned"
   },
@@ -460,20 +481,6 @@
     "base_addr": 500,
     "data_width": 1,
     "sign": "unsigned"
-  },
-  "CALIB:offset:XX": {
-    "access": "r",
-    "addr_width": 5,
-    "base_addr": 800,
-    "data_width": 32,
-    "sign": "signed"
-  },
-  "CALIB:gain:XX": {
-    "access": "r",
-    "addr_width": 5,
-    "base_addr": 900,
-    "data_width": 32,
-    "sign": "signed"
   },
   "MPS:chkLOLO:XX": {
     "access": "rw",

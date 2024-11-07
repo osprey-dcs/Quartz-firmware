@@ -31,20 +31,19 @@
 
 void ad7768Init(void);
 void ad7768Reset(int reset);
-int ad7768IsReset(void);
 void ad7768EnableFMC(void);
+int ad7768IsReset(void);
 void ad7768Crank(void);
 void ad7768DumpReg(void);
 void ad7768StartAlignment(void);
 int ad7768SetOfst(int channel, int offset);
 int ad7768SetGain(int channel, int gain);
-int ad7768GetOfst(int channel);
-int ad7768GetGain(int channel);
 void ad7768SetSamplingRate(int rate);
 
 uint32_t ad7768FetchSysmon(int index);
 uint32_t ad7768GetHeader(int index);
 uint32_t ad7768GetStatuses(void);
+uint32_t ad7768FetchMCLKrate(void);
 
 void ad7768ShowAlignment(void);
 void ad7768TestRAM(void);

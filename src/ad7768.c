@@ -28,6 +28,7 @@
 
 #include <stdio.h>
 #include <xparameters.h>
+#include "acq.h"
 #include "ad7768.h"
 #include "calibration.h"
 #include "clockAdjust.h"
@@ -64,13 +65,12 @@
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
 #define CSR_READ()   GPIO_READ(GPIO_IDX_AD7768_CSR)
 
-#define CHANNEL_RESTORE -1000
-
 #define MCLK_CSR_W_DISABLE  0x00
 #define MCLK_CSR_W_32p000   0x01
 #define MCLK_CSR_W_25p600   0x02
 #define MCLK_CSR_W_20p480   0x04
 #define MCLK_CSR_W_16p384   0x08
+#define MCLK_CSR_R_RATE_MASK    0x0FFFFFFF
 
 #define CHAN_MODE_DEC_32    0x00
 #define CHAN_MODE_DEC_64    0x01
@@ -275,11 +275,11 @@ ad7768IsReset(void)
 
 static int factoryGainAdjust[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 void
-ad7768Reset(int reset)
+ad7768Reset(int applyReset)
 {
     int chip;
     static int firstTime = 1;
-    if (reset) {
+    if (applyReset) {
         CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
         GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
@@ -337,12 +337,11 @@ ad7768Reset(int reset)
                 printf("AD7768[%d] gain adjust:0x%06X\n", channel,factoryGain);
             }
         }
-        calibrationUpdate();
+        if (calibrationInit()) {
+            acqSetCalibrationValidity(1);
+        }
     }
-    else {
-        ad7768SetOfst(CHANNEL_RESTORE, 0);
-        ad7768SetGain(CHANNEL_RESTORE, 0);
-    }
+    calibrationApply();
     ad7768SetSamplingRate(0);
     return;
 }
@@ -363,17 +362,10 @@ ad7768EnableFMC(void)
     CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_ENABLE_FMC_OUT);
 }
 
-static int offsets[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 int
 ad7768SetOfst(int channel, int offset)
 {
     int i, chip, reg;
-    if (channel == CHANNEL_RESTORE) {
-        for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
-            ad7768SetOfst(i, offsets[i]);
-        }
-        return 0;
-    }
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
@@ -381,7 +373,6 @@ ad7768SetOfst(int channel, int offset)
     if (debugFlags & DEBUGFLAG_CALIBRATION) {
         printf("AD7768[%d] offset %d\n", channel, offset);
     }
-    offsets[channel] = offset;
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = (mapChannel(channel) * 3) + 0x20;
     for (i = 0 ; i < 3 ; i++) {
@@ -392,17 +383,11 @@ ad7768SetOfst(int channel, int offset)
     return 0;
 }
 
-static int gains[CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP];
 int
 ad7768SetGain(int channel, int gain)
 {
     int i, chip, reg;
-    if (channel == CHANNEL_RESTORE) {
-        for (i = 0 ; i < CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP; i++) {
-            ad7768SetGain(i, gains[i]);
-        }
-        return 0;
-    }
+    unsigned int uGain;
     if ((channel < 0)
      || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
         return -1;
@@ -410,9 +395,43 @@ ad7768SetGain(int channel, int gain)
     if (debugFlags & DEBUGFLAG_CALIBRATION) {
         printf("AD7768[%d] gain %d\n", channel, gain);
     }
+
+    /*
+     * Scale from parts-per-million to ADC gain counts
+     * From the data sheet, the relationship is:
+     *
+     *   PPM     Gain Counts
+     * ------- = -----------
+     * 1000000   (2^24) / 12
+     *
+     * Allow this to be done with 32-bit arithmetic by:
+     * 1. Limiting range to a value that fits in 16 bits.
+     * 2. Reducing fraction in right side denominator.
+     *
+     *   PPM     Gain Counts
+     * ------- = -----------
+     * 1000000    (2^22) / 3
+     *
+     * 3. Removing six common factors of 2.
+     *
+     *   PPM     Gain Counts
+     * ------- = -----------
+     *  15625    (2^16) / 3
+     *
+     * Rearranging:
+     *               PPM * 2^16
+     * Gain Counts = ----------
+     *                3 * 15625
+     */
+    uGain = (gain < 0) ? -gain : gain;
+    if (uGain > 50000) {
+        uGain = 50000;
+    }
+    uGain = (uint32_t)((uGain << 16) + ((3*15625)/2)) / (3*15625);
+    gain = (gain < 0) ? -uGain : uGain;
+
     chip = channel / CFG_AD7768_ADC_PER_CHIP;
     reg  = (mapChannel(channel) * 3) + 0x38;
-    gains[channel] = gain;
     gain += factoryGainAdjust[channel];
     for (i = 0 ; i < 3 ; i++) {
         writeReg(chip, reg, gain & 0xFF);
@@ -420,25 +439,6 @@ ad7768SetGain(int channel, int gain)
         reg--;
     }
     return 0;
-}
-int
-ad7768GetOfst(int channel)
-{
-    if ((channel < 0)
-     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
-        return -1;
-    }
-    return offsets[channel] ;
-}
-
-int
-ad7768GetGain(int channel)
-{
-    if ((channel < 0)
-     || (channel >= (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP))) {
-        return -1;
-    }
-    return gains[channel];
 }
 
 void
@@ -499,8 +499,24 @@ ad7768FetchSysmon(int index)
     case 0: return fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
     case 1: return fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY);
     case 2: return fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
+    case 3: return ad7768FetchMCLKrate();
     }
     return 0;
+}
+
+/*
+ * Accumulation is not in system clock domain so read until value is stable.
+ */
+uint32_t
+ad7768FetchMCLKrate(void)
+{
+    uint32_t mclk, mclkOld;
+    mclkOld = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR) & MCLK_CSR_R_RATE_MASK;
+    for (;;) {
+        mclk = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR) & MCLK_CSR_R_RATE_MASK;
+        if (mclk == mclkOld) return mclk;
+        mclkOld = mclk;
+    }
 }
 
 void

@@ -28,204 +28,246 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <xparameters.h>
 #include "ad7768.h"
-#include "acq.h"
 #include "config.h"
-#include "ffs.h"
+#include "gpio.h"
 #include "calibration.h"
 #include "util.h"
 
-#define FILENAME "Calibration.csv"
+#define CHANNEL_COUNT ((CFG_AD7768_CHIP_COUNT) * (CFG_AD7768_ADC_PER_CHIP))
+#define MAGIC 0x3789ECF6
 
-#define ADC_COUNT (CFG_AD7768_CHIP_COUNT * CFG_AD7768_ADC_PER_CHIP)
+/*
+ * EEPROM IIC 7-bit address
+ */
+#define EEPROM_ADDRESS7 0x57
 
-enum statusCode { STATUS_VALID = 0,
-                  STATUS_UNINITIALIZED,
-                  STATUS_MOUNT_FAILED,
-                  STATUS_OPEN_FAILED,
-                  STATUS_READ_FAILED,
-                  STATUS_EOF,
-                  STATUS_CONTENTS_GARBLED,
-                  STATUS_BAD_CHARACTER,
-                  STATUS_BAD_NUMBER };
-static enum statusCode status = STATUS_UNINITIALIZED;
-static int lineNumber, columnNumber;
-static uint32_t date;
+struct calEEPROM {
+    uint32_t magic;
+    uint32_t calibrationDate;
+    uint8_t  offsets[3*CHANNEL_COUNT];
+    uint8_t  gains[3*CHANNEL_COUNT];
+    uint32_t checksum;
+};
 
-static void
-error(int code)
+enum statusCodes {
+    S_VALID,
+    S_UNREAD,
+    S_READ_FAULT,
+    S_BAD_MAGIC,
+    S_BAD_CHECKSUM,
+    S_WRITE_FAULT
+};
+
+static int32_t status = S_UNREAD;
+static uint32_t calibrationDate;
+static int32_t offsets[CHANNEL_COUNT];
+static int32_t gains[CHANNEL_COUNT];
+static int hasChanged;
+
+/*
+ * Back ported from QuartzV2
+ */
+#include "ffs.h"
+int
+readEEPROM(int address, unsigned int length, void *buf)
 {
-    const char *msg;
-    switch(code) {
-    default:                        msg = "Error";                  break;
-    case STATUS_MOUNT_FAILED:       msg = "Mount failed";           break;
-    case STATUS_OPEN_FAILED:        msg = "Open failed";            break;
-    case STATUS_READ_FAILED:        msg = "Read failed";            break;
-    case STATUS_EOF:                msg = "Unexpected end of file"; break;
-    case STATUS_CONTENTS_GARBLED:   msg = "Syntax error";           break;
-    case STATUS_BAD_CHARACTER:      msg = "Bad character";          break;
-    case STATUS_BAD_NUMBER:         msg = "Bad number";             break;
+    FIL fil;
+    FRESULT fr;
+    unsigned int nRead;
+    const char *name = "Calibration.csv";
 
+    if ((fr = f_open(&fil, name, FA_READ)) != FR_OK) {
+        status = S_READ_FAULT;
+        return -1;
     }
-    printf("Calibration error line %d, column %d: %s\n", lineNumber,
-                                                             columnNumber, msg);
-    status = code;
+    fr = f_read(&fil, buf, length, &nRead);
+    f_close(&fil);
+    if ((fr != FR_OK)
+     || (nRead != length)) {
+        status = S_READ_FAULT;
+        return -1;
+    }
+    return length;
+}
+
+int
+writeEEPROM(int address, unsigned int length, const void *buf)
+{
+    FIL fil;
+    FRESULT fr;
+    unsigned int nWritten;
+    const char *name = "Calibration.csv";
+
+    if ((fr = f_open(&fil, name, FA_CREATE_ALWAYS | FA_WRITE)) != FR_OK) {
+        status = S_WRITE_FAULT;
+        return -1;
+    }
+    fr = f_write(&fil, buf, length, &nWritten);
+    f_close(&fil);
+    if ((fr != FR_OK)
+     || (nWritten != length)) {
+        status = S_WRITE_FAULT;
+        return -1;
+    }
+    return length;
+}
+
+static int32_t *
+getAddr(int index)
+{
+    if (index < 0) return NULL;
+    if (index < CHANNEL_COUNT) return &offsets[index];
+    index -= CHANNEL_COUNT;
+    if (index < CHANNEL_COUNT) return &gains[index];
+    index -= CHANNEL_COUNT;
+    switch (index) {
+    case 0: return (int32_t *)&calibrationDate;
+    case 1: return &status;
+    default: return NULL;
+    }
 }
 
 void
-calibrationUpdate(void)
+calibrationSetValue(int index, int value)
 {
-    FIL fil;
-    if (!ffsCheckMount()) {
-        error(STATUS_MOUNT_FAILED);
-        return;
-    }
-    if (f_open(&fil, FILENAME, FA_READ) == FR_OK) {
-        unsigned int nBuf = 0, cIndex = 0;
-        char cbuf[128];
-        int inNumber = 0;
-        int needNumber = 1;
-        uint32_t number = 0;
-        int neg = 0;
-        int row = 1, col = 1;
-        int awaitEOL = 0;
-        lineNumber = 1;
-        columnNumber = 0;
-        for (;;) {
-            char c;
-            columnNumber++;
-            if (cIndex >= nBuf) {
-                if (f_read(&fil, cbuf, sizeof cbuf, &nBuf) != FR_OK) {
-                    error(STATUS_READ_FAILED);
-                    break;
-                }
-                if (nBuf == 0) {
-                    error(STATUS_EOF);
-                    break;
-                }
-                cIndex = 0;
-            }
-            c = cbuf[cIndex++];
-            if ((c == '\n') || (c == ',')) {
-                if (!awaitEOL) {
-                    if (needNumber) {
-                        error(STATUS_CONTENTS_GARBLED);
-                        break;
-                    }
-                    if (row == 1) {
-                        if (neg) {
-                            error(STATUS_CONTENTS_GARBLED);
-                            break;
-                        }
-                        date = number;
-                        awaitEOL = 1;
-                    }
-                    else {
-                        if (col == 1) {
-                            if (number > 1000000) {
-                                number = 1000000;
-                            }
-                            ad7768SetOfst((row-2), neg ? -number : number);
-                        }
-                        else {
-                            int gain;
-                            /*
-                             * Scale from parts-per-million to ADC gain counts
-                             *
-                             *   PPM     Gain Counts
-                             * ------- = -----------
-                             * 1000000   (2^24) / 12
-                             *
-                             * Allow this to be done with 32-bit arithmetic
-                             * by removing as many powers of 2 as possible
-                             * and limiting range to 16 bits.
-                             *     (5^6) = 15625
-                             */
-                            if (number > 50000) {
-                                number = 50000;
-                            }
-                            gain = (uint32_t)((number << 16) + ((3*15625)/2)) /
-                                                                      (3*15625);
-                            ad7768SetGain((row-2), neg ? -gain : gain);
-                            awaitEOL = 1;
-                        }
-                    }
-                }
-                if (c == '\n') {
-                    if (row == (1 + ADC_COUNT)) {
-                        status = STATUS_VALID;
-                        break;
-                    }
-                    lineNumber++;
-                    row++;
-                    col = 1;
-                    columnNumber = 0;
-                    awaitEOL = 0;
-                }
-                else {
-                    col++;
-                }
-                if (!awaitEOL) {
-                    needNumber = 1;
-                    inNumber = 0;
-                    number = 0;
-                    neg = 0;
-                    continue;
-                }
-            }
-            if (awaitEOL) {
-                continue;
-            }
-            if ((c == ' ') || (c == '\t') || (c == '\r')) {
-                inNumber = 0;
-                continue;
-            }
-            if (c == '-') {
-                if (!needNumber || neg) {
-                    error(STATUS_BAD_NUMBER);
-                    break;
-                }
-                neg = 1;
-                continue;
-            }
-            if ((c < '0') || (c > '9')) {
-                error(STATUS_BAD_CHARACTER);
-                break;
-            }
-            if (!inNumber && !needNumber) {
-                error(STATUS_CONTENTS_GARBLED);
-                break;
-            }
-            if ((number > ((UINT32_MAX) / 10))
-             || (c > ((UINT32_MAX) - (number * 10)))) {
-                error(STATUS_BAD_NUMBER);
-                break;
-            }
-            inNumber = 1;
-            needNumber = 0;
-            number = (number * 10) + (c - '0');
+    int32_t i32Value, *vp;
+    if ((vp = getAddr(index)) == NULL) return;
+    if (index < CHANNEL_COUNT) {
+        if (value < -1000000) {
+            value = -1000000;
         }
-        f_close(&fil);
+        if (value > 1000000) {
+            value = 1000000;
+        }
+        ad7768SetOfst(index, value);
+    }
+    else if (index < (2 * CHANNEL_COUNT)) {
+        if (value < -50000) {
+            value = -50000;
+        }
+        if (value > 50000) {
+            value = 50000;
+        }
+        ad7768SetGain(index - CHANNEL_COUNT, value);
     }
     else {
-        error(STATUS_OPEN_FAILED);
+        if (debugFlags & DEBUGFLAG_CALIBRATION) {
+            printf("CAL[%d] = %d\n", index, value);
+        }
     }
-    ffsUnmount();
-    if (debugFlags & DEBUGFLAG_CALIBRATION) {
-        printf("Calibration update status %d.\n", status);
+    i32Value = (int32_t)value;
+    if (i32Value != *vp) {
+        *vp = i32Value;
+        hasChanged = 1;
     }
-    acqSetCalibrationValidity(status == 0);
 }
 
-uint32_t
-calibrationDate(void)
+int
+calibrationGetValue(int index)
 {
-    return date;
+    int32_t *vp;
+    if ((vp = getAddr(index)) == NULL) return 0;
+    return *vp;
 }
 
 int
 calibrationStatus(void)
 {
-    if (status == STATUS_VALID) return 0;
-    return (status << 16) | lineNumber;
+    return status;
+}
+
+static void
+pack(uint8_t *cp, uint32_t value)
+{
+    cp[0] = value >> 16;
+    cp[1] = value >> 8;
+    cp[2] = value;
+}
+
+void
+calibrationWrite(void)
+{
+    if (hasChanged) {
+        int i;
+        struct calEEPROM buf;
+        uint32_t checksum = 0, *lp;
+        if (debugFlags & DEBUGFLAG_CALIBRATION) {
+            printf("Write calibration EEPROM.\n");
+        }
+        buf.magic = MAGIC;
+        buf.calibrationDate = calibrationDate;
+        for (i = 0 ; i < CHANNEL_COUNT ; i++) {
+            pack(&buf.offsets[3*i], offsets[i]);
+            pack(&buf.gains[3*i], gains[i]);
+        }
+        lp = (uint32_t *)&buf;
+        while (lp < &buf.checksum) {
+            checksum += *lp++;
+        }
+        buf.checksum = checksum;
+        if (writeEEPROM(0, sizeof buf, &buf) == sizeof buf) {
+            status = S_VALID;
+        }
+        else {
+            printf("Calibration EEPROM write failed!\n");
+            status = S_WRITE_FAULT;
+        }
+        hasChanged = 0;
+    }
+}
+
+static int
+unpack(const uint8_t *cp)
+{
+    uint32_t value = (cp[0] << 16) | (cp[1] << 8) | cp[2];
+    if (value & 0x800000) value |= 0xFF000000;
+    return value;
+}
+
+int
+calibrationInit(void)
+{
+    int i;
+    struct calEEPROM buf;
+    uint32_t checksum = 0, *lp;
+    if (readEEPROM(0, sizeof buf, &buf) != sizeof buf) {
+        printf("Calibration fault -- EEPROM read error.\n");
+        status = S_READ_FAULT;
+        return 0;
+    }
+    if (buf.magic != MAGIC) {
+        printf("Calibration fault -- Bad magic number.\n");
+        status = S_BAD_MAGIC;
+        return 0;
+    }
+    lp = (uint32_t *)&buf;
+    while (lp < &buf.checksum) {
+        checksum += *lp++;
+    }
+    if (checksum != buf.checksum) {
+        printf("Calibration fault -- Bad checksum.\n");
+        status = S_BAD_CHECKSUM;
+        return 0;
+    }
+    calibrationDate = buf.calibrationDate;
+    if (debugFlags & DEBUGFLAG_CALIBRATION) {
+        printf("Calibration date: %u\n", calibrationDate);
+    }
+    for (i = 0 ; i < CHANNEL_COUNT ; i++) {
+        offsets[i] = unpack(&buf.offsets[3*i]);
+        gains[i] = unpack(&buf.gains[3*i]);
+    }
+    return 1;
+}
+
+void
+calibrationApply(void)
+{
+    int i;
+    for (i = 0 ; i < CHANNEL_COUNT ; i++) {
+        ad7768SetOfst(i, offsets[i]);
+        ad7768SetGain(i, gains[i]);
+    }
 }

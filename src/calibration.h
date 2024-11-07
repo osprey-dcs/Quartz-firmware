@@ -29,8 +29,11 @@
 #ifndef _CALIBRATION_H_
 #define _CALIBRATION_H_
 
-void calibrationUpdate(void);
-uint32_t calibrationDate(void);
+int calibrationInit(void);
+void calibrationSetValue(int index, int value);
+int calibrationGetValue(int index);
 int calibrationStatus(void);
+void calibrationWrite(void);
+void calibrationApply(void);
 
 #endif /* _CALIBRATION_H_ */

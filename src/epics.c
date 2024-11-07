@@ -70,8 +70,8 @@ struct LEEPpacket {
 #define REG_POWERUP_STATE                   10
 #define REG_FIRMWARE_BUILD_DATE             20
 #define REG_SOFTWARE_BUILD_DATE             21
-#define REG_CALIBRATION_DATE                22
-#define REG_CALIBRATION_STATUS              23
+#define REG_CALIBRATION_STATUS              25
+#define REG_CALIBRATION_WRITE               26
 #define REG_FPGA_REBOOT                     30
 #define REG_SECONDS_SINCE_BOOT              40
 #define REG_FMC1_SERIAL_NUMBER              50
@@ -94,12 +94,11 @@ struct LEEPpacket {
 #define SYSMON_SIZE                         300
 #define REG_ACQ_CHAN_ACTIVE_BASE            400
 #define REG_ACQ_CHAN_COUPLING_BASE          500
-#define REG_CALIB_CHAN_OFFSET_BASE          800
-#define REG_CALIB_CHAN_GAIN_BASE            900
 #define REG_LOLO_THRESHOLD_BASE             1000
 #define REG_LO_THRESHOLD_BASE               1032
 #define REG_HI_THRESHOLD_BASE               1064
 #define REG_HIHI_THRESHOLD_BASE             1096
+#define REG_CALIBRATION_BASE                1100
 #define REG_MPS_LOLO_BITMAP_BASE            1200
 #define REG_MPS_LO_BITMAP_BASE              1216
 #define REG_MPS_HI_BITMAP_BASE              1232
@@ -126,6 +125,7 @@ writeReg(int address, uint32_t value)
 {
     switch(address) {
     case REG_POWERUP_STATE:     if (value == 0)   powerUpFlag = 0;       return;
+    case REG_CALIBRATION_WRITE: calibrationWrite();                     return;
     case REG_FPGA_REBOOT:       if (value == 100) resetFPGA(0);          return;
     case REG_ACQ_ENABLE:        if (isEVG())      evgAcqControl(value);  return;
     case REG_SAMPLING_RATE:     ad7768SetSamplingRate(value);            return;
@@ -138,6 +138,9 @@ writeReg(int address, uint32_t value)
     if (MATCH(address, REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT)) {
         acqSetActive(address - REG_ACQ_CHAN_ACTIVE_BASE, value);
         return;
+    }
+    if (MATCH(address, REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1)) {
+        return calibrationSetValue(address - REG_CALIBRATION_BASE, value);
     }
     if (MATCH(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT)) {
         acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
@@ -215,7 +218,6 @@ readReg(int address)
     case REG_POWERUP_STATE:       return powerUpFlag;
     case REG_FIRMWARE_BUILD_DATE: return GPIO_READ(GPIO_IDX_FIRMWARE_DATE);
     case REG_SOFTWARE_BUILD_DATE: return SOFTWARE_BUILD_DATE;
-    case REG_CALIBRATION_DATE:    return calibrationDate();
     case REG_CALIBRATION_STATUS:  return calibrationStatus();
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
@@ -249,14 +251,11 @@ readReg(int address)
     if (MATCH(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT)) {
         return acqGetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE);
     }
+    if (MATCH(address, REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1)) {
+        return calibrationGetValue(address - REG_CALIBRATION_BASE);
+    }
     if (MATCH(address, REG_GET_LOLO, 4)) {
         return acqGetLimitExcursions(address - REG_GET_LOLO);
-    }
-    if (MATCH(address, REG_CALIB_CHAN_OFFSET_BASE, CHANNEL_COUNT)) {
-        return ad7768GetOfst(address - REG_CALIB_CHAN_OFFSET_BASE);
-    }
-    if (MATCH(address, REG_CALIB_CHAN_GAIN_BASE, CHANNEL_COUNT)) {
-        return ad7768GetGain(address - REG_CALIB_CHAN_GAIN_BASE);
     }
     if (MATCH(address, REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT)) {
         return acqGetLOLOthreshold(address - REG_LOLO_THRESHOLD_BASE);
