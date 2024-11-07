@@ -68,7 +68,8 @@ static int hasChanged;
 static const char name[] = "Calibration.bin";
 
 /*
- * Back ported from QuartzV2
+ * Back ported from QuartzV2.
+ * Use part of the Marble flash to act as the QuartzV2 on-board EEPROM.
  */
 #include "ffs.h"
 int
