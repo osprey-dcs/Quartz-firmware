@@ -65,6 +65,7 @@ static uint32_t calibrationDate;
 static int32_t offsets[CHANNEL_COUNT];
 static int32_t gains[CHANNEL_COUNT];
 static int hasChanged;
+static const char name[] = "Calibration.bin";
 
 /*
  * Back ported from QuartzV2
@@ -76,7 +77,6 @@ readEEPROM(int address, unsigned int length, void *buf)
     FIL fil;
     FRESULT fr;
     unsigned int nRead;
-    const char *name = "Calibration.bin";
 
     if ((fr = f_open(&fil, name, FA_READ)) != FR_OK) {
         status = S_READ_FAULT;
@@ -98,7 +98,6 @@ writeEEPROM(int address, unsigned int length, const void *buf)
     FIL fil;
     FRESULT fr;
     unsigned int nWritten;
-    const char *name = "Calibration.csv";
 
     if ((fr = f_open(&fil, name, FA_CREATE_ALWAYS | FA_WRITE)) != FR_OK) {
         status = S_WRITE_FAULT;

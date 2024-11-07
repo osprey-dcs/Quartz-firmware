@@ -58,7 +58,7 @@ static const struct fileInfo fileTable[] = {
     { "BOOT.bin",         0,                                          MiB(7) },
     { "BOOT_A.bin",       CFG_ALT_BOOT_IMAGE_OFFSET,                  MiB(6) },
     { "SYSPARAM.dat",     MiB(15),                                    KiB(4) },
-    { "Calibration.csv",  (MiB(15)+KiB(64)),                          KiB(4) },
+    { "Calibration.bin",  (MiB(15)+KiB(64)),                          KiB(4) },
     { "FullFlash.bin",    0,                                         MiB(16) },
     { "QSFP1_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP1,      256 },
     { "QSFP2_EEPROM.bin", IS_EEPROM|IS_READONLY|IIC_FPGA_IDX_QSFP2,      256 },

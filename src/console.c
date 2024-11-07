@@ -318,14 +318,7 @@ cmdFMON(int argc, char **argv)
             rate = csr & 0x3FFFFFFF;
         }
         else {
-            /* Accumulation is not in system clock domain
-             * so read until the value is stable.
-             */
-            uint32_t mclk, mclkOld = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR);
-            while ((mclk = GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR)) != mclkOld) {
-                mclkOld = mclk;
-            }
-            rate = mclk;
+            rate = ad7768FetchMCLKrate();
         }
         if (csr & 0x80000000) {
             /* Lower accuracy with internal PPS marker */
