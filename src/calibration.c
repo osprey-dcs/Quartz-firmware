@@ -76,7 +76,7 @@ readEEPROM(int address, unsigned int length, void *buf)
     FIL fil;
     FRESULT fr;
     unsigned int nRead;
-    const char *name = "Calibration.csv";
+    const char *name = "Calibration.bin";
 
     if ((fr = f_open(&fil, name, FA_READ)) != FR_OK) {
         status = S_READ_FAULT;
