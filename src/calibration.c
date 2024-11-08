@@ -69,12 +69,13 @@ static const char name[] = "Calibration.bin";
 
 /*
  * Back ported from QuartzV2.
- * Use part of the Marble flash to act as the QuartzV2 on-board EEPROM.
+ * Option to use the Marble flash to act as the QuartzV2 on-board EEPROM.
  */
 #include "ffs.h"
 int
 readEEPROM(int address, unsigned int length, void *buf)
 {
+#ifdef CONFIG_CALIBRATION_IN_MARBLE
     FIL fil;
     FRESULT fr;
     unsigned int nRead;
@@ -91,11 +92,15 @@ readEEPROM(int address, unsigned int length, void *buf)
         return -1;
     }
     return length;
+#else
+    return -1;
+#endif
 }
 
 int
 writeEEPROM(int address, unsigned int length, const void *buf)
 {
+#ifdef CONFIG_CALIBRATION_IN_MARBLE
     FIL fil;
     FRESULT fr;
     unsigned int nWritten;
@@ -112,6 +117,9 @@ writeEEPROM(int address, unsigned int length, const void *buf)
         return -1;
     }
     return length;
+#else
+    return -1;
+#endif
 }
 
 static int32_t *
@@ -133,6 +141,8 @@ void
 calibrationSetValue(int index, int value)
 {
     int32_t i32Value, *vp;
+    static uint32_t unwrittenOffsets = ~0;
+    static uint32_t unwrittenGains = ~0;
     if ((vp = getAddr(index)) == NULL) return;
     if (index < CHANNEL_COUNT) {
         if (value < -1000000) {
@@ -142,6 +152,7 @@ calibrationSetValue(int index, int value)
             value = 1000000;
         }
         ad7768SetOfst(index, value);
+        unwrittenOffsets &= ~((uint32_t)1 << index);
     }
     else if (index < (2 * CHANNEL_COUNT)) {
         if (value < -50000) {
@@ -151,6 +162,7 @@ calibrationSetValue(int index, int value)
             value = 50000;
         }
         ad7768SetGain(index - CHANNEL_COUNT, value);
+        unwrittenGains &= ~((uint32_t)1 << (index - CHANNEL_COUNT));
     }
     else {
         if (debugFlags & DEBUGFLAG_CALIBRATION) {
@@ -161,6 +173,9 @@ calibrationSetValue(int index, int value)
     if (i32Value != *vp) {
         *vp = i32Value;
         hasChanged = 1;
+    }
+    if ((unwrittenOffsets == 0) && (unwrittenGains == 0)) {
+        status = S_VALID;
     }
 }
 
