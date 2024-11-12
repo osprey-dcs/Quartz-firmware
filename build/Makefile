@@ -21,5 +21,5 @@ $(IMAGE): $(MMI) $(BIT) $(ELF_0) $(ELF_1)
               -data "$(ELF_0)"
 
 clean:
-	rm -f $(IMAGE) chk.bit vitis_pid*.str *.jou *.log eeprom*.bin
+	rm -f "$(IMAGE)" chk.bit vitis_pid*.str *.jou *.log eeprom*.bin
 
