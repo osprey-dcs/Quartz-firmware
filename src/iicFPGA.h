@@ -49,6 +49,7 @@ int iicFPGAeepromRead(int idx, uint32_t address, uint32_t length, void *buf);
 int iicFPGAeepromWrite(int idx, uint32_t address, uint32_t length,
                                                                const void *buf);
 uint32_t iicFPGAgetSerialNumber(int index);
+uint32_t iicFPGAgetPartNumber(int index);
 uint32_t iicFPGAfetchSysmon(int index);
 void iicFPGAscan(void);
 

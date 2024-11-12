@@ -398,6 +398,13 @@
     "data_width": 32,
     "sign": "unsigned"
   },
+  "FMC1:PartNumber": {
+    "access": "r",
+    "addr_width": 0,
+    "base_addr": 54,
+    "data_width": 32,
+    "sign": "unsigned"
+  },
   "ACQ:status": {
     "access": "r",
     "addr_width": 0,

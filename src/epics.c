@@ -76,6 +76,8 @@ struct LEEPpacket {
 #define REG_SECONDS_SINCE_BOOT              40
 #define REG_FMC1_SERIAL_NUMBER              50
 #define REG_FMC2_SERIAL_NUMBER              51
+#define REG_FMC1_PART_NUMBER                54
+#define REG_FMC2_PART_NUMBER                55
 #define REG_AD7768_RECORDER                 60
 #define REG_AD7768_STATUSES                 65
 #define REG_MPS_CLEAR                       70
@@ -222,6 +224,8 @@ readReg(int address)
     case REG_SECONDS_SINCE_BOOT:  return GPIO_READ(GPIO_IDX_SECONDS_SINCE_BOOT);
     case REG_FMC1_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(0);
     case REG_FMC2_SERIAL_NUMBER:  return iicFPGAgetSerialNumber(1);
+    case REG_FMC1_PART_NUMBER:    return iicFPGAgetPartNumber(0);
+    case REG_FMC2_PART_NUMBER:    return iicFPGAgetPartNumber(1);
     case REG_AD7768_RESET:        return ad7768IsReset();
     case REG_AD7768_RECORDER:     return ad7768recorderIsBusy();
     case REG_AD7768_STATUSES:     return ad7768GetStatuses();

@@ -62,6 +62,7 @@ static struct iicMap {
 
 #define FMC_COUNT 2
 static uint32_t serialNumber[FMC_COUNT];
+static uint32_t partNumber[FMC_COUNT];
 
 static int
 setMux(unsigned char c)
@@ -160,9 +161,11 @@ showIPMI(int device)
         while (fieldLength--) {
             char c = cbuf[offset++];
             printf("%c", c);
-            number = (number * 10) + (c - '0');
             if (i < 63) {
                 strBuf[i++] = c;
+            }
+            if ((c >= '0') && (c <= '9')) {
+                number = (number * 10) + (c - '0');
             }
         }
         strBuf[i] = '\0';
@@ -185,7 +188,8 @@ showIPMI(int device)
                 serialNumber[index] = number;
                 break;
             case 3:
-                if (strncmp(strBuf, "v1", 2) != 0) {
+                partNumber[index] = number;
+                if (strncasecmp(strBuf, "v1", 2) != 0) {
                     hardwareMatches = 0;
                     criticalWarning("Firmware requires Quartz V1");
                 }
@@ -205,6 +209,15 @@ iicFPGAgetSerialNumber(int index)
         return -1;
     }
     return serialNumber[index];
+}
+
+uint32_t
+iicFPGAgetPartNumber(int index)
+{
+    if ((index < 0) || (index >= FMC_COUNT)) {
+        return -1;
+    }
+    return partNumber[index];
 }
 
 void
