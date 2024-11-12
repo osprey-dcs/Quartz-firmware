@@ -1,7 +1,7 @@
 #!/bin/sh
 
 IP=192.168.19.101
-BOOT=download.bit
+BOOT=quartzV1.bit
 TARGET=BOOT.bin
 
 usage()

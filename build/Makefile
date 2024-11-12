@@ -1,7 +1,7 @@
 MMI = ../../../NASA_ACQ.runs/impl_1/NASA_ACQ.mmi
 BIT = ../../../NASA_ACQ.runs/impl_1/NASA_ACQ.bit
 ELF_0 = ../Release/NASA_ACQ.elf
-IMAGE = download.bit
+IMAGE = quarzV1.bit
 
 .PHONY: srCheck elfCheck
 all: srcCheck elfCheck $(IMAGE)
@@ -21,5 +21,5 @@ $(IMAGE): $(MMI) $(BIT) $(ELF_0) $(ELF_1)
               -data "$(ELF_0)"
 
 clean:
-	rm -f download.bit chk.bit vitis_pid*.str *.jou *.log eeprom*.bin
+	rm -f $(IMAGE) chk.bit vitis_pid*.str *.jou *.log eeprom*.bin
 
