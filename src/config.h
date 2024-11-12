@@ -87,8 +87,8 @@
 /*
  * Machine protection
  */
-#define CFG_MPS_INPUT_COUNT     8
-#define CFG_MPS_OUTPUT_COUNT    8
+#define CFG_MPS_INPUT_COUNT     4
+#define CFG_MPS_OUTPUT_COUNT    4
 
 /*
  * AD7768 DRDY/DCLK recorder
