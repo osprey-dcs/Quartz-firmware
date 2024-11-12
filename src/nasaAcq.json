@@ -403,7 +403,7 @@
     "addr_width": 0,
     "base_addr": 54,
     "data_width": 32,
-    "sign": "unsigned"
+    "sign": "signed"
   },
   "ACQ:status": {
     "access": "r",

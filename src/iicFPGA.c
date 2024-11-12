@@ -143,7 +143,7 @@ showIPMI(int device)
         uint8_t type_length = cbuf[offset];
         int fieldLength;
         const char *cp;
-        uint32_t number = 0;
+        int32_t number = 0;
         if (((type_length & 0xC0) != 0xC0)
          || (((fieldLength = (type_length & 0x3F)) + offset) > length)) {
             printf("WARNING -- FMC EEPROM has bad board information.\n");
@@ -188,11 +188,12 @@ showIPMI(int device)
                 serialNumber[index] = number;
                 break;
             case 3:
-                partNumber[index] = number;
                 if (strncasecmp(strBuf, "v1", 2) != 0) {
                     hardwareMatches = 0;
                     criticalWarning("Firmware requires Quartz V1");
+                    number = -number;
                 }
+                partNumber[index] = number;
                 break;
             }
         }
