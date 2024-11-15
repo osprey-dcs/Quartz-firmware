@@ -343,7 +343,6 @@ ad7768Reset(int applyReset)
     }
     calibrationApply();
     ad7768SetSamplingRate(0);
-    return;
 }
 
 void
@@ -353,6 +352,12 @@ ad7768Init(void)
                                     ((debugFlags & DEBUGFLAG_USE_FAKE_AD7768) ?
                                                  OP_CHIP_PINS_ASSERT_FAKE_ADC :
                                                  0));
+    /*
+     * ADC reset should already be applied by firmware on FPGA
+     * startup, but just to make sure, do it here, too.
+     */
+    ad7768Reset(1);
+    microsecondSpin(100);
     ad7768Reset(0);
 }
 
@@ -444,9 +449,11 @@ ad7768SetGain(int channel, int gain)
 void
 ad7768SetSamplingRate(int rate)
 {
+    uint32_t csr = ~0;
     struct downSampleInfo const *dp = downsampleInfo(rate);
     if ((dp == NULL)
-     || (CSR_READ() & CSR_R_RESET_ACTIVE)) {
+     || ((csr = CSR_READ()) & CSR_R_RESET_ACTIVE)) {
+        printf("Warning -- sampling rate can't be set -- CSR:%08X\n", csr);
         return;
     }
 
