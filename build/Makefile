@@ -1,7 +1,7 @@
 MMI = ../../../NASA_ACQ.runs/impl_1/NASA_ACQ.mmi
 BIT = ../../../NASA_ACQ.runs/impl_1/NASA_ACQ.bit
 ELF_0 = ../Release/NASA_ACQ.elf
-IMAGE = quarzV1.bit
+IMAGE = quartzV1.bit
 
 .PHONY: srCheck elfCheck
 all: srcCheck elfCheck $(IMAGE)
