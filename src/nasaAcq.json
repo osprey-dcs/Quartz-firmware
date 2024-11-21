@@ -107,28 +107,28 @@
   "ACQ:LOLOlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr":  1000,
+    "base_addr":  900,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:LOlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 1032,
+    "base_addr": 932,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:HIlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 1064,
+    "base_addr": 964,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:HIHIlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 1096,
+    "base_addr": 996,
     "data_width": 32,
     "sign": "signed"
   },

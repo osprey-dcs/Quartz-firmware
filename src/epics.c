@@ -96,10 +96,10 @@ struct LEEPpacket {
 #define SYSMON_SIZE                         300
 #define REG_ACQ_CHAN_ACTIVE_BASE            400
 #define REG_ACQ_CHAN_COUPLING_BASE          500
-#define REG_LOLO_THRESHOLD_BASE             1000
-#define REG_LO_THRESHOLD_BASE               1032
-#define REG_HI_THRESHOLD_BASE               1064
-#define REG_HIHI_THRESHOLD_BASE             1096
+#define REG_LOLO_THRESHOLD_BASE             900
+#define REG_LO_THRESHOLD_BASE               932
+#define REG_HI_THRESHOLD_BASE               964
+#define REG_HIHI_THRESHOLD_BASE             996
 #define REG_CALIBRATION_BASE                1100
 #define REG_MPS_LOLO_BITMAP_BASE            1200
 #define REG_MPS_LO_BITMAP_BASE              1216
