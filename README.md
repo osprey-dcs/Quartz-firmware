@@ -21,7 +21,7 @@
 1. In the **Project Manager** pane click `Settings`.  In the **Project Settings** of the window that pops up expand the IP entry and ensure that an **IP Repositories** value identifies the locations of the support modules in the ip_repo directory in the project top-level directory.  If not, select the incorrect entries and click the `-` button, then click the `+` button and navigate to and select the correct location.
 Once the repository path is correct, click `OK` to close the window.
 1. Click the `Reports` menu item and click `Report IP Status`.  In the **IP Status** pane at the bottom of the window click `Upgrade Selected` if it is not greyed out (i.e. if any of the support modules has changed).
-1. Click `Generate Block Design` in the **Project Manager** pane.  If a window pops up asking if synthesis and implementation should proceed first, agree to this.  Then wait.....  When the block design has been generated a green check mark will appear between the right angle bracket and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
+1. Click `Generate Block Design` in the **Project Manager** pane.  Wait.....  When the block design has been generated a green check mark will appear between the right angle bracket and the 'bd' in the lower left of the 'Design Runs' tab in the bottom pane of the Vivado window.
 2. In the menu bar, click `File`, then select`Export`, then click `Export Hardware...`.
 3. In the 'Export Hardware Platform' window that appears, click `Next`.
 4. In the 'Output' pane that appears, ensure that the 'Pre-synthesis' menu item is selected, then click `Next`.
