@@ -33,24 +33,18 @@
 #include "mgt.h"
 #include "util.h"
 
-/*
- * Index 0: EVR
- * Index 1: EVF
- */
-#define RX_CHANNEL_COUNT 2
-#define RX_CHANNEL_MASK ((1 << (RX_CHANNEL_COUNT)) - 1)
-
 #define CSR_W_DRP_ENABLE        0x80000000
 #define CSR_W_DRP_WRITE         0x40000000
 #define CSR_W_SEL_SHIFT         27
+#define CSR_W_DRP_ADDR_SHIFT    16
+#define CSR_RW_DRP_DATA_MASK    0xFFFF
 #define CSR_W_SEL_MASK          (0x7 << CSR_W_SEL_SHIFT)
-#define CSR_W_RX_1_BITSLIDE     0x40
-#define CSR_W_RX_0_BITSLIDE     0x20
-#define CSR_W_TX_SOFT_RESET     0x10
-#define CSR_W_RX_SOFT_RESET     0x8
-#define CSR_W_TX_RESET          0x4
-#define CSR_W_RX_RESET          0x2
-#define CSR_W_PMA_RESET         0x1
+#define CSR_W_POWERDOWN_ENABLE  0x400000
+#define CSR_W_RXSLIDE_ENABLE    0x200000
+#define CSR_W_RESET_ENABLE      0x100000
+#define CSR_W_TX_SOFT_RESET     0x80000
+#define CSR_W_RX_SOFT_RESET     0x40000
+#define CSR_W_TX_RESET          0x20000
 
 #define CSR_R_DRP_BUSY          0x80000000
 #define CSR_R_QPLL1_LOCKED      0x8000000
@@ -61,20 +55,13 @@
 #define CSR_R_RX_RESET_DONE     0x40000
 #define CSR_R_RX_FSM_RESET_DONE 0x20000
 #define CSR_R_TX_FSM_RESET_DONE 0x10000
-#define PLLS_LOCKED   (CSR_R_QPLL1_LOCKED | CSR_R_QPLL0_LOCKED)
-#define STATUS_GOOD   (CSR_R_QPLL1_LOCKED      | \
-                       CSR_R_QPLL0_LOCKED      | \
-                       CSR_R_TX_RESET_DONE     | \
-                       CSR_R_RX_RESET_DONE     | \
-                       CSR_R_RX_FSM_RESET_DONE | \
-                       CSR_R_TX_FSM_RESET_DONE)
-#define TX_ONLY_STATUS_GOOD   (CSR_R_QPLL1_LOCKED      | \
-                               CSR_R_QPLL0_LOCKED      | \
-                               CSR_R_TX_RESET_DONE     | \
-                               CSR_R_TX_FSM_RESET_DONE)
 
-#define CSR_W_DRP_ADDR_SHIFT    16
-#define CSR_RW_DRP_DATA_MASK    0xFFFF
+#define PLLS_LOCKED (CSR_R_QPLL1_LOCKED | CSR_R_QPLL0_LOCKED)
+
+/*
+ * For now, start by assuming that all lanes are active
+ */
+static uint32_t activeLanes = ((1UL << CFG_MGT_COUNT) - 1);
 
 void
 mgtShowStatus(void)
@@ -86,19 +73,13 @@ mgtShowStatus(void)
         csr = GPIO_READ(GPIO_IDX_MGT_CSR);
         printf("MGT %d: %04X:%04X\n", mgtIndex, csr >> 16, csr & 0xFFFF);
     }
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, 5 << CSR_W_SEL_SHIFT);
 }
 
 void
 mgtInit(void)
 {
-    uint32_t then;
     uint32_t csr;
-    int isUp, wasUp = 0;
-    int mgtIndex;
-    int mgtMap = (1UL << CFG_MGT_COUNT) - 1;
-
-    then = microsecondsSinceBoot();
+    uint32_t then = microsecondsSinceBoot();
     for (;;) {
         csr = GPIO_READ(GPIO_IDX_MGT_CSR);
         if ((csr & PLLS_LOCKED) == PLLS_LOCKED) {
@@ -109,57 +90,50 @@ mgtInit(void)
             break;
         }
     }
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_TX_RESET | CSR_W_RX_RESET /*| CSR_W_RX_SOFT_RESET | CSR_W_TX_SOFT_RESET*/);
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE | CSR_W_TX_SOFT_RESET |
+                                                      CSR_W_RX_SOFT_RESET);
     microsecondSpin(1);
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, 0);
-    mgtIndex = 0;
-    while (mgtMap) {
-        int mgtBit = 1UL << mgtIndex;
-        if (mgtMap & mgtBit) {
-            uint32_t good = (mgtIndex < CFG_MGT_RX_COUNT) ? STATUS_GOOD
-                                                          : TX_ONLY_STATUS_GOOD;
-            then = microsecondsSinceBoot();
-            for (;;) {
-                csr = GPIO_READ(GPIO_IDX_MGT_CSR);
-                if ((csr & good) == good) {
-                    if (debugFlags & DEBUGFLAG_MGT) {
-                        printf("MGT %d reset.\n", mgtIndex);
-                    }
-                    mgtMap &= ~mgtBit;
-                    break;
-                }
-                if ((microsecondsSinceBoot() - then) > 200000) {
-                    printf("Warning -- Reset Incomplete(%d:%X):%X\n", mgtIndex,
-                                                                   mgtMap, csr);
-                    mgtMap &= ~mgtBit;
-                    break;
-                }
-            }
-        }
-        mgtIndex++;
-    }
-    then = microsecondsSinceBoot();
-    do {
-        int newUp;
-        isUp = GPIO_READ(GPIO_IDX_LINK_STATUS) & RX_CHANNEL_MASK;
-        if ((microsecondsSinceBoot() - then) > 2000000) {
-            break;
-        }
-        newUp = isUp & ~wasUp;
-        if (newUp & 0x1) printf("EVR link up.\n");
-        if (newUp & 0x2) printf("EVF link up.\n");
-        wasUp = isUp;
-    } while (isUp != RX_CHANNEL_MASK);
-    mgtShowStatus();
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE);
     eyescanInit();
 
     /*
      * Must reset PMA after enabling eye scan hardware
      */
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_PMA_RESET);
-    microsecondSpin(2);
-    GPIO_WRITE(GPIO_IDX_MGT_CSR, 0);
-    microsecondSpin(100);
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE | ((1UL<<CFG_MGT_COUNT)-1));
+    microsecondSpin(1);
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE);
+}
+
+/*
+ * Must use receiver manual alignment since automatic alignment results in a
+ * one receiver clock uncertainty in the timing of the received data.
+ * RXSLIDE can't be used since that again results in the uncertainty.
+ * The solution is simple, but crude.  Keep resetting the receiver until
+ * it happens to start up with the correct bit alignment.
+ */
+void
+mgtCrank(void)
+{
+    unsigned int isUp;
+    static unsigned int wasUp = ~0;
+    uint32_t now = microsecondsSinceBoot();
+    static uint32_t then;
+
+    if ((now - then) < 100000) {
+        return;
+    }
+    isUp = GPIO_READ(GPIO_IDX_LINK_STATUS) & activeLanes;
+    if ((debugFlags & DEBUGFLAG_MGT) && (isUp != wasUp)) {
+        printf("MGT links up: %X\n", isUp);
+    }
+    if ((isUp & activeLanes) != activeLanes) {
+        unsigned int isDown = ~isUp & activeLanes;
+        GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE | isDown);
+        microsecondSpin(2);
+        GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_RESET_ENABLE);
+    }
+    wasUp = isUp;
+    then = now;
 }
 
 uint32_t
@@ -169,6 +143,18 @@ mgtFetchSysmon(int index)
     case 0: return GPIO_READ(GPIO_IDX_LINK_STATUS);
     default: return 0;
     }
+}
+
+void
+mgtSetActiveLanes(uint32_t active)
+{
+    uint32_t idleLanes;
+    /*
+     * First channel (EVR) is always active
+     */
+    activeLanes = (active | 0x1) & ((1UL << CFG_MGT_COUNT) - 1);
+    idleLanes = ~activeLanes & ((1UL << CFG_MGT_COUNT) - 1);
+    GPIO_WRITE(GPIO_IDX_MGT_CSR, CSR_W_POWERDOWN_ENABLE | idleLanes);
 }
 
 void

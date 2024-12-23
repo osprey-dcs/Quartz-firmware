@@ -50,10 +50,10 @@
 #define GPIO_IDX_ACQCLK_HW_JITTER          14 // HW_INTERVAL jitter
 #define GPIO_IDX_AD7768_CSR                15 // AD7768 ADC control/status
 #define GPIO_IDX_AD7768_DRDY_STATUS        16 // AD7768 DRDY alignment status
-#define GPIO_IDX_AD7768_DRDY_HISTORY       17 // AD7768 DRDY logic analyzer
-#define GPIO_IDX_AD7768_ALIGN_COUNT        18 // AD7768 (re)alignment count
-#define GPIO_IDX_INPUT_COUPLING_CSR        19 // Firmware AC/DC coupling
-#define GPIO_IDX_MCLK_SELECT_CSR           20 // ADC MCLK selection CSR
+#define GPIO_IDX_AD7768_DRDY_HISTORY       17 // AD7768 DRDY logic analyzer (R)
+#define GPIO_IDX_INPUT_COUPLING_CSR        18 // Firmware AC/DC coupling
+#define GPIO_IDX_MCLK_SELECT_CSR           19 // ADC MCLK selection CSR
+#define GPIO_IDX_DIGITIZER_AMC7823         20 // Digitizer slow monitors
 #define GPIO_IDX_BUILD_PACKET_STATUS       21 // Packet builder status (R)
 #define GPIO_IDX_BUILD_PACKET_BITMAP       22 // Packet builder active channels
 #define GPIO_IDX_BUILD_PACKET_BYTECOUNT    23 // Packet builder packet size
@@ -62,18 +62,15 @@
 #define GPIO_IDX_ADC_SEQNO                 26 // Packet builder sequence number
 #define GPIO_IDX_INPUT_COUPLING_CLR        27 // Input coupling RESET coils (AC)
 #define GPIO_IDX_INPUT_COUPLING_SET_START  28 // SET coils (DC) and start SPI
-#define GPIO_IDX_DIGITIZER_AMC7823         29 // Digitizer slow monitors
-#define GPIO_IDX_PPS_LATENCY               30 // HW to EVR PPS interval
-#define GPIO_IDX_MPS_CSR                   31 // Machine protection CSR
-#define GPIO_IDX_MPS_DATA                  32 // Machine protection data
-#define GPIO_IDX_MPS_MERGE_CSR             33 // MPS merge/forward CSR
-#define GPIO_IDX_AD7768_RECORDER_CSR       34 // AD7768 DCLK/DRDY recorder
+#define GPIO_IDX_PPS_LATENCY               29 // HW to EVR PPS interval
+#define GPIO_IDX_MPS_CSR                   30 // Machine protection CSR
+#define GPIO_IDX_MPS_DATA                  31 // Machine protection data
+#define GPIO_IDX_MPS_MERGE_CSR             32 // MPS merge/forward CSR
+#define GPIO_IDX_AD7768_RECORDER_CSR       33 // AD7768 DCLK/DRDY recorder
 
-#define GPIO_IDX_MCLK_FANOUT_ERROR_COUNT    40
 #define GPIO_IDX_MCLK_CLK32P00_ERROR_COUNT  41
 #define GPIO_IDX_MCLK_CLK25P60_ERROR_COUNT  42
 #define GPIO_IDX_MCLK_CLK20P48_ERROR_COUNT  43
-#define GPIO_IDX_ADC_STARTCOUNT             44
 
 #define GPIO_IDX_COUNT                     64 // Number of GPIO registers
 

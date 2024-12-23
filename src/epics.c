@@ -96,29 +96,29 @@ struct LEEPpacket {
 #define SYSMON_SIZE                         300
 #define REG_ACQ_CHAN_ACTIVE_BASE            400
 #define REG_ACQ_CHAN_COUPLING_BASE          500
-#define REG_LOLO_THRESHOLD_BASE             900
-#define REG_LO_THRESHOLD_BASE               932
-#define REG_HI_THRESHOLD_BASE               964
-#define REG_HIHI_THRESHOLD_BASE             996
-#define REG_CALIBRATION_BASE                1100
-#define REG_MPS_LOLO_BITMAP_BASE            1200
-#define REG_MPS_LO_BITMAP_BASE              1216
-#define REG_MPS_HI_BITMAP_BASE              1232
-#define REG_MPS_HIHI_BITMAP_BASE            1248
-#define REG_MPS_DISCRETE_BITMAP_BASE        1264
-#define REG_MPS_DISCRETE_GOOD_BASE          1280
-#define REG_MPS_FIRST_FAULT_LOLO_BASE       1296
-#define REG_MPS_FIRST_FAULT_LO_BASE         1312
-#define REG_MPS_FIRST_FAULT_HI_BASE         1328
-#define REG_MPS_FIRST_FAULT_HIHI_BASE       1344
-#define REG_MPS_FIRST_FAULT_DISCRETE_BASE   1360
-#define REG_MPS_FIRST_FAULT_SECONDS_BASE    1376
-#define REG_MPS_FIRST_FAULT_TICKS_BASE      1392
-#define REG_MPS_STATUS_BASE                 1408
-#define REG_AD7768_HEADERS_BASE             1440
+#define REG_LOLO_THRESHOLD_BASE             1000
+#define REG_LO_THRESHOLD_BASE               1032
+#define REG_HI_THRESHOLD_BASE               1064
+#define REG_HIHI_THRESHOLD_BASE             1096
+#define REG_CALIBRATION_BASE                1200
+#define REG_MPS_LOLO_BITMAP_BASE            1300
+#define REG_MPS_LO_BITMAP_BASE              1316
+#define REG_MPS_HI_BITMAP_BASE              1332
+#define REG_MPS_HIHI_BITMAP_BASE            1348
+#define REG_MPS_DISCRETE_BITMAP_BASE        1364
+#define REG_MPS_DISCRETE_GOOD_BASE          1380
+#define REG_MPS_FIRST_FAULT_LOLO_BASE       1396
+#define REG_MPS_FIRST_FAULT_LO_BASE         1412
+#define REG_MPS_FIRST_FAULT_HI_BASE         1428
+#define REG_MPS_FIRST_FAULT_HIHI_BASE       1444
+#define REG_MPS_FIRST_FAULT_DISCRETE_BASE   1460
+#define REG_MPS_FIRST_FAULT_SECONDS_BASE    1476
+#define REG_MPS_FIRST_FAULT_TICKS_BASE      1492
+#define REG_MPS_STATUS_BASE                 1508
+#define REG_AD7768_HEADERS_BASE             1540
 #define REG_JSON_ROM_BASE                   0x800
 
-#define MATCH(addr, base, size) (((addr)>=(base)) && ((addr)<((base)+(size))))
+#define RANGE(base, count) (base) ... ((base)+(count)-1)
 
 static int powerUpFlag = 1;
 
@@ -136,55 +136,42 @@ writeReg(int address, uint32_t value)
     case REG_AD7768_RECORDER:   ad7768recorderStart();                   return;
     case REG_MPS_CLEAR: if(isEVG()) evgSendEvent(CFG_EVR_MPS_CLEAR_CODE);return;
     case REG_MPS_MERGE_REQUIRED:mpsMergeSetRequiredLinks(value);         return;
-    }
-    if (MATCH(address, REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT):
         acqSetActive(address - REG_ACQ_CHAN_ACTIVE_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1)) {
+    case RANGE(REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1):
         return calibrationSetValue(address - REG_CALIBRATION_BASE, value);
-    }
-    if (MATCH(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT):
         acqSetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT):
         acqSetLOLOthreshold(address - REG_LOLO_THRESHOLD_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_LO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_LO_THRESHOLD_BASE, CHANNEL_COUNT):
         acqSetLOthreshold(address - REG_LO_THRESHOLD_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_HI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_HI_THRESHOLD_BASE, CHANNEL_COUNT):
         acqSetHIthreshold(address - REG_HI_THRESHOLD_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT):
         acqSetHIHIthreshold(address - REG_HIHI_THRESHOLD_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetLOLObitmap(address - REG_MPS_LOLO_BITMAP_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetLObitmap(address - REG_MPS_LO_BITMAP_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetHIbitmap(address - REG_MPS_HI_BITMAP_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetHIHIbitmap(address - REG_MPS_HIHI_BITMAP_BASE, value);
         return;
-    }
-    if (MATCH(address, REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetDiscreteBitmap(address - REG_MPS_DISCRETE_BITMAP_BASE,value);
         return;
-    }
-    if (MATCH(address, REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT):
         mpsLocalSetDiscreteGoodState(address-REG_MPS_DISCRETE_GOOD_BASE,value);
         return;
     }
@@ -232,8 +219,8 @@ readReg(int address)
     case REG_MPS_MERGE_TRIPPED:   return mpsMergeGetTripped();
     case REG_MPS_MERGE_REQUIRED:  return mpsMergeGetRequiredLinks();
     case REG_GET_PACKET_SEQNO:    return fetchRegister(GPIO_IDX_ADC_SEQNO);
-    }
-    if (MATCH(address, REG_SYSMON_BASE, SYSMON_SIZE)) {
+    case RANGE(REG_SYSMON_BASE, SYSMON_SIZE):
+        {
         int offset = address - REG_SYSMON_BASE;
         int bank = offset & 0xE0;
         int index = offset & 0x1F;
@@ -247,74 +234,53 @@ readReg(int address)
         case 0xC0:  return ad7768FetchSysmon(index);
         case 0xE0:  return mgtFetchSysmon(index);
         }
+        }
         return 0;
-    }
-    if (MATCH(address, REG_ACQ_CHAN_ACTIVE_BASE, SYSMON_SIZE)) {
+    case RANGE(REG_ACQ_CHAN_ACTIVE_BASE, CHANNEL_COUNT):
         return acqGetActive(address - REG_ACQ_CHAN_ACTIVE_BASE);
-    }
-    if (MATCH(address, REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_ACQ_CHAN_COUPLING_BASE, CHANNEL_COUNT):
         return acqGetCoupling(address - REG_ACQ_CHAN_COUPLING_BASE);
-    }
-    if (MATCH(address, REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1)) {
+    case RANGE(REG_CALIBRATION_BASE, (2*CHANNEL_COUNT)+1):
         return calibrationGetValue(address - REG_CALIBRATION_BASE);
-    }
-    if (MATCH(address, REG_GET_LOLO, 4)) {
+    case RANGE(REG_GET_LOLO, 4):
         return acqGetLimitExcursions(address - REG_GET_LOLO);
-    }
-    if (MATCH(address, REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_LOLO_THRESHOLD_BASE, CHANNEL_COUNT):
         return acqGetLOLOthreshold(address - REG_LOLO_THRESHOLD_BASE);
-    }
-    if (MATCH(address, REG_LO_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_LO_THRESHOLD_BASE, CHANNEL_COUNT):
         return acqGetLOthreshold(address - REG_LO_THRESHOLD_BASE);
-    }
-    if (MATCH(address, REG_HI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_HI_THRESHOLD_BASE, CHANNEL_COUNT):
         return acqGetHIthreshold(address - REG_HI_THRESHOLD_BASE);
-    }
-    if (MATCH(address, REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_HIHI_THRESHOLD_BASE, CHANNEL_COUNT):
         return acqGetHIHIthreshold(address - REG_HIHI_THRESHOLD_BASE);
-    }
-    if (MATCH(address, REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_LOLO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetLOLObitmap(address - REG_MPS_LOLO_BITMAP_BASE);
-    }
-    if (MATCH(address, REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_LO_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetLObitmap(address - REG_MPS_LO_BITMAP_BASE);
-    }
-    if (MATCH(address, REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_HI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetHIbitmap(address - REG_MPS_HI_BITMAP_BASE);
-    }
-    if (MATCH(address, REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_HIHI_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetHIHIbitmap(address - REG_MPS_HIHI_BITMAP_BASE);
-    }
-    if (MATCH(address, REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_DISCRETE_BITMAP_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetDiscreteBitmap(address-REG_MPS_DISCRETE_BITMAP_BASE);
-    }
-    if (MATCH(address, REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_DISCRETE_GOOD_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetDiscreteGoodState(address-REG_MPS_DISCRETE_GOOD_BASE);
-    }
-    if (MATCH(address, REG_MPS_FIRST_FAULT_LOLO_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_LOLO_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultLOLO(address-REG_MPS_FIRST_FAULT_LOLO_BASE);
-    }
-    if (MATCH(address, REG_MPS_FIRST_FAULT_LO_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_LO_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultLO(address-REG_MPS_FIRST_FAULT_LO_BASE);
-    }
-    if (MATCH(address, REG_MPS_FIRST_FAULT_HI_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_HI_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultHI(address-REG_MPS_FIRST_FAULT_HI_BASE);
-    }
-    if (MATCH(address, REG_MPS_FIRST_FAULT_HIHI_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_HIHI_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultHIHI(address-REG_MPS_FIRST_FAULT_HIHI_BASE);
-    }
-    if (MATCH(address,REG_MPS_FIRST_FAULT_DISCRETE_BASE,CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_DISCRETE_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultDiscrete(address -
                                              REG_MPS_FIRST_FAULT_DISCRETE_BASE);
-    }
-    if (MATCH(address, REG_MPS_FIRST_FAULT_TICKS_BASE,CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_FIRST_FAULT_TICKS_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetFirstFaultTicks(address -
                                                 REG_MPS_FIRST_FAULT_TICKS_BASE);
-    }
-    if (MATCH(address, REG_MPS_STATUS_BASE, CFG_MPS_OUTPUT_COUNT)) {
+    case RANGE(REG_MPS_STATUS_BASE, CFG_MPS_OUTPUT_COUNT):
         return mpsLocalGetStatus(address - REG_MPS_STATUS_BASE);
-    }
-    if (MATCH(address, REG_AD7768_HEADERS_BASE, CHANNEL_COUNT)) {
+    case RANGE(REG_AD7768_HEADERS_BASE, CHANNEL_COUNT):
         return ad7768GetHeader(address - REG_AD7768_HEADERS_BASE);
     }
     return 0;

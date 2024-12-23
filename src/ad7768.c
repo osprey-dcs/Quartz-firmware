@@ -36,7 +36,6 @@
 #include "util.h"
 
 #define CSR_W_OP_CHIP_PINS      (0x1<<30)
-# define OP_CHIP_PINS_START_ALIGNMENT   0x100
 # define OP_CHIP_PINS_CONTROL_RESET     0x2
 # define OP_CHIP_PINS_ASSERT_RESET      0x1
 # define OP_CHIP_PINS_CONTROL_FAKE_ADC  0x8
@@ -45,9 +44,8 @@
 #define CSR_W_OP_SPI_TRANSFER   (0x2<<30)
 # define OP_SPI_CS_MASK         (((1<<CFG_AD7768_CHIP_COUNT)-1)<<16)
 #define CSR_R_SPI_ACTIVE        0x80000000
-#define CSR_R_ALIGNMENT_ACTIVE  0x40000000
-#define CSR_R_USING_FAKE_ADC    0x20000000
-#define CSR_R_RESET_ACTIVE      0x10000000
+#define CSR_R_USING_FAKE_ADC    0x40000000
+#define CSR_R_RESET_ACTIVE      0x20000000
 #define CSR_R_SPI_READ_MASK     0xFFFF
 #define CSR_W_OP_HEADER_SELECT (0x3<<30)
 # define CSR_R_AD7768_HEADER_MASK   0xFF0000
@@ -65,11 +63,14 @@
 #define CSR_WRITE(v) GPIO_WRITE(GPIO_IDX_AD7768_CSR, (v))
 #define CSR_READ()   GPIO_READ(GPIO_IDX_AD7768_CSR)
 
-#define MCLK_CSR_W_DISABLE  0x00
-#define MCLK_CSR_W_32p000   0x01
-#define MCLK_CSR_W_25p600   0x02
-#define MCLK_CSR_W_20p480   0x04
-#define MCLK_CSR_W_16p384   0x08
+#define MCLK_CSR_W_NO_CLOCK     0x00
+#define MCLK_CSR_W_32p000       0x01
+#define MCLK_CSR_W_25p600       0x02
+#define MCLK_CSR_W_20p480       0x04
+#define MCLK_CSR_W_16p384       0x08
+#define MCLK_CSR_W_CLKSEL       0x10
+#define MCLK_CSR_W_SYNC         0x80000000
+#define MCLK_CSR_R_SYNC_BUSY    0x80000000
 #define MCLK_CSR_R_RATE_MASK    0x0FFFFFFF
 
 #define CHAN_MODE_DEC_32    0x00
@@ -83,7 +84,6 @@
 #define POWER_MODE_MCLK_DIV_4   0x33
 #define POWER_MODE_MCLK_DIV_8   0x22
 #define POWER_MODE_MCLK_DIV_32  0x00
-#define POWER_MODE_LVDS         0x08
 
 struct downSampleInfo {
     int     rate;
@@ -91,6 +91,8 @@ struct downSampleInfo {
     uint8_t channelMode;
     uint8_t powerMode;
 };
+
+static uint32_t alignCount;
 
 static struct downSampleInfo const *
 downsampleInfo(int rate)
@@ -106,7 +108,7 @@ downsampleInfo(int rate)
       {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
       {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
     };
-    static struct downSampleInfo const * dpOld = &downSampleTable[4];
+    static struct downSampleInfo const * dpOld = &downSampleTable[1];
     if (rate <= 0) {
         return dpOld;
     }
@@ -183,7 +185,7 @@ ad7768DumpReg(void)
 
 /*
  * ADC alignment state machine
- * Alignment requires two START* cycles.
+ * Alignment requires two SYNC_IN* assertions
  */
 static void
 ad7768step(int startAlignment)
@@ -214,13 +216,14 @@ ad7768step(int startAlignment)
         if (debugFlags & DEBUGFLAG_SHOW_AD7768_SYNCS) {
             printf("AD7768 alignment started.\n");
         }
-        CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_START_ALIGNMENT);
+        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_SYNC);
+        alignCount++;
         then = microsecondsSinceBoot();
         state = ST_AWAIT_ALIGNMENT;
         break;
 
     case ST_AWAIT_ALIGNMENT:
-        if (!(CSR_READ() & CSR_R_ALIGNMENT_ACTIVE)) {
+        if (!(GPIO_READ(GPIO_IDX_MCLK_SELECT_CSR) & MCLK_CSR_R_SYNC_BUSY)) {
             now = microsecondsSinceBoot();
             if (debugFlags & DEBUGFLAG_SHOW_AD7768_SYNCS) {
                 printf("AD7768 SYNC done after %d us.\n", now - then);
@@ -282,7 +285,8 @@ ad7768Reset(int applyReset)
     if (applyReset) {
         CSR_WRITE(CSR_W_OP_CHIP_PINS | OP_CHIP_PINS_CONTROL_RESET |
                                                      OP_CHIP_PINS_ASSERT_RESET);
-        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
+        GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_CLKSEL |
+                                                           MCLK_CSR_W_NO_CLOCK);
         return;
     }
     if (!ad7768IsReset()) {
@@ -458,19 +462,18 @@ ad7768SetSamplingRate(int rate)
     }
 
     /*
-     * Fast mode, LVDS, MCLK divide by N
-     * Do this first so that on startup, or after an AD7768 reset, the
-     * LVDS_ENABLE bit has been set before any clock is applied.
+     * Fast mode, LVCMOS, MCLK divide by N
      */
-    broadcastReg(0x04, POWER_MODE_LVDS | dp->powerMode);
+    broadcastReg(0x04, dp->powerMode);
 
     /*
      * Select hardware clock
      * Ensure glitch-free change by disabling before changing.
+     * Disable twice to give a little delay between disabling and reenabling.
      */
-    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_DISABLE);
-    microsecondSpin(1);
-    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, dp->mclkSelect);
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_CLKSEL|MCLK_CSR_W_NO_CLOCK);
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_CLKSEL|MCLK_CSR_W_NO_CLOCK);
+    GPIO_WRITE(GPIO_IDX_MCLK_SELECT_CSR, MCLK_CSR_W_CLKSEL | dp->mclkSelect);
 
     // Mode A: Wideband, Decimate by N
     if (debugFlags & DEBUGFLAG_ENABLE_DRDY_FAULT) {
@@ -505,7 +508,7 @@ ad7768FetchSysmon(int index)
     switch (index) {
     case 0: return fetchRegister(GPIO_IDX_AD7768_DRDY_STATUS);
     case 1: return fetchRegister(GPIO_IDX_AD7768_DRDY_HISTORY);
-    case 2: return fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT);
+    case 2: return alignCount;
     case 3: return ad7768FetchMCLKrate();
     }
     return 0;
@@ -540,7 +543,7 @@ ad7768ShowAlignment(void)
                                      history & DRDY_HISTORY_LOGIC_MASK,
                                      (history & DRDY_HISTORY_STATE_MASK) >>
                                                       DRDY_HISTORY_STATE_SHIFT);
-    printf("Alignment Count: %d\n", fetchRegister(GPIO_IDX_AD7768_ALIGN_COUNT));
+    printf("Alignment Count: %d\n", alignCount);
     for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i++) {
         int r;
         r = readReg(i, 0x09);

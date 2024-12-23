@@ -95,4 +95,12 @@
  */
 #define CFG_AD7768_DRDY_RECORDER_SAMPLE_COUNT 131072
 
+
+/*
+ * QuartzV1 boards have no EEPROM so the best we can do is keep the
+ * calibration values in Marble flash.
+ * Uncomment the following to do this.
+ */
+#define CONFIG_CALIBRATION_IN_MARBLE
+
 #endif /* _CONFIG_H_ */

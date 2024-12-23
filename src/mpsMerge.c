@@ -41,6 +41,10 @@
 void
 mpsMergeSetRequiredLinks(uint32_t requiredLinks)
 {
+    /*
+     * The first link is the EVR and so can never be required.
+     * The second link on EVG nodes is the uplink and so cannot be required.
+     */
     requiredLinks &= ~(isEVG() ? 0x1 : 0x3);
     GPIO_WRITE(GPIO_IDX_MPS_MERGE_CSR, requiredLinks);
 }
@@ -57,4 +61,3 @@ mpsMergeGetTripped(void)
     return (GPIO_READ(GPIO_IDX_MPS_MERGE_CSR) & CSR_TRIPPED_MASK)
                                                            >> CSR_TRIPPED_SHIFT;
 }
-

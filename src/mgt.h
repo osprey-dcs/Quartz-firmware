@@ -29,8 +29,10 @@
 #define _MGT_H_
 
 void mgtInit(void);
+void mgtCrank(void);
 void mgtShowStatus(void);
 uint32_t mgtFetchSysmon(int index);
+void mgtSetActiveLanes(uint32_t active);
 
 void mgtDRPwrite(int mgtIndex, int drpAddress, int value);
 int mgtDRPread(int mgtIndex, int drpAddress);

@@ -29,8 +29,13 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <xparameters.h>
+#include <xiic.h>
 #include "ad7768.h"
 #include "config.h"
+#ifdef CONFIG_CALIBRATION_IN_MARBLE
+# include "ffs.h"
+  static const char name[] = "Calibration.bin";
+#endif
 #include "gpio.h"
 #include "calibration.h"
 #include "util.h"
@@ -65,15 +70,9 @@ static uint32_t calibrationDate;
 static int32_t offsets[CHANNEL_COUNT];
 static int32_t gains[CHANNEL_COUNT];
 static int hasChanged;
-static const char name[] = "Calibration.bin";
 
-/*
- * Back ported from QuartzV2.
- * Option to use the Marble flash to act as the QuartzV2 on-board EEPROM.
- */
-#include "ffs.h"
 int
-readEEPROM(int address, unsigned int length, void *buf)
+readEEPROM(int address, int length, void *buf)
 {
 #ifdef CONFIG_CALIBRATION_IN_MARBLE
     FIL fil;
@@ -93,12 +92,59 @@ readEEPROM(int address, unsigned int length, void *buf)
     }
     return length;
 #else
-    return -1;
+    int nLeft = length;
+    unsigned char *cp = buf;
+    unsigned char cbuf[2];
+    static int firstTime = 1;
+    if (firstTime) {
+        uint32_t whenStarted;
+        uint32_t sr;
+        if (XIic_DynInit(XPAR_IIC_QUARTZ_BASEADDR) != XST_SUCCESS) {
+            printf("Calibration XIic_DynInit failed!\n");
+            return -1;
+        }
+        /* Remove reset */
+        XIic_WriteReg(XPAR_IIC_FPGA_BASEADDR, XIIC_GPO_REG_OFFSET, 0x1);
+        whenStarted = microsecondsSinceBoot();
+        while (((sr=XIic_ReadReg(XPAR_IIC_FPGA_BASEADDR, XIIC_SR_REG_OFFSET)) &
+                                                 (XIIC_SR_RX_FIFO_EMPTY_MASK |
+                                                  XIIC_SR_TX_FIFO_EMPTY_MASK |
+                                                  XIIC_SR_BUS_BUSY_MASK)) !=
+                                                 (XIIC_SR_RX_FIFO_EMPTY_MASK |
+                                                  XIIC_SR_TX_FIFO_EMPTY_MASK)) {
+            if ((microsecondsSinceBoot() - whenStarted) > 1000000) {
+                printf("Calibration IIC not ready  SR:%08X!\n", sr);
+                return -1;
+            }
+        }
+        firstTime = 0;
+    }
+    while (nLeft) {
+        int nReq = nLeft;
+        /* Dynamic operation can transfer at most 255 bytes */
+        if (nReq > 255) nReq = 255;
+        cbuf[0] = address >> 8;
+        cbuf[1] = address;
+        if (XIic_DynSend(XPAR_IIC_QUARTZ_BASEADDR, EEPROM_ADDRESS7, cbuf, 2,
+                                                    XIIC_REPEATED_START) != 2) {
+            printf("Calibration XIic_DynSend failed!\n");
+            break;
+        }
+        if (XIic_DynRecv(XPAR_IIC_QUARTZ_BASEADDR, EEPROM_ADDRESS7, cp, nReq)
+                                                                      != nReq) {
+            printf("Calibration XIic_DynRecv failed!");
+            break;
+        }
+        cp += nReq;
+        address += nReq;
+        nLeft -= nReq;
+    }
+    return length - nLeft;
 #endif
 }
 
 int
-writeEEPROM(int address, unsigned int length, const void *buf)
+writeEEPROM(int address, int length, const void *buf)
 {
 #ifdef CONFIG_CALIBRATION_IN_MARBLE
     FIL fil;
@@ -118,7 +164,44 @@ writeEEPROM(int address, unsigned int length, const void *buf)
     }
     return length;
 #else
-    return -1;
+    /*
+     * All devices should be able to handle a page size of 16, but things
+     * lock up when I try that.  Perhaps there's an issue in the XIIC code
+     * with writes larger than the transmitter FIFO?
+     * The easy way out is just to limit the write size.
+     */
+    const int pageSize = 8;
+    const unsigned char *cp = buf;
+    unsigned char cbuf[2+pageSize];
+    int nLeft = length;
+    while (nLeft) {
+        uint32_t then;
+        int writeSize, nSend = nLeft;
+        cbuf[0] = address >> 8;
+        cbuf[1] = address;
+        if (nSend > pageSize) nSend = pageSize;
+        memcpy(&cbuf[2], cp, nSend);
+        writeSize = 2 + nSend;
+        if (XIic_DynSend(XPAR_IIC_QUARTZ_BASEADDR, EEPROM_ADDRESS7, cbuf,
+                                           writeSize, XIIC_STOP) != writeSize) {
+            return -1;
+        }
+        /*
+         * Poll for completion
+         */
+        then = microsecondsSinceBoot();
+        while (XIic_DynSend(XPAR_IIC_QUARTZ_BASEADDR, EEPROM_ADDRESS7, cbuf,
+                                                           1, XIIC_STOP) != 1) {
+            if ((microsecondsSinceBoot() - then) > 20000) {
+                printf("EEPROM write failed to complete.\n");
+                return -1;
+            }
+        }
+        nLeft -= nSend;
+        cp += nSend;
+        address += nSend;
+    }
+    return length;
 #endif
 }
 

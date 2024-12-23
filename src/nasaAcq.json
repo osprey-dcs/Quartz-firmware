@@ -23,21 +23,21 @@
   "calibrationOffset": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 1100,
+    "base_addr": 1200,
     "data_width": 32,
     "sign": "signed"
   },
   "calibrationGain": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 1132,
+    "base_addr": 1232,
     "data_width": 32,
     "sign": "signed"
   },
   "calibrationDate": {
     "access": "rw",
     "addr_width": 0,
-    "base_addr": 1164,
+    "base_addr": 1264,
     "data_width": 32,
     "sign": "unsigned"
   },
@@ -107,28 +107,28 @@
   "ACQ:LOLOlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr":  900,
+    "base_addr":  1000,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:LOlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 932,
+    "base_addr": 1032,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:HIlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 964,
+    "base_addr": 1064,
     "data_width": 32,
     "sign": "signed"
   },
   "ACQ:HIHIlimXX": {
     "access": "rw",
     "addr_width": 5,
-    "base_addr": 996,
+    "base_addr": 1096,
     "data_width": 32,
     "sign": "signed"
   },
@@ -492,98 +492,98 @@
   "MPS:chkLOLO:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr":  1200,
+    "base_addr":  1300,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:chkLO:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr": 1216,
+    "base_addr": 1316,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:chkHI:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr": 1232,
+    "base_addr": 1332,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:chkHIHI:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr": 1248,
+    "base_addr": 1348,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:chkDiscrete:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr": 1264,
+    "base_addr": 1364,
     "data_width": 8,
     "sign": "unsigned"
   },
   "MPS:discreteGood:XX": {
     "access": "rw",
     "addr_width": 3,
-    "base_addr": 1280,
+    "base_addr": 1380,
     "data_width": 8,
     "sign": "unsigned"
   },
   "MPS:firstFaultLOLO:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr":  1296,
+    "base_addr":  1396,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:firstFaultLO:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1312,
+    "base_addr": 1412,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:firstFaultHI:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1328,
+    "base_addr": 1428,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:firstFaultHIHI:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1344,
+    "base_addr": 1444,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:firstFaultDiscrete:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1360,
+    "base_addr": 1460,
     "data_width": 8,
     "sign": "unsigned"
   },
   "MPS:firstFaultSeconds:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1376,
+    "base_addr": 1476,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:firstFaultTicks:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1392,
+    "base_addr": 1492,
     "data_width": 32,
     "sign": "unsigned"
   },
   "MPS:status:XX": {
     "access": "r",
     "addr_width": 3,
-    "base_addr": 1408,
+    "base_addr": 1508,
     "data_width": 32,
     "sign": "unsigned"
   },
@@ -611,7 +611,7 @@
   "ADC:headers": {
     "access": "r",
     "addr_width": 5,
-    "base_addr": 1440,
+    "base_addr": 1540,
     "data_width": 8,
     "sign": "unsigned"
   },

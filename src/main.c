@@ -76,6 +76,7 @@ main()
     fastDataInit();
     for (;;) {
         clockAdjustCrank();
+        mgtCrank();
         ad7768Crank();
         evgCrank();
         consoleCrank();
