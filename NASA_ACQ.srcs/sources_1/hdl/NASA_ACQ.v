@@ -71,12 +71,12 @@ module NASA_ACQ #(
     output wire [CFG_MGT_COUNT-1:0] QSFP_TX_P,
     output wire [CFG_MGT_COUNT-1:0] QSFP_TX_N,
 
-    output wire PMOD1_0,
-    output wire PMOD1_1,
+    input  wire PMOD1_0,
+    input  wire PMOD1_1,
     output wire PMOD1_2,
     output wire PMOD1_3,
-    output wire PMOD1_4,
-    output wire PMOD1_5,
+    input  wire PMOD1_4,
+    input  wire PMOD1_5,
     output wire PMOD1_6,
     output wire PMOD1_7,
 
@@ -89,9 +89,11 @@ module NASA_ACQ #(
     output wire PMOD2_6,
     output wire PMOD2_7,
 
-    // Osprey Quad AD7768 FMC Digitizer
+    // Osprey Quad AD7768 FMC Digitizer (version 1)
     output wire                                 AD7768_MCLK_P_io,
     output wire                                 AD7768_MCLK_N_io,
+    output wire                                 AD7768_START_n_io,
+    input  wire                                 AD7768_SYNC_OUT_n,
     output wire                                 AD7768_RESET_n_io,
     output wire                                 AD7768_SCLK_io,
     output wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n_io,
@@ -101,9 +103,7 @@ module NASA_ACQ #(
     input  wire     [CFG_AD7768_CHIP_COUNT-1:0] AD7768_DRDY,
     input  wire [(CFG_AD7768_CHIP_COUNT *
                   CFG_AD7768_ADC_PER_CHIP)-1:0] AD7768_DOUT,
-    output wire                                 AD7768_START_n_io,
-    input  wire                                 AD7768_SYNC_IN_n,
-    input  wire                                 AD7768_SYNC_OUT_n,
+    inout  wire                          [15:0] AD7768_GPIO,
 
     output wire                                 COIL_CONTROL_SPI_CLK_io,
     output wire                                 COIL_CONTROL_SPI_CS_n_io,
@@ -122,26 +122,15 @@ module NASA_ACQ #(
     );
 
 ///////////////////////////////////////////////////////////////////////////////
-// Static outputs
-assign VCXO_EN = 1'b1;
-assign WR_DAC2_SYNC_Tn = 1'b1;
-
-///////////////////////////////////////////////////////////////////////////////
-// Clocks
-wire sysClk, acqClk, fixedClk200, evrRxClk, evfRxClk, evgClk;
-wire clk32, clk32p768, clk40p96, clk51p2, clk64, mclk;
-wire refClk125;
-IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
-
-///////////////////////////////////////////////////////////////////////////////
 // Tri-state FMC outputs until we know that we're running
 // on hardware that matches the firmware.
 wire disableFMCoutputs;
+wire [CFG_AD7768_CHIP_COUNT-1:0] AD7768_MCLK;
+wire                             AD7768_START_n;
 wire                             AD7768_RESET_n;
 wire                             AD7768_SCLK;
 wire [CFG_AD7768_CHIP_COUNT-1:0] AD7768_CS_n;
 wire                             AD7768_SDI;
-wire                             AD7768_START_n;
 wire                             COIL_CONTROL_SPI_CLK;
 wire                             COIL_CONTROL_SPI_CS_n;
 wire                             COIL_CONTROL_SPI_DIN;
@@ -158,20 +147,15 @@ for (i = 0 ; i < CFG_AD7768_CHIP_COUNT ; i = i + 1) begin
                    .T(disableFMCoutputs));
 end
 endgenerate;
-// Can't tri-state the MCLK lines since that requires an IOSTANDARD of BLVDS,
-// which requires source termination, which the board doesn't have.
-OBUFDS MCLK_BUF(.I(mclk),
-                .O(AD7768_MCLK_P_io),
-                .OB(AD7768_MCLK_N_io));
+IOBUF SDI_BUF(.I(AD7768_SDI),
+              .IO(AD7768_SDI_io),
+              .T(disableFMCoutputs));
 IOBUF RESET_n_BUF(.I(AD7768_RESET_n),
                   .IO(AD7768_RESET_n_io),
                   .T(disableFMCoutputs));
 IOBUF SCLK_BUF(.I(AD7768_SCLK),
                .IO(AD7768_SCLK_io),
                .T(disableFMCoutputs));
-IOBUF SDI_BUF(.I(AD7768_SDI),
-              .IO(AD7768_SDI_io),
-              .T(disableFMCoutputs));
 IOBUF START_n_BUF(.I(AD7768_START_n),
                   .IO(AD7768_START_n_io),
                   .T(disableFMCoutputs));
@@ -196,6 +180,18 @@ IOBUF AMC7823_SPI_CS_BUF(.I(AMC7823_SPI_CS_n),
 IOBUF AMC7823_SPI_DIN_BUF(.I(AMC7823_SPI_DIN),
                           .IO(AMC7823_SPI_DIN_io),
                           .T(disableFMCoutputs));
+
+///////////////////////////////////////////////////////////////////////////////
+// Static outputs
+assign VCXO_EN = 1'b1;
+assign WR_DAC2_SYNC_Tn = 1'b1;
+
+///////////////////////////////////////////////////////////////////////////////
+// Clocks
+wire sysClk, acqClk, fixedClk200, evrRxClk, evfRxClk, evgClk;
+wire clk32, clk32p768, clk40p96, clk51p2, clk64;
+wire refClk125;
+IBUFGDS DDR_REF_CLK_BUF(.I(DDR_REF_CLK_P), .IB(DDR_REF_CLK_N), .O(refClk125));
 
 ///////////////////////////////////////////////////////////////////////////////
 // General-purpose I/O register glue
@@ -264,6 +260,7 @@ wire  [7:0] evgTxCode;
 wire        evgTxCodeValid;
 wire [15:0] mpsTxChars;
 wire        mpsTxCharIsK;
+wire [CFG_MPS_OUTPUT_COUNT-1:0] mpsTrippedOutputs;
 fiberLinks #(
     .MGT_COUNT(CFG_MGT_COUNT),
     .MGT_DATA_WIDTH(16),
@@ -301,6 +298,7 @@ fiberLinks #(
     .evgTxCodeValid(evgTxCodeValid),
     .mpsTxChars(mpsTxChars),
     .mpsTxCharIsK(mpsTxCharIsK),
+    .mpsTrippedOutputs(mpsTrippedOutputs),
     .sysTimestamp(sysTimestamp),
     .acqClk(acqClk),
     .acqTimestamp(acqTimestamp),
@@ -313,6 +311,9 @@ fiberLinks #(
     .txN(QSFP_TX_N));
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_SECONDS] = sysTimestamp[32+:32];
 assign GPIO_IN[GPIO_IDX_SYS_TIMESTAMP_TICKS]   = sysTimestamp[0+:32];
+
+// Driving a 0 to the PMOD connector turns the output transistor ON.
+assign {PMOD1_7, PMOD1_3, PMOD1_6, PMOD1_2} = mpsTrippedOutputs;
 
 ///////////////////////////////////////////////////////////////////////////////
 // Measure interval between hardware and event receiver PPS markers
@@ -426,6 +427,11 @@ quartzMapDOUT #(
     .DOUT_RAW(AD7768_DOUT),
     .DOUT_MAPPED(AD7768_DOUT_MAPPED));
 
+wire ad7768mclk, ad7768reset_n, ad7768sclk, ad7768sdi;
+assign AD7768_RESET_n = ad7768reset_n;
+assign AD7768_SCLK = ad7768sclk;
+assign AD7768_SDI = ad7768sdi;
+
 ad7768 #(
     .ADC_CHIP_COUNT(CFG_AD7768_CHIP_COUNT),
     .ADC_PER_CHIP(CFG_AD7768_ADC_PER_CHIP),
@@ -434,7 +440,6 @@ ad7768 #(
     .ACQ_CLK_RATE(CFG_ACQCLK_RATE),
     .MCLK_MAX_RATE(CFG_MCLK_MAX_RATE),
     .DEBUG_DRDY("false"),
-    .DEBUG_ALIGN("false"),
     .DEBUG_ACQ("false"),
     .DEBUG_PINS("false"),
     .DEBUG_SPI("false"))
@@ -445,22 +450,21 @@ ad7768 #(
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_CSR]),
     .sysDRDYstatus(GPIO_IN[GPIO_IDX_AD7768_DRDY_STATUS]),
     .sysDRDYhistory(GPIO_IN[GPIO_IDX_AD7768_DRDY_HISTORY]),
-    .sysAlignCount(GPIO_IN[GPIO_IDX_AD7768_ALIGN_COUNT]),
+    .sysDisableFMCoutputs(disableFMCoutputs),
     .clk32(clk32),
     .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .acqStrobe(ad7768Strobe),
     .acqData(ad7768Data),
     .acqHeaders(ad7768Headers),
-    .adcSCLK(AD7768_SCLK),
+    .adcSCLK(ad7768sclk),
     .adcCSn(AD7768_CS_n),
-    .adcSDI(AD7768_SDI),
+    .adcSDI(ad7768sdi),
     .adcSDO(AD7768_SDO),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
     .adcDOUT_a(AD7768_DOUT_MAPPED),
-    .adcSTARTn(AD7768_START_n),
-    .adcRESETn(AD7768_RESET_n));
+    .adcRESETn(ad7768reset_n));
 
 // Need different MCLK values to get the sampling rates we need.
 mclkSelect #(.DEBUG("false"))
@@ -468,22 +472,24 @@ mclkSelect #(.DEBUG("false"))
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),
     .sysGPIO_OUT(GPIO_OUT),
-    .mclkRate(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
+    .sysStatus(GPIO_IN[GPIO_IDX_MCLK_SELECT_CSR]),
     .acqClk(acqClk),
     .acqPPSstrobe(acqPPSstrobe),
     .clk32p768(clk32p768),
     .clk40p96(clk40p96),
     .clk51p2(clk51p2),
     .clk64(clk64),
-    .MCLK(mclk));
+    .MCLK(ad7768mclk),
+    .SYNC_n(AD7768_START_n));
 
-/////////////////////////////////////////////////////////////////////////////
-// FIXME: Count clock faults -- maybe this should be permanent?
+// Can't tri-state the MCLK lines since that requires an IOSTANDARD of BLVDS,
+// which requires source termination, which the board doesn't have.
+OBUFDS MCLK_BUF(.I(ad7768mclk),
+                .O(AD7768_MCLK_P_io),
+                .OB(AD7768_MCLK_N_io));
+
+///////////////////////////////////////////////////////////////////////////////
 wire clk40p96locked, clk51p2locked, clk64locked;
-countRisingEdges countFanoutFaults(
-    .clk(fixedClk200),
-    .signal_a(MCLKfanoutFault),
-    .status(GPIO_IN[GPIO_IDX_MCLK_FANOUT_ERROR_COUNT]));
 countRisingEdges countClk40p96unlocks(
     .clk(fixedClk200),
     .signal_a(!clk40p96locked),
@@ -496,10 +502,6 @@ countRisingEdges countClk64unlocks(
     .clk(fixedClk200),
     .signal_a(!clk64locked),
     .status(GPIO_IN[GPIO_IDX_MCLK_CLK32P00_ERROR_COUNT]));
-countRisingEdges countADCstarts(
-    .clk(fixedClk200),
-    .signal_a(!AD7768_START_n),
-    .status(GPIO_IN[GPIO_IDX_ADC_STARTCOUNT]));
 
 /////////////////////////////////////////////////////////////////////////////
 // Investigate odd DRDY behaviour
@@ -514,22 +516,11 @@ ad7768recorder #(
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_AD7768_RECORDER_CSR]),
     .acqClk(acqClk),
-    .adcMCLK_a(mclk),
+    .adcMCLK_a(ad7768mclk),
     .adcDCLK_a(AD7768_DCLK),
     .adcDRDY_a(AD7768_DRDY),
     .acqDCLKshifted(PMOD2_4),
     .acqMisalignedMarker(acqMisalignedMarker));
-
-// FIXME: For scope viewing to see where ADC SYNC shifts are arising!
-assign PMOD1_0 = AD7768_DRDY[0];
-assign PMOD1_1 = AD7768_DRDY[1];
-assign PMOD1_2 = AD7768_DRDY[2];
-assign PMOD1_3 = AD7768_DRDY[3];
-assign PMOD1_4 = AD7768_DCLK[0];
-assign PMOD1_5 = AD7768_DCLK[1];
-assign PMOD1_6 = AD7768_DCLK[2];
-assign PMOD1_7 = AD7768_DCLK[3];
-assign PMOD2_5 = acqMisalignedMarker;
 
 ///////////////////////////////////////////////////////////////////////////////
 // AC/DC coupling
@@ -679,6 +670,7 @@ evrAcqControl #(.DEBUG("false"))
 
 ///////////////////////////////////////////////////////////////////////////////
 // MPS
+// LED ON at MPS input appears as a 0 at the PMOD connector.
 mpsLocal #(
     .MPS_OUTPUT_COUNT(CFG_MPS_OUTPUT_COUNT),
     .MPS_INPUT_COUNT(CFG_MPS_INPUT_COUNT),
@@ -698,7 +690,7 @@ mpsLocal #(
     .acqLimitExcursions(acqLimitExcursions),
     .acqLimitExcursionsTVALID(acqStrobe),
     .acqTimestamp(acqTimestamp),
-    .mpsInputStates_a({PMOD2_7,PMOD2_6,PMOD2_5,PMOD2_4,PMOD2_3,PMOD2_2,PMOD2_1,PMOD2_0}), // FIXME -- how will interlock inputs be handed for real?
+    .mpsInputStates_a(~{PMOD1_5, PMOD1_1, PMOD1_4, PMOD1_0}),
     .mgtTxClk(evgClk),
     .mpsTxChars(mpsTxChars),
     .mpsTxCharIsK(mpsTxCharIsK));
@@ -746,6 +738,14 @@ bd bd_i (
     .i2c_fpga_sda_o(i2c_fpga_sda_o),
     .i2c_fpga_sda_t(i2c_fpga_sda_t),
     .i2c_fpga_gpo(I2C_FPGA_SW_RSTn),
+
+    // Fake signals not present on QuartzV1.
+    .i2c_quartz_scl_i(1'b1),
+    .i2c_quartz_scl_o(),
+    .i2c_quartz_scl_t(),
+    .i2c_quartz_sda_i(1'b1),
+    .i2c_quartz_sda_o(),
+    .i2c_quartz_sda_t(),
 
     .RGMII_rxc(RGMII_RX_CLK),
     .RGMII_rd(rgmiiDataDelayed),

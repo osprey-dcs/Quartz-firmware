@@ -34,7 +34,6 @@ module ad7768 #(
     parameter ACQ_CLK_RATE   = 125000000,
     parameter MCLK_MAX_RATE  = 32000000,
     parameter DEBUG_DRDY     = "false",
-    parameter DEBUG_ALIGN    = "false",
     parameter DEBUG_ACQ      = "false",
     parameter DEBUG_PINS     = "false",
     parameter DEBUG_SPI      = "false"
@@ -45,13 +44,12 @@ module ad7768 #(
     output wire [31:0] sysStatus,
     output wire [31:0] sysDRDYstatus,
     output wire [31:0] sysDRDYhistory,
-    output wire [31:0] sysAlignCount,
     output reg         sysDisableFMCoutputs = 1,
 
     input  wire        clk32,
 
     input  wire                                                acqClk,
-    (*MARK_DEBUG=DEBUG_ALIGN*) input  wire                     acqPPSstrobe,
+    (*MARK_DEBUG=DEBUG_PINS*)  input  wire                     acqPPSstrobe,
     (*MARK_DEBUG=DEBUG_ACQ*)   output reg                      acqStrobe=0,
     (*MARK_DEBUG=DEBUG_ACQ*)   output wire
                 [(ADC_CHIP_COUNT*ADC_PER_CHIP*ADC_WIDTH)-1:0] acqData,
@@ -67,7 +65,6 @@ module ad7768 #(
     (*MARK_DEBUG=DEBUG_PINS*) input  wire     [ADC_CHIP_COUNT-1:0] adcDRDY_a,
     (*MARK_DEBUG=DEBUG_PINS*) input  wire
                                [(ADC_CHIP_COUNT*ADC_PER_CHIP)-1:0] adcDOUT_a,
-    (*MARK_DEBUG=DEBUG_PINS*) output wire                          adcSTARTn,
     (*MARK_DEBUG=DEBUG_PINS*) output wire                          adcRESETn);
 
 localparam SKEW_LIMIT_NS = 30;
@@ -81,11 +78,6 @@ localparam DCLK_MAX_RATE = MCLK_MAX_RATE / DCLK_DIV;
 // System clock (sysClk) domain
 ///////////////////////////////////////////////////////////////////////////////
 
-reg sysStartAlignmentToggle = 0;
-reg doneAlignmentToggle = 0; /* acqClk domain, but needed here */
-(*ASYNC_REG="true"*) reg sysDoneAlignmentToggle_m = 0;
-reg sysDoneAlignmentToggle = 0;
-
 reg sysResetADC = 1;
 reg sysUseFakeAD7768 = 0;
 assign adcRESETn = !sysResetADC;
@@ -96,8 +88,6 @@ localparam CSR_W_OP_CHIP_PINS     = 2'h1,
            CSR_W_OP_AD7768_SELECT = 2'h3;
 
 always @(posedge sysClk) begin
-    sysDoneAlignmentToggle_m <= doneAlignmentToggle;
-    sysDoneAlignmentToggle   <= sysDoneAlignmentToggle_m;
     if (sysCsrStrobe) begin
         case (sysOpcode)
         CSR_W_OP_CHIP_PINS: begin
@@ -109,15 +99,6 @@ always @(posedge sysClk) begin
             end
             if (sysGPIO_OUT[7]) begin
                 sysDisableFMCoutputs <= 0;
-            end
-            if (sysGPIO_OUT[8]) begin
-                /*
-                 * A request can remain pending for up to a second
-                 * so just toggling sysStartAlignmentToggle here
-                 * might result in a second request cancelling
-                 * an earlier one
-                 */
-                sysStartAlignmentToggle <= !sysDoneAlignmentToggle;
             end
         end
         default: ;
@@ -424,10 +405,9 @@ end
 endgenerate
 
 assign sysStatus = { spiActive,
-                     sysDoneAlignmentToggle ^ sysStartAlignmentToggle,
                      sysUseFakeAD7768,
                      sysResetADC,
-                     {32 - 4 - HEADER_WIDTH - SPI_SHIFTREG_WIDTH{1'b0}},
+                     {32 - 3 - HEADER_WIDTH - SPI_SHIFTREG_WIDTH{1'b0}},
                      headerMux,
                      spiShiftReg };
 
@@ -463,43 +443,6 @@ always @(posedge acqClk) begin
 end
 
 //////////////////////////////////////////////////////////////////////////////
-// Emit ADC alignment START synchronized to PPS
-// Request an alignment upon request from the system or on DRDY misalignment.
-// Stretch START* to about 500 ns.
-localparam ADC_ALIGN_STRETCH_TICKS = ACQ_CLK_RATE / 2000000;
-localparam ADC_ALIGN_STRETCH_COUNT_WIDTH = $clog2(ADC_ALIGN_STRETCH_TICKS+1)+1;
-reg [ADC_ALIGN_STRETCH_COUNT_WIDTH-1:0] adcAlignStretch=ADC_ALIGN_STRETCH_TICKS;
-wire adcAlignDone = adcAlignStretch[ADC_ALIGN_STRETCH_COUNT_WIDTH-1];
-(*ASYNC_REG="true"*) reg startAlignmentToggle_m = 0;
-(*MARK_DEBUG=DEBUG_ALIGN*) reg startAlignmentToggle = 0;
-(*MARK_DEBUG=DEBUG_ALIGN*) reg alignmentActive = 0;
-
-localparam ADC_ALIGN_COUNT_WIDTH = 20;
-reg [ADC_ALIGN_COUNT_WIDTH-1:0] adcAlignCount = 0;
-
-always @(posedge acqClk) begin
-    startAlignmentToggle_m <= sysStartAlignmentToggle;
-    startAlignmentToggle   <= startAlignmentToggle_m;
-    if (alignmentActive) begin
-        if (adcAlignDone) begin
-            alignmentActive <= 0;
-            doneAlignmentToggle <= startAlignmentToggle;
-        end
-        else begin
-            adcAlignStretch <= adcAlignStretch - 1;
-        end
-    end
-    else begin
-        adcAlignStretch <= ADC_ALIGN_STRETCH_TICKS;
-        if ((startAlignmentToggle != doneAlignmentToggle) && acqPPSstrobe) begin
-            adcAlignCount <= adcAlignCount + 1;
-            alignmentActive <=1;
-        end
-    end
-end
-assign adcSTARTn = ~alignmentActive;
-
-//////////////////////////////////////////////////////////////////////////////
 // Pass status back to system
 // Don't worry about clock-crossing since the C code
 // knows the values may be metastable.
@@ -511,8 +454,6 @@ assign sysDRDYstatus = { !drdyAligned,
 assign sysDRDYhistory = { drdyState,
                           {32-3-(4*ADC_CHIP_COUNT){1'b0}},
                           drdySkewPattern };
-
-assign sysAlignCount = { {32-ADC_ALIGN_COUNT_WIDTH{1'b0}}, adcAlignCount };
 
 endmodule
 `default_nettype wire

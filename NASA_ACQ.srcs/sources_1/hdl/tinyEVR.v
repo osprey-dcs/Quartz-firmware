@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2023 Osprey DCS
+// Copyright (c) 2024 Osprey DCS
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+`timescale 1ns / 1ns
 
 ////////////////////////////////////////////////////////////////////////////////
 // Very small subset of MRF event receiver
@@ -119,7 +121,7 @@ module tinyEVRcommon #(
     (*mark_debug=DEBUG*) output wire                       ppsMarker,
     (*mark_debug=DEBUG*) output reg                        timestampValid = 0,
     (*mark_debug=DEBUG*) output wire [TIMESTAMP_WIDTH-1:0] timestamp,
-    (*mark_debug=DEBUG*) output wire                 [7:0] distributedDataBus,
+    (*mark_debug=DEBUG*) output reg                  [7:0] distributedDataBus=0,
     output wire [ACT_MSB:ACT_LSB]                          action,
 
     input                                             sysClk,
@@ -136,14 +138,16 @@ assign timestamp = {tsSeconds, tsTicks};
 localparam EVCODE_SHIFT_ZERO     = 8'h70;
 localparam EVCODE_SHIFT_ONE      = 8'h71;
 localparam EVCODE_SECONDS_MARKER = 8'h7D;
+localparam EVCODE_K28_5          = 8'hBC;
 
 (*mark_debug=DEBUG*) reg           [SECONDS_WIDTH-1:0] shiftReg;
 (*mark_debug=DEBUG*) reg [$clog2(SECONDS_WIDTH)-1:0] bitsLeft = SECONDS_WIDTH - 1;
 (*mark_debug=DEBUG*) reg enoughBits = 0, tooManyBits = 0;
 
 wire [7:0] evCode = evrRxWord[7:0];
-assign distributedDataBus = evrRxWord[15:8];
 wire evCodeValid = !evrCharIsK[0];
+reg distributedBusPhaseValid = 0;
+reg distributedBusPhase = 0;
 
 always @(posedge evrRxClk) begin
     // Update time stamp seconds and clear time stamp ticks
@@ -176,6 +180,20 @@ always @(posedge evrRxClk) begin
         if (bitsLeft == 0) enoughBits <= 1;
         shiftReg <= {shiftReg[SECONDS_WIDTH-2:0], evCode[0]};
     end
+
+    // Update distributed bus
+    if (evrCharIsK[0] && (evCode == EVCODE_K28_5)) begin
+        distributedBusPhaseValid <= 1;
+        distributedBusPhase <= 0;
+        distributedDataBus <= evrRxWord[15:8];
+    end
+    else begin
+        distributedBusPhase <= !distributedBusPhase;
+        if (distributedBusPhaseValid && distributedBusPhase) begin
+            distributedDataBus <= evrRxWord[15:8];
+        end
+    end
+
 end
 
 // Rely on the optimizer to clean out all unused event strobes

@@ -30,6 +30,19 @@
  *      evsXXXX   -- Event source (generator or fanout) out
  *      mpsXXXX   -- Machine protection out (EVR MGT)
  *      mpfXXXX   -- Merged Machine protection out (EVF MGT)
+ *
+ * Fibers:
+ *  1 (QSFP1-1), All nodes
+ *          Event stream in, local MPS status out.
+ *          For leaf notes this is the only fiber.
+ *
+ *  2 (QSFP1-2), Event generator node
+ *          Merged MPS status from event fanout in, event stream out.
+ *  2 (QSFP1-2), Event fanout nodes
+ *          Event stream from generator in, event stream out.
+ *
+ *  3-8 (QSFP1-3:4, QSFP2-1:4), Event generator and event fanout nodes
+ *          MPS status in, event stream out.
  */
 `default_nettype none
 module fiberLinks #(
@@ -69,11 +82,12 @@ module fiberLinks #(
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
                          output reg                        isEVG = 0,
 
-                         output wire                       mgtTxClk,
-                         input  wire                 [7:0] evgTxCode,
-                         input  wire                       evgTxCodeValid,
-                         input  wire  [MGT_DATA_WIDTH-1:0] mpsTxChars,
-                         input  wire                       mpsTxCharIsK,
+                         output wire                         mgtTxClk,
+                         input  wire                   [7:0] evgTxCode,
+                         input  wire                         evgTxCodeValid,
+                         input  wire    [MGT_DATA_WIDTH-1:0] mpsTxChars,
+                         input  wire                         mpsTxCharIsK,
+                         output wire [MPS_OUTPUT_COUNT-1:0 ] mpsTrippedOutputs,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
@@ -199,6 +213,8 @@ always @(posedge mgtTxClk) begin
 end
 assign evsTxChars =   mgtIsEVG ? evgTxChars   : evfTxChars;
 assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : evfTxCharIsK;
+assign mpsTrippedOutputs = isEVG ? mpfTxChars[8+:MPS_OUTPUT_COUNT]
+                                 : {MPS_OUTPUT_COUNT{1'b1}};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceivers
@@ -296,11 +312,11 @@ tinyEVG #(.DEBUG(DEBUG_EVG))
     .seconds(sysSeconds),
     .distributedBus(8'h00),
     .sysClk(sysClk),
-    .sysSendStrobe(1'b0),
     .sysWriteStrobe(1'b0),
-    .sysWriteAddress(11'h000),
-    .sysWriteData(8'h00),
-    .sysBufferBusy());
+    .sysAddress(11'h000),
+    .sysData(8'h00),
+    .sysSendStrobe(1'b0),
+    .sysBusy());
 
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event fanout
@@ -326,6 +342,7 @@ mpsMerge #(
     .sysCsrStrobe(sysMPSmergeStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysMPSmergeStatus),
+    .sysIsEVG(isEVG),
     .mgtRxChars(mgtRxChars),
     .mgtRxLinkUp(mgtRxLinkUp),
     .mgtTxClk(mgtTxClk),

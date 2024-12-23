@@ -123,9 +123,7 @@ set_property -dict {PACKAGE_PIN H13 IOSTANDARD LVCMOS25} [get_ports {AD7768_DOUT
 #set_property -dict {PACKAGE_PIN F8 IOSTANDARD LVCMOS25} [get_ports {FMC1_LA_N[29]}]
 
 # FMC1 LA30 -- FMC1 H34/H35
-set_property PACKAGE_PIN B12 [get_ports {AD7768_SDO[0]}]
-set_property IOSTANDARD LVCMOS25 [get_ports {AD7768_SDO[0]}]
-set_property PULLUP true [get_ports {AD7768_SDO[0]}]
+set_property -dict {PACKAGE_PIN B12 IOSTANDARD LVCMOS25 PULLUP true} [get_ports {AD7768_SDO[0]}]
 set_property -dict {PACKAGE_PIN B11 IOSTANDARD LVCMOS25 PULLDOWN true} [get_ports AD7768_SDI_io]
 
 # FMC1 LA31 -- FMC1 G33/G34

@@ -26,7 +26,7 @@
 /*
  * Delay data value from ethernet PHY
  * The IDELAY_VALUE was determined emperically by placing the
- * delay blocks in VAR_LOAD mode and seeing what values 
+ * delay blocks in VAR_LOAD mode and seeing what values
  * corresponded to correct network operation.
  */
 `default_nettype none
