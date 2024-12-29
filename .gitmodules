@@ -1,0 +1,3 @@
+[submodule "Workspace/NASA_ACQ"]
+	path = Workspace/NASA_ACQ
+	url = git@github.com:osprey-dcs/nasa-fpga-sw.git
