@@ -188,9 +188,9 @@ showIPMI(int device)
                 serialNumber[index] = number;
                 break;
             case 3:
-                if (strncasecmp(strBuf, "v2", 2) != 0) {
+                if (strncasecmp(strBuf, "v1", 2) != 0) {
                     hardwareMatches = 0;
-                    criticalWarning("Firmware requires Quartz V2");
+                    criticalWarning("Firmware requires Quartz V1");
                     number = -number;
                 }
                 partNumber[index] = number;

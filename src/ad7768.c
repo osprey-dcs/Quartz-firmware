@@ -84,6 +84,7 @@
 #define POWER_MODE_MCLK_DIV_4   0x33
 #define POWER_MODE_MCLK_DIV_8   0x22
 #define POWER_MODE_MCLK_DIV_32  0x00
+#define POWER_MODE_LVDS         0x08
 
 struct downSampleInfo {
     int     rate;
@@ -185,7 +186,7 @@ ad7768DumpReg(void)
 
 /*
  * ADC alignment state machine
- * Alignment requires two SYNC_IN* assertions
+ * Alignment requires two START* assertions
  */
 static void
 ad7768step(int startAlignment)
@@ -462,9 +463,11 @@ ad7768SetSamplingRate(int rate)
     }
 
     /*
-     * Fast mode, LVCMOS, MCLK divide by N
+     * Fast mode, LVDS, MCLK divide by N
+     * Do this first so that on startup, or after an AD7768 reset, the
+     * LVDS_ENABLE bit has been set before any clock is applied.
      */
-    broadcastReg(0x04, dp->powerMode);
+    broadcastReg(0x04, POWER_MODE_LVDS | dp->powerMode);
 
     /*
      * Select hardware clock
