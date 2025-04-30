@@ -51,6 +51,8 @@ wire commaCounterDone = commaCounter[2];
 /*
  * FIFO write side
  */
+wire [7:0] rxCode = rxChars[15:8];
+wire       rxIsK = rxCharIsK[1];
 (*MARK_DEBUG=DEBUG*) reg [7:0] fifoIN;
 (*MARK_DEBUG=DEBUG*) reg       fifoWREN;
 
@@ -70,8 +72,8 @@ always @(posedge rxClk) begin
     /*
      * FIFO write side
      */
-    fifoIN <= rxChars[7:0];
-    if (rxLinkUp && !rxCharIsK[0] && (rxChars[7:0] != EVCODE_NOP)) begin
+    fifoIN <= rxCode;
+    if (rxLinkUp && !rxIsK && (rxCode != EVCODE_NOP)) begin
         fifoWREN <= 1;
     end
     else begin
@@ -102,8 +104,8 @@ always @(posedge txClk) begin
         txCodeIsK <= 0;
     end
 end
-assign txChars = { 8'h00, txCode };
-assign txCharIsK = { 1'b0, txCodeIsK };
+assign txChars = { txCode, 8'h00 };
+assign txCharIsK = {txCodeIsK, 1'b0 };
 
 /*
  * Instantiate the event code clock-crossing FIFO

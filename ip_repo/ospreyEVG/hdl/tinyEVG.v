@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2106 Osprey DCS
+// Copyright (c) 2024 Osprey DCS
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -20,20 +20,19 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-// Core of MRF-compativble event generator
-// Provides heartbeats, time stamps, arbitrary events and,
-// optionally, distributed buffer.
+// Core of MRF-compatible event generator
+// Provides heartbeats, time stamps, arbitrary events and distributed buffer.
 // Nets with names beginning with 'sys' are in the system clock (sysClk) domain.
 
 module tinyEVG #(
-    parameter SECONDS_WIDTH                    = 32,
     parameter DISTRIBUTED_BUFFER_ADDRESS_WIDTH = 11,
+    parameter SECONDS_WIDTH                    = 32,
     parameter DEBUG                            = "false"
     ) (
     // Connection to transmitter
-    input  wire                     evgTxClk,
-    output reg               [15:0] evgTxWord,
-    output reg                [1:0] evgTxIsK,
+    input  wire                            evgTxClk,
+    (*MARK_DEBUG=DEBUG*) output reg [15:0] evgTxWord,
+    (*MARK_DEBUG=DEBUG*) output reg  [1:0] evgTxIsK,
 
     // Arbitrary event request
     input  wire               [7:0] eventCode,
@@ -52,11 +51,11 @@ module tinyEVG #(
 
     // Distributed buffer
     input  wire                                        sysClk,
-    input  wire                                        sysSendStrobe,
     input  wire                                        sysWriteStrobe,
-    input  wire [DISTRIBUTED_BUFFER_ADDRESS_WIDTH-1:0] sysWriteAddress,
-    input  wire                                  [7:0] sysWriteData,
-    output reg                                         sysBufferBusy = 0);
+    input  wire [DISTRIBUTED_BUFFER_ADDRESS_WIDTH-1:0] sysAddress,
+    input  wire                                  [7:0] sysData,
+    input  wire                                        sysSendStrobe,
+    output reg                                         sysBusy = 0);
 
 localparam EVCODE_SHIFT_ZERO     = 8'h70;
 localparam EVCODE_SHIFT_ONE      = 8'h71;
@@ -68,45 +67,44 @@ localparam EVCODE_K28_5          = 8'hBC;
 
 // Dual-port RAM
 reg [7:0] dpram[0:(1 << DISTRIBUTED_BUFFER_ADDRESS_WIDTH) - 1], dpramQ;
-reg sendMatch = 0;
+reg sendAckToggle = 0;
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
-reg sysSendToggle = 0;
-(* ASYNC_REG = "true" *) reg sysSendMatch_m = 0;
-reg sysSendMatch = 0;
-reg [DISTRIBUTED_BUFFER_ADDRESS_WIDTH-1:0] sysLastAddress;
+reg sysSendReqToggle = 0;
+(* ASYNC_REG = "true" *) reg sysSendAckToggle_m = 0;
+reg sysSendAckToggle = 0;
+reg [DISTRIBUTED_BUFFER_ADDRESS_WIDTH-1:0] sysFinalAddress;
 always @(posedge sysClk) begin
-    if (sysWriteStrobe) begin
-        dpram[sysWriteAddress] <= sysWriteData;
-        sysLastAddress <= sysWriteAddress;
-    end
-    sysSendMatch_m <= sendMatch;
-    sysSendMatch   <= sysSendMatch_m;
-    if (sysBufferBusy) begin
-        if (sysSendMatch == sysSendToggle) begin
-            sysBufferBusy <= 0;
+    sysSendAckToggle_m <= sendAckToggle;
+    sysSendAckToggle   <= sysSendAckToggle_m;
+    if (sysBusy) begin
+        if (sysSendAckToggle == sysSendReqToggle) begin
+            sysBusy <= 0;
         end
     end
     else if (sysSendStrobe) begin
-        sysSendToggle <= !sysSendToggle;
-        sysBufferBusy <= 1;
+        sysFinalAddress <= sysAddress;
+        sysSendReqToggle <= !sysSendReqToggle;
+        sysBusy <= 1;
+    end
+    else if (sysWriteStrobe) begin
+        dpram[sysAddress] <= sysData;
     end
 end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event generator clock domain
-(*MARK_DEBUG=DEBUG*) reg ppsPending = 0, haveSeconds = 0, sentSeconds = 0;
-(*MARK_DEBUG=DEBUG*) reg [SECONDS_WIDTH-1:0] secondsReg;
-reg [SECONDS_WIDTH-1:0] secondsShiftReg;
+reg ppsPending = 0, haveSeconds = 0, sentSeconds = 0;
+reg [SECONDS_WIDTH-1:0] secondsReg, secondsShiftReg;
 reg [$clog2(SECONDS_WIDTH):0] secondsBitCount = ~0;
 wire secondsBitCountDone = secondsBitCount[$clog2(SECONDS_WIDTH)];
 reg secondsBitCountDone_d = 1;
 reg [2:0] secondsGap = 0;
 reg [2:0] commaGap = 0;
-(* ASYNC_REG = "true" *) reg sendToggle_m;
-reg sendToggle = 0;
-reg bufferBusy;
+(* ASYNC_REG = "true" *) reg sendReqToggle_m;
+reg sendReqToggle = 0;
+reg bufferBusy = 0;
 
 // Buffer transmission state machine
 localparam S_START  = 3'd0,
@@ -130,12 +128,12 @@ always @(posedge evgTxClk) begin
         secondsReg <= seconds;
         haveSeconds <= 1;
     end
-    else if (ppsStrobe) begin
-        secondsReg <= secondsReg + 1;
-    end
 
     // Make note of a PPS request
     if (ppsStrobe) begin
+        if (!secondsStrobe) begin
+            secondsReg <= secondsReg + 1;
+        end
         if (!ppsPending) begin
             ppsPending <= 1;
         end
@@ -148,26 +146,27 @@ always @(posedge evgTxClk) begin
     // Send events in priority order
     // Arbitrary event request
     if (eventStrobe) begin
-        evgTxWord[7:0] <= eventCode;
-        evgTxIsK[0] <= 0;
+        evgTxWord[15:8] <= eventCode;
+        evgTxIsK[1] <= 0;
     end
-    // Then heartbeats -- may be inhibited by FIFO event, but never delayed.
+    // Then heartbeats -- may be inhibited by arbitrary event but never delayed.
     else if (heartbeatRequest) begin
-        evgTxWord[7:0] <= EVCODE_HEARTBEAT;
-        evgTxIsK[0] <= 0;
+        evgTxWord[15:8] <= EVCODE_HEARTBEAT;
+        evgTxIsK[1] <= 0;
     end
     // Then PPS markers (which could be delayed by an arbitrary amount).
-    // Best practice is to ensure gap between arbitrary event requests
+    // Best practice is to ensure gap between arbitrary event requests to
+    // minimize the PPS marker shift.
     else if (ppsPending) begin
         ppsPending <= 0;
         secondsGap <= 3;
         if (sentSeconds) begin
-            evgTxWord[7:0] <= EVCODE_SECONDS_MARKER;
-            evgTxIsK[0] <= 0;
+            evgTxWord[15:8] <= EVCODE_SECONDS_MARKER;
+            evgTxIsK[1] <= 0;
         end
         else begin
-            evgTxWord[7:0] <= 0;
-            evgTxIsK[0] <= 0;
+            evgTxWord[15:8] <= 0;
+            evgTxIsK[1] <= 0;
         end
         if (haveSeconds) begin
             secondsBitCount <= SECONDS_WIDTH - 1;
@@ -179,36 +178,40 @@ always @(posedge evgTxClk) begin
         secondsBitCount <= secondsBitCount - 1;
         secondsGap <= 3;
         secondsShiftReg <= { secondsShiftReg[0+:SECONDS_WIDTH-1], 1'b0 };
-        evgTxWord[7:0] <= secondsShiftReg[SECONDS_WIDTH-1] ? EVCODE_SHIFT_ONE :
+        evgTxWord[15:8] <= secondsShiftReg[SECONDS_WIDTH-1] ? EVCODE_SHIFT_ONE :
                                                              EVCODE_SHIFT_ZERO;
-        evgTxIsK[0] <= 0;
+        evgTxIsK[1] <= 0;
     end
     else if (commaGap[2]) begin
-        evgTxWord[7:0] <= EVCODE_K28_5;
-        evgTxIsK[0] <= 1;
+        evgTxWord[15:8] <= EVCODE_K28_5;
+        evgTxIsK[1] <= 1;
     end
     else begin
-        evgTxWord[7:0] <= 0;
-        evgTxIsK[0] <= 0;
+        evgTxWord[15:8] <= 0;
+        evgTxIsK[1] <= 0;
     end
 
     // Distributed data buffer
-    sendToggle_m <= sysSendToggle;
-    sendToggle   <= sendToggle_m;
+    sendReqToggle_m <= sysSendReqToggle;
+    sendReqToggle   <= sendReqToggle_m;
     dpramQ <= dpram[bufferAddress];
     if (bufferBusy) begin
-        if (!commaGap[0]) begin
+        if (commaGap[0]) begin
+            evgTxWord[7:0] <= distributedBus;
+            evgTxIsK[0] <= 0;
+        end
+        else begin
             case (bufferState)
             S_START: begin
-                evgTxWord[15:8] <= EVCODE_K28_0;
-                evgTxIsK[1] <= 1;
+                evgTxWord[7:0] <= EVCODE_K28_0;
+                evgTxIsK[0] <= 1;
                 bufferChecksum <= 0;
                 bufferAddress <= 0;
                 bufferState <= S_DATA;
             end
             S_DATA: begin
-                evgTxWord[15:8] <= dpramQ;
-                evgTxIsK[1] <= 0;
+                evgTxWord[7:0] <= dpramQ;
+                evgTxIsK[0] <= 0;
                 bufferChecksum <= bufferChecksum + dpramQ;
                 bufferAddress <= bufferAddress + 1;
                 bufferCounter <= bufferCounter - 1;
@@ -218,35 +221,31 @@ always @(posedge evgTxClk) begin
             end
             S_STOP: begin
                 bufferChecksum <= ~bufferChecksum;
-                evgTxWord[15:8] <= EVCODE_K28_1;
-                evgTxIsK[1] <= 1;
+                evgTxWord[7:0] <= EVCODE_K28_1;
+                evgTxIsK[0] <= 1;
                 bufferState <= S_CHK_HI;
             end
             S_CHK_HI: begin
-                evgTxWord[15:8] <= bufferChecksum[15:8];
-                evgTxIsK[1] <= 0;
+                evgTxWord[7:0] <= bufferChecksum[15:8];
+                evgTxIsK[0] <= 0;
                 bufferState <= S_CHK_LO;
             end
             S_CHK_LO: begin
-                evgTxWord[15:8] <= bufferChecksum[7:0];
-                evgTxIsK[1] <= 0;
+                evgTxWord[7:0] <= bufferChecksum[7:0];
+                evgTxIsK[0] <= 0;
                 bufferBusy <= 0;
-                sendMatch <= !sendMatch;
+                sendAckToggle <= !sendAckToggle;
             end
             default: ;
             endcase
         end
-        else begin
-            evgTxWord[15:8] <= distributedBus;
-            evgTxIsK[1] <= 0;
-        end
     end
     else begin
-        evgTxWord[15:8] <= distributedBus;
-        evgTxIsK[1] <= 0;
+        evgTxWord[7:0] <= distributedBus;
+        evgTxIsK[0] <= 0;
         bufferState <= S_START;
-        if (sendToggle != sendMatch) begin
-            bufferCounter <= {1'b0, sysLastAddress} - 1;
+        if (sendReqToggle != sendAckToggle) begin
+            bufferCounter <= {1'b0, sysFinalAddress} - 1;
             bufferBusy <= 1;
         end
     end

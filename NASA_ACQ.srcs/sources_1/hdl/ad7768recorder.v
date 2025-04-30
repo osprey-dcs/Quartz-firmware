@@ -41,7 +41,7 @@ module ad7768recorder #(
     input  wire                      adcMCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDCLK_a,
     input  wire [ADC_CHIP_COUNT-1:0] adcDRDY_a,
-    
+ 
     output wire                      acqDCLKshifted,
     output wire                      acqMisalignedMarker);
 

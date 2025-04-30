@@ -1,0 +1,1548 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <title>Osprey EVG</title>
+  </head>
+  <body>
+    <span style="font-weight: bold;"><span style="font-family: Times New
+        Roman, Times, serif;"></span></span>
+    <h1><span style="font-family: Times New Roman, Times, serif;">Osprey
+        EVG</span></h1>
+    <span style="font-family: Times New Roman, Times, serif;">Vivado
+      block design component and driver providing a basic MRF-compatible
+      event generator.</span><span style="font-family: Times New Roman,
+      Times, serif;"><br>
+    </span>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Firmware</span><span
+        style="font-family: Times New Roman, Times, serif;"></span></h2>
+    <div style="margin-left: 40px;"><span style="font-family: Times New
+        Roman, Times, serif;"><img moz-do-not-send="true"
+          src="BlockDesign.svg" alt="" style=" width: 412px; height:
+          262px;"></span><br>
+      <span style="font-family: Times New Roman, Times, serif;"></span></div>
+    <span style="font-family: Times New Roman, Times, serif;"><br>
+    </span>
+    <table style=" text-align: left; width: 70%;" cellspacing="2"
+      cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;"><span style="font-weight:
+                bold;">Name</span></span><span style="font-family: Times
+              New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;"><span style="font-weight:
+                bold;">Clock</span></span><span style="font-family:
+              Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style=" vertical-align: middle; text-align: center;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-weight: bold;">Description</span></span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">S_AXI</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_aclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">AXI4-Lite port.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgClk<br>
+            </span></td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Transmitter clock from
+              multi-gigabit transceiver.</span><span style="font-family:
+              Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_aclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Clock for AXI4-lite port.</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">ppsMarker_a</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;">_<br>
+          </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Pulse-per second marker.&nbsp;
+              The time stamp seconds are incremented and the time stamp
+              ticks cleared on the rising edge of this signal.&nbsp;
+              Asynchronous to evgClk but duration must be at least two
+              evgClk cycles.<br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">hwTriggers_a</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;">–<br>
+          </td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Hardware trigger inputs.&nbsp;
+              An event code can be transmitted on either edge.</span><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;">&nbsp;
+
+
+
+
+
+
+                Asynchronous to evgClk but duration must be at least two
+                evgClk cycles.</span></span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">distributedBus</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgClk</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Sampled and synchronized on
+              rising edge of evgClk.&nbsp; Transmitted on every other
+              evgClk.<br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_aresetn</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">s_axi_aclk</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Active-low reset input.&nbsp;
+              Resets all firmware.</span><span style="font-family: Times
+              New Roman, Times, serif;"><br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgTxChars</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgClk</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;"><span style="font-family: Times
+                New Roman, Times, serif;">Multi-gigabit transceiver
+                transmit data.&nbsp; Event codes and K28.5 alignment
+                commas are sent in the most significant eight
+                bits.&nbsp; Distributed bus and distributed data values
+                are sent in the least significant eight bits.</span><span
+                style="font-family: Times New Roman, Times, serif;"><br>
+              </span> </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgTxCharIsK</span><span
+              style="font-family: Times New Roman, Times, serif;"><br>
+            </span><span style="font-family: Times New Roman, Times,
+              serif;"> </span></td>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">evgClk</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">M</span><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;">ulti-gigabit
+
+
+
+
+
+
+                  transceiver transmit data modifiers.</span></span> </span></td>
+        </tr>
+      </tbody>
+    </table>
+    <span style="font-family: Times New Roman, Times, serif;"><br>
+    </span><span style="font-family: Times New Roman, Times, serif;">The
+      number of timers and hardware trigger inputs is configurable by
+      the block design editor.<br>
+      The evgClk frequency must be configured in the block design editor
+      to the value produced by the multi-gigabit transceiver.<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"><br>
+    </span>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Software</span></h2>
+    <meta charset="UTF-8">
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Initialization<br>
+      </span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">An application must initialize
+        the the hardware interface before calling any of the other
+        routines.&nbsp; Initialization is performed by invoking</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">int <span style="font-weight:
+          bold;">ospreyEVGInit</span>(uint32_t baseAddress);</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><br
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-style: normal; font-variant-caps: normal; font-weight: 400;
+        letter-spacing: normal; text-align: start; text-indent: 0px;
+        text-transform: none; white-space: normal; word-spacing: 0px;
+        -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+        text-decoration: none;">
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">The return value is 0 if
+        registration succeeded and -1 otherwise.</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;">&nbsp; If the
+      block design component name is ospreyEVG</span><span
+      style="font-family: Times New Roman, Times, serif;"></span><span
+      style="font-family: Times New Roman, Times, serif;"> the
+      memory-mapped I/O base address to pass as the argument will be
+      defined in the board support xparameters.h file as
+      XPAR_OSPREYEVG_S_AXI_BASEADDR.</span><span style="font-family:
+      Times New Roman, Times, serif;"><br style="caret-color: rgb(0, 0,
+        0); color: rgb(0, 0, 0); font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none;">
+    </span>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;"><a
+          name="StatusReg"></a>Status</span><span style="font-family:
+        Times New Roman, Times, serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The status of the event generator is returned by<br>
+      </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">int </span><span style="font-family: Times New
+        Roman, Times, serif;"><span style="font-weight: bold;">ospreyEVGStatus</span></span><span
+        style="font-family: Times New Roman, Times, serif;">(void);</span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"></span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">Returns the event generator status word:<br>
+      </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"></span></p>
+    <table style=" text-align: left; width: 70%;" cellspacing="2"
+      cellpadding="2" border="1">
+      <tbody>
+        <tr>
+          <td style="text-align: center;"><span style="font-weight:
+              bold;"><span style="font-family: Times New Roman, Times,
+                serif;">&nbsp;Bit(s)&nbsp; </span></span><br>
+          </td>
+          <td style="vertical-align: middle; text-align: center;"><span
+              style="font-weight: bold;"><span style="font-family: Times
+                New Roman, Times, serif;">Description</span></span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;"></span><span
+              style="font-family: Times New Roman, Times, serif;">0</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Set when the pulse-per-second
+              marker is valid.</span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">1</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Set when the event generator
+              time stamp seconds are valid.&nbsp; This bit will remain
+              cleared until the pulse-per-second marker is valid and the
+              POSIX seconds have been set</span><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+                  font-size: medium; font-style: normal;
+                  font-variant-caps: normal; font-weight: 400;
+                  letter-spacing: normal; text-align: start;
+                  text-indent: 0px; text-transform: none; white-space:
+                  normal; word-spacing: 0px; -moz-text-size-adjust:
+                  auto; -webkit-text-stroke-width: 0px; text-decoration:
+                  none; display: inline !important; float: none;">.&nbsp;
+
+
+
+                  An invalid </span></span></span><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+                  font-size: medium; font-style: normal;
+                  font-variant-caps: normal; font-weight: 400;
+                  letter-spacing: normal; text-align: start;
+                  text-indent: 0px; text-transform: none; white-space:
+                  normal; word-spacing: 0px; -moz-text-size-adjust:
+                  auto; -webkit-text-stroke-width: 0px; text-decoration:
+                  none; display: inline !important; float: none;"><span
+                    style="font-family: Times New Roman, Times, serif;">pulse-per-second
+
+
+
+                    marker will clear this bit</span></span></span></span><span
+              style="font-family: Times New Roman, Times, serif;"> until
+              the pulse-per-second marker is valid and the POSIX seconds
+              have again been set.</span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">8–11</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Four bit field holding the
+              number of hardware trigger outputs.<br>
+            </span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;"></span><span
+              style="font-family: Times New Roman, Times, serif;">12–15</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Four bit field holding the
+              number of timer event sources.</span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">16</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Set when the event sequencer is
+              armed.</span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">17</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Set when the event sequencer is
+              active.</span></td>
+        </tr>
+        <tr>
+          <td style="text-align: center;"><span style="font-family:
+              Times New Roman, Times, serif;">20</span></td>
+          <td style="text-align: left;"><span style="font-family: Times
+              New Roman, Times, serif;">Changes state on each rising
+              edge of the ppsMarker_a input.<br>
+            </span></td>
+        </tr>
+      </tbody>
+    </table>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"></span><span style="font-family: Times New Roman,
+        Times, serif;">The corresponding header definitions are:</span><br>
+    </p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none; margin-left: 40px;"><span
+        style="font-family: Times New Roman, Times, serif;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_STATUS_PPS_TOGGLE&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0x100000<br>
+        #define OSPREY_EVG_STATUS_SEQUENCER_ACTIVE&nbsp; 0x20000</span><span
+        style="font-family: Courier New, Courier, monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_STATUS_SEQUENCER_ARMED&nbsp;&nbsp; 0x10000</span><span
+        style="font-family: Courier New, Courier, monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_TIMER_COUNT_MASK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0xF000</span><span style="font-family: Courier New, Courier,
+        monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_TIMER_COUNT_SHIFT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        12</span><span style="font-family: Courier New, Courier,
+        monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_HW_TRIG_COUNT_MASK&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0xF00</span><span style="font-family: Courier New, Courier,
+        monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_HW_TRIG_COUNT_SHIFT&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 8</span><span
+        style="font-family: Courier New, Courier, monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_STATUS_TIME_VALID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0x02</span><span style="font-family: Courier New, Courier,
+        monospace;"></span><br>
+      <span style="font-family: Courier New, Courier, monospace;"></span><span
+        style="font-family: Courier New, Courier, monospace;">#define
+        OSPREY_EVG_STATUS_PPS_VALID&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        0x01</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span> </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Time of Day</span><span
+        style="font-family: Times New Roman, Times, serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">The time of day sent by the event generator is
+            initialized by invoking<br>
+            int <span style="font-weight: bold;">ospreyEVGSetSeconds</span>(uint32_t
+
+
+
+
+
+
+            posixSeconds);</span></span></span><span style="font-family:
+        Times New Roman, Times, serif;"></span><span style="font-family:
+        Times New Roman, Times, serif;"><span style="font-weight: bold;"><br>
+        </span>Once set the seconds value is incremented by each rising
+        edge of the PPS marker.</span><br>
+    </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Heartbeat
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">The rate at which heartbeat events are generated is
+            the evgClk divided by the divisor set by invoking<br>
+            int <span style="font-weight: bold;">ospreyEVGSetHeartbeatDivisor</span>(uint32_t
+
+
+
+
+
+
+            divisor);</span></span></span><span style="font-family:
+        Times New Roman, Times, serif;"></span><span style="font-family:
+        Times New Roman, Times, serif;"><span style="font-weight: bold;"></span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Timer-requested
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">The event and rate at which timer-requested events
+            are generated&nbsp; are set by invoking</span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;"><br>
+        </span>int <span style="font-weight: bold;">ospreyEVGSetTimerEvent</span>(int
+
+
+
+
+
+
+        index, int evCode);<span style="font-weight: bold;"><br>
+        </span>int <span style="font-weight: bold;">ospreyEVGSetTimerDivisor</span>(int
+
+
+
+
+
+
+        index, uint32_t divisor);<br>
+      </span><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;">The rate is the evgClk divided by by the
+              specified divisor.&nbsp; An index value of 0 corresponds
+              to the first timer.&nbsp; An event code of 0 disables the
+              associated timer.&nbsp; A divisor less than or equal to 1
+              sets the divisor to its maximum value (2^32-1).<br>
+            </span></span></span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Hardware-Triggered
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">The event and rate at which timer-requested events
+            are generated&nbsp; are set by invoking</span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;"><br>
+        </span>int <span style="font-weight: bold;">ospreyEVGSetHwTriggerEvent</span>(int
+
+
+
+
+
+
+        index, int evCode);<span style="font-weight: bold;"></span><br>
+      </span><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;">An index value of 0 sets the event code to
+              be triggered by a rising edge on the first hardware
+              trigger input.&nbsp; </span></span></span></span><br>
+      <span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="font-family: Times
+                    New Roman, Times, serif;"><span style="caret-color:
+                      rgb(0, 0, 0); color: rgb(0, 0, 0); font-size:
+                      medium; font-style: normal; font-variant-caps:
+                      normal; font-weight: 400; letter-spacing: normal;
+                      text-align: start; text-indent: 0px;
+                      text-transform: none; white-space: normal;
+                      word-spacing: 0px; -moz-text-size-adjust: auto;
+                      -webkit-text-stroke-width: 0px; text-decoration:
+                      none; display: inline !important; float: none;">An
+                      index value of 1 sets the event code to be
+                      triggered by a falling edge on the first hardware
+                      trigger input.<br>
+                    </span></span></span></span></span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"> </span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;">An index value of 2 sets the event code to
+              be triggered by a rising edge on the second hardware
+              trigger input, and so on.<br>
+              An event code of 0 results in no event being triggered by
+              the associated edge and input.</span></span></span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Software-Triggered
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">An arbitrary event code is transmitted by invoking</span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;"><br>
+        </span>int <span style="font-weight: bold;">ospreyEVGSendSoftwareEvent</span>(int
+
+
+
+
+
+
+        index, int evCode);</span><br>
+    </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Event
+        Sequencer</span><span style="font-family: Times New Roman,
+        Times, serif;"><br>
+      </span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+          font-size: medium; font-style: normal; font-variant-caps:
+          normal; font-weight: 400; letter-spacing: normal; text-align:
+          start; text-indent: 0px; text-transform: none; white-space:
+          normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+          -webkit-text-stroke-width: 0px; text-decoration: none;
+          display: inline !important; float: none;">Event patterns are
+          written to the sequencer RAM by first calling</span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-weight: bold;"><br>
+      </span>int <span style="font-weight: bold;">ospreyEVGSequencerLatchDelay</span>(int
+
+
+
+
+      delay);<br>
+      where the delay is a 28 bit value.&nbsp; If the most significant
+      bit of this value is clear, the remainder of the bits specify the
+      delay before the next event is emitted in units of event generator
+      clock ticks.&nbsp; Full scale value with a typical event clock
+      period of 8 ns is a little more than one second.&nbsp; </span><span
+      style="font-family: Times New Roman, Times, serif;">If the most
+      significant bit of this value is set, the remainder of the bits
+      specify the delay before the next event is emitted in units of 64
+      event generator clock ticks.&nbsp; The full scale value in this
+      case is a little more than one minute.&nbsp; Delays longer than
+      this can be obtained by chaining together multiple delays with an
+      event code of zero.<br>
+      Note that calling this routine does not write anything to the
+      sequencer RAM – rather it simply latches the value internally for
+      a subsequent call to<br>
+    </span><span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;"></span>int <span
+          style="font-weight: bold;">ospreyEVGSequencerWrite</span>(int
+        value);<br>
+        where the least significant eight bits of <span
+          style="font-weight: bold;">value</span> are the event code to
+        emit after the delay currently in the latch mentioned above and
+        the next most significant twelve bits are the sequencer RAM
+        location into which the value will be written.&nbsp; A sequence
+        is terminated by an event code of all ones (255).<br>
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;"><br>
+        Once an event sequence has been loaded it is emitted by first
+        calling<br>
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;">int
+
+
+
+
+        <span style="font-weight: bold;">ospreyEVGSequencerArm</span>(void);<br>
+        followed by a hardware trigger or a call to<br>
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-weight: bold;"></span>int <span
+          style="font-weight: bold;">ospreyEVGSequencerTrigger</span>(void);<br>
+        <br>
+        An armed sequencer or active sequence can be terminated by
+        calling<br>
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;">int <span
+              style="font-weight: bold;">ospreyEVGSequencerCancel</span>(void);<br>
+          </span></span></span></span><span style="font-family: Times
+      New Roman, Times, serif;"><span style="font-family: Times New
+        Roman, Times, serif;"></span></span><br>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;"></span>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"> </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-weight: bold;"></span> </span></p>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"></span></p>
+    <h2><span style="font-family: Times New Roman, Times, serif;">Event
+        Source Priorities</span></h2>
+    <p><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+            font-size: medium; font-style: normal; font-variant-caps:
+            normal; font-weight: 400; letter-spacing: normal;
+            text-align: start; text-indent: 0px; text-transform: none;
+            white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;"><span style="font-family: Times New Roman, Times,
+              serif;"></span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;">If multiple
+        event sources make simultaneous requests the event from the
+        lower priority source will be delayed and emitted at the next
+        free slot, in most cases.&nbsp; The event source priorities are:<br>
+      </span></p>
+    <ul>
+      <li><span style="font-family: Times New Roman, Times, serif;">Sequencer
+
+
+
+
+          events.<br>
+        </span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Timer-driven
+
+
+
+
+
+
+          events.&nbsp; The first timer (index 0) has the highest
+          priority.<br>
+        </span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Hardware-trigger-driven
+
+
+
+
+
+
+          events.</span><span style=" font-family: Times New Roman,
+          Times, serif;">&nbsp; The first hardware input (index 0 or 1)
+          has the highest priority.</span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Software-requested
+
+
+
+
+
+
+          events.<br>
+        </span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Heartbeat
+
+
+
+
+
+
+          events.&nbsp; If preempted the event is omitted rather than
+          being shifted to the next free slot.</span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Pulse-per-second
+
+
+
+
+
+
+          events.</span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Time-of-day
+
+
+
+
+
+
+          updates.&nbsp; There is no problem with these events (112 and
+          113) being delayed as long as all 32 have been sent before the
+          next pulse-per-second event.<br>
+        </span></li>
+    </ul>
+    <p><br>
+    </p>
+    <h2><span style="font-family: Times New Roman, Times, serif;">EPICS</span></h2>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">Example EPICS database entries
+        to control the event generator are included in the
+        distribution.&nbsp; The entries use the LEEP protocol to
+        communicate with the FPGA.</span></span><span
+      style="font-family: Times New Roman, Times, serif;">&nbsp; All
+      record names in the example database begin with the <span
+        style="font-weight: bold;">$(P)</span> macro.&nbsp; This prefix
+      is not included in the record names below.</span><span
+      style="font-family: Times New Roman, Times, serif;"></span><span
+      style="font-family: Times New Roman, Times, serif;"><br>
+      <br>
+      To include the EPICS database in an EPICS application:<br>
+    </span>
+    <ul>
+      <li><span style="font-family: Times New Roman, Times, serif;">Add
+          an OSPREY_EVG entry in the application configure/RELEASE or
+          configure/RELEASE.local.<br>
+          The entry should refer to the EPICS directory in the ospreyEVG
+          support module.</span></li>
+      <li><span style=" font-family: Times New Roman, Times, serif;">Add
+          two lines to the application Db/Makefile:<br>
+          <span style="font-family: Courier New, Courier, monospace;">USR_VPATH
+
+
+
+            += $(OSPREY_EVG)/db</span><span style="font-family: Courier
+            New, Courier, monospace;"><br>
+          </span><span style="font-family: Courier New, Courier,
+            monospace;">DB += ospreyEVG.db</span><br>
+        </span></li>
+    </ul>
+    <span style="font-family: Times New Roman, Times, serif;"> </span>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Status</span><span
+        style="font-family: Times New Roman, Times, serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;">The longin record <span style="font-weight:
+          bold;">status</span> holds the status register contents
+        described <a moz-do-not-send="true" href="#StatusReg">above</a>.<br>
+      </span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Heartbeat
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">The rate at which heartbeat events are generated is
+            the evgClk divided by by the divisor set by the <span
+              style="font-weight: bold;">hbDivisor</span> longout
+            record.</span></span></span><br>
+    </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Timer-requested
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"></span><span style="font-family: Times New Roman, Times,
+        serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;"></span></span></span><span style="font-family: Times
+        New Roman, Times, serif;"></span><br>
+    </h3>
+    <span style="font-family: Times New Roman, Times, serif;"></span>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"> </span><span style="font-family: Times New
+        Roman, Times, serif;"><span style="font-family: Times New Roman,
+          Times, serif;"><span style="font-family: Times New Roman,
+            Times, serif;"><span style="caret-color: rgb(0, 0, 0);
+              color: rgb(0, 0, 0); font-size: medium; font-style:
+              normal; font-variant-caps: normal; font-weight: 400;
+              letter-spacing: normal; text-align: start; text-indent:
+              0px; text-transform: none; white-space: normal;
+              word-spacing: 0px; -moz-text-size-adjust: auto;
+              -webkit-text-stroke-width: 0px; text-decoration: none;
+              display: inline !important; float: none;">The </span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="caret-color: rgb(0,
+                    0, 0); color: rgb(0, 0, 0); font-size: medium;
+                    font-style: normal; font-variant-caps: normal;
+                    font-weight: 400; letter-spacing: normal;
+                    text-align: start; text-indent: 0px; text-transform:
+                    none; white-space: normal; word-spacing: 0px;
+                    -moz-text-size-adjust: auto;
+                    -webkit-text-stroke-width: 0px; text-decoration:
+                    none; display: inline !important; float: none;">rate
+                    at which timer-requested events are generated is</span></span></span>
+              the evgClk divided by by the <span style="font-weight:
+                bold;">TMR:</span><span style="font-weight: bold;"><span
+                  style="font-style: italic;">n</span></span><span
+                style="font-weight: bold;">:divisor</span> longout
+              records, where <span style="font-style: italic;">n</span>
+              is 1 or 2.&nbsp;&nbsp; The event code emitted is set by
+              the</span></span></span></span><span style="font-family:
+        Times New Roman, Times, serif;"><span style="font-family: Times
+          New Roman, Times, serif;"><span style="font-family: Times New
+            Roman, Times, serif;"><span style="caret-color: rgb(0, 0,
+              0); color: rgb(0, 0, 0); font-size: medium; font-style:
+              normal; font-variant-caps: normal; font-weight: 400;
+              letter-spacing: normal; text-align: start; text-indent:
+              0px; text-transform: none; white-space: normal;
+              word-spacing: 0px; -moz-text-size-adjust: auto;
+              -webkit-text-stroke-width: 0px; text-decoration: none;
+              display: inline !important; float: none;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"><span
+                    style="font-family: Times New Roman, Times, serif;"><span
+                      style="caret-color: rgb(0, 0, 0); color: rgb(0, 0,
+                      0); font-size: medium; font-style: normal;
+                      font-variant-caps: normal; font-weight: 400;
+                      letter-spacing: normal; text-align: start;
+                      text-indent: 0px; text-transform: none;
+                      white-space: normal; word-spacing: 0px;
+                      -moz-text-size-adjust: auto;
+                      -webkit-text-stroke-width: 0px; text-decoration:
+                      none; display: inline !important; float: none;"> <span
+                        style="font-weight: bold;">TMR:</span><span
+                        style="font-weight: bold;"><span
+                          style="font-style: italic;">n</span></span><span
+                        style="font-weight: bold;">:event</span> longout
+                      records.&nbsp; </span></span></span></span>An
+              event code of 0 disables the associated timer.&nbsp; A
+              divisor less than or equal to 1 sets the divisor to its
+              maximum value (2^32-1).<br>
+            </span></span></span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Hardware-Triggered
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="font-family: Times New Roman, Times,
+            serif;"><span style="caret-color: rgb(0, 0, 0); color:
+              rgb(0, 0, 0); font-size: medium; font-style: normal;
+              font-variant-caps: normal; font-weight: 400;
+              letter-spacing: normal; text-align: start; text-indent:
+              0px; text-transform: none; white-space: normal;
+              word-spacing: 0px; -moz-text-size-adjust: auto;
+              -webkit-text-stroke-width: 0px; text-decoration: none;
+              display: inline !important; float: none;">The event code </span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="font-family: Times
+                    New Roman, Times, serif;"><span style="caret-color:
+                      rgb(0, 0, 0); color: rgb(0, 0, 0); font-size:
+                      medium; font-style: normal; font-variant-caps:
+                      normal; font-weight: 400; letter-spacing: normal;
+                      text-align: start; text-indent: 0px;
+                      text-transform: none; white-space: normal;
+                      word-spacing: 0px; -moz-text-size-adjust: auto;
+                      -webkit-text-stroke-width: 0px; text-decoration:
+                      none; display: inline !important; float: none;">emitted
+
+
+
+
+                    </span></span></span></span>on the edge of the
+              signal at each hardware trigger input is set by the</span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="font-family: Times
+                    New Roman, Times, serif;"><span style="caret-color:
+                      rgb(0, 0, 0); color: rgb(0, 0, 0); font-size:
+                      medium; font-style: normal; font-variant-caps:
+                      normal; font-weight: 400; letter-spacing: normal;
+                      text-align: start; text-indent: 0px;
+                      text-transform: none; white-space: normal;
+                      word-spacing: 0px; -moz-text-size-adjust: auto;
+                      -webkit-text-stroke-width: 0px; text-decoration:
+                      none; display: inline !important; float: none;"> <span
+                        style="font-weight: bold;">TRIG:<span
+                          style="font-style: italic;">n</span>:rise </span>or
+
+
+
+
+                    </span></span></span></span></span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="font-family: Times
+                    New Roman, Times, serif;"><span style="caret-color:
+                      rgb(0, 0, 0); color: rgb(0, 0, 0); font-size:
+                      medium; font-style: normal; font-variant-caps:
+                      normal; font-weight: 400; letter-spacing: normal;
+                      text-align: start; text-indent: 0px;
+                      text-transform: none; white-space: normal;
+                      word-spacing: 0px; -moz-text-size-adjust: auto;
+                      -webkit-text-stroke-width: 0px; text-decoration:
+                      none; display: inline !important; float: none;"><span
+                        style="font-family: Times New Roman, Times,
+                        serif;"><span style="font-family: Times New
+                          Roman, Times, serif;"><span
+                            style="font-family: Times New Roman, Times,
+                            serif;"><span style="caret-color: rgb(0, 0,
+                              0); color: rgb(0, 0, 0); font-size:
+                              medium; font-style: normal;
+                              font-variant-caps: normal; font-weight:
+                              400; letter-spacing: normal; text-align:
+                              start; text-indent: 0px; text-transform:
+                              none; white-space: normal; word-spacing:
+                              0px; -moz-text-size-adjust: auto;
+                              -webkit-text-stroke-width: 0px;
+                              text-decoration: none; display: inline
+                              !important; float: none;"><span
+                                style="font-family: Times New Roman,
+                                Times, serif;"><span style="font-family:
+                                  Times New Roman, Times, serif;"><span
+                                    style="font-family: Times New Roman,
+                                    Times, serif;"><span
+                                      style="caret-color: rgb(0, 0, 0);
+                                      color: rgb(0, 0, 0); font-size:
+                                      medium; font-style: normal;
+                                      font-variant-caps: normal;
+                                      font-weight: 400; letter-spacing:
+                                      normal; text-align: start;
+                                      text-indent: 0px; text-transform:
+                                      none; white-space: normal;
+                                      word-spacing: 0px;
+                                      -moz-text-size-adjust: auto;
+                                      -webkit-text-stroke-width: 0px;
+                                      text-decoration: none; display:
+                                      inline !important; float: none;"><span
+                                        style="font-weight: bold;">TRIG:<span
+                                          style="font-style: italic;">n</span>:fall
+
+
+
+
+                                      </span></span></span></span></span></span></span></span></span>longout
+
+
+
+
+                      records where <span style="font-style: italic;">n</span>
+                      ranges from 1 through 4.&nbsp; </span></span></span></span>An
+
+
+
+
+              event code of 0 disables the associated trigger.</span></span></span></span><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+              font-size: medium; font-style: normal; font-variant-caps:
+              normal; font-weight: 400; letter-spacing: normal;
+              text-align: start; text-indent: 0px; text-transform: none;
+              white-space: normal; word-spacing: 0px;
+              -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+              0px; text-decoration: none; display: inline !important;
+              float: none;"></span></span></span></span></p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Software-Triggered
+
+
+
+
+
+
+        Events</span><span style="font-family: Times New Roman, Times,
+        serif;"><br>
+      </span></h3>
+    <p style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; font-weight: 400;
+      letter-spacing: normal; text-align: start; text-indent: 0px;
+      text-transform: none; white-space: normal; word-spacing: 0px;
+      -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+      text-decoration: none;"><span style="font-family: Times New Roman,
+        Times, serif;"><span style="font-family: Times New Roman, Times,
+          serif;"><span style="caret-color: rgb(0, 0, 0); color: rgb(0,
+            0, 0); font-size: medium; font-style: normal;
+            font-variant-caps: normal; font-weight: 400; letter-spacing:
+            normal; text-align: start; text-indent: 0px; text-transform:
+            none; white-space: normal; word-spacing: 0px;
+            -moz-text-size-adjust: auto; -webkit-text-stroke-width: 0px;
+            text-decoration: none; display: inline !important; float:
+            none;">An arbitrary event code is transmitted by writing the
+            code to the </span></span></span><span style="font-family:
+        Times New Roman, Times, serif;"><span style="font-family: Times
+          New Roman, Times, serif;"><span style="caret-color: rgb(0, 0,
+            0); color: rgb(0, 0, 0); font-size: medium; font-style:
+            normal; font-variant-caps: normal; font-weight: 400;
+            letter-spacing: normal; text-align: start; text-indent: 0px;
+            text-transform: none; white-space: normal; word-spacing:
+            0px; -moz-text-size-adjust: auto; -webkit-text-stroke-width:
+            0px; text-decoration: none; display: inline !important;
+            float: none;"><span style="font-weight: bold;">swEvent</span>
+            longout record.</span></span></span><br>
+    </p>
+    <h3 style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+      font-style: normal; font-variant-caps: normal; letter-spacing:
+      normal; text-align: start; text-indent: 0px; text-transform: none;
+      white-space: normal; word-spacing: 0px; -moz-text-size-adjust:
+      auto; -webkit-text-stroke-width: 0px; text-decoration: none;"><span
+        style="font-family: Times New Roman, Times, serif;">Event
+        Sequencer</span><span style="font-family: Times New Roman,
+        Times, serif;"><br>
+      </span></h3>
+    <span style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;">Event sequences are a described
+        by a table of delay:event pairs</span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-weight: bold;"></span></span><span
+      style="font-family: Times New Roman, Times, serif;">, where the
+      delay is the number of evgClk ticks to wait before emitting the
+      specified event.&nbsp; Thus a delay value of 0 means that the
+      event is emitted in the next event code slot following the
+      previous event.&nbsp; The table is written the to sequencer memory
+      by first writing the desired delay value to the </span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;"><span style="font-weight:
+          bold;">SEQ:latchDelay</span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"> longout
+      record and then the sequencer memory address and event to the </span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="caret-color: rgb(0, 0, 0); color: rgb(0, 0, 0);
+        font-size: medium; font-style: normal; font-variant-caps:
+        normal; font-weight: 400; letter-spacing: normal; text-align:
+        start; text-indent: 0px; text-transform: none; white-space:
+        normal; word-spacing: 0px; -moz-text-size-adjust: auto;
+        -webkit-text-stroke-width: 0px; text-decoration: none; display:
+        inline !important; float: none;"><span style="font-weight:
+          bold;">SEQ:write</span></span></span><span style="font-family:
+      Times New Roman, Times, serif;"> longout record.&nbsp; The least
+      significant eight bits of the value specify the event code nad the
+      next most significant twelve bit specify the memory address to
+      which the latched delay value and event will be written.&nbsp; The
+      end of the table is indicated by an event code of 255.&nbsp;
+      Delays are specified as 28 bit values.&nbsp; If the most
+      significant bit of this value is clear, the remainder of the bits
+      specify the delay before the next event is emitted in units of
+      event generator clock ticks.&nbsp; Full scale value with a typical
+      event clock period of 8 ns is a little more than one second.&nbsp;
+      If the most significant bit of the delay value is set, the
+      remainder of the bits specify the delay before the next event is
+      emitted in units of 64 event generator clock ticks.&nbsp; The full
+      scale value in this case is a little more than one minute.&nbsp;
+      Delays longer than this can be obtained by chaining together
+      multiple delays with an event code of zero.<span
+        style="font-family: Times New Roman, Times, serif;"><br>
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;"><br>
+        Once an event sequence has been loaded it is emitted by first
+        processing the </span></span><span style="font-family: Times
+      New Roman, Times, serif;"><span style="font-family: Times New
+        Roman, Times, serif;"><span style="font-family: Times New Roman,
+          Times, serif;"><span style="font-family: Times New Roman,
+            Times, serif;"><span style="font-family: Times New Roman,
+              Times, serif;"><span style="font-family: Times New Roman,
+                Times, serif;"><span style="font-family: Times New
+                  Roman, Times, serif;"><span style="caret-color: rgb(0,
+                    0, 0); color: rgb(0, 0, 0); font-size: medium;
+                    font-style: normal; font-variant-caps: normal;
+                    font-weight: 400; letter-spacing: normal;
+                    text-align: start; text-indent: 0px; text-transform:
+                    none; white-space: normal; word-spacing: 0px;
+                    -moz-text-size-adjust: auto;
+                    -webkit-text-stroke-width: 0px; text-decoration:
+                    none; display: inline !important; float: none;"><span
+                      style="font-weight: bold;">SEQ:arm</span></span></span></span></span>
+            binary-out record and then processing the </span></span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"><span
+                    style="font-family: Times New Roman, Times, serif;"><span
+                      style="font-family: Times New Roman, Times,
+                      serif;"><span style="font-family: Times New Roman,
+                        Times, serif;"><span style="font-family: Times
+                          New Roman, Times, serif;"><span
+                            style="caret-color: rgb(0, 0, 0); color:
+                            rgb(0, 0, 0); font-size: medium; font-style:
+                            normal; font-variant-caps: normal;
+                            font-weight: 400; letter-spacing: normal;
+                            text-align: start; text-indent: 0px;
+                            text-transform: none; white-space: normal;
+                            word-spacing: 0px; -moz-text-size-adjust:
+                            auto; -webkit-text-stroke-width: 0px;
+                            text-decoration: none; display: inline
+                            !important; float: none;"><span
+                              style="font-weight: bold;">SEQ:swTrig</span></span></span></span></span>
+                    binary-out record</span></span></span></span> (the
+            value written to the records is unimportant).&nbsp; </span></span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;">An armed
+        sequencer or active sequence can be terminated by processing the
+      </span></span><span style="font-family: Times New Roman, Times,
+      serif;"><span style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"></span></span></span></span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"><span
+                    style="font-family: Times New Roman, Times, serif;"><span
+                      style="font-family: Times New Roman, Times,
+                      serif;"><span style="font-family: Times New Roman,
+                        Times, serif;"><span style="font-family: Times
+                          New Roman, Times, serif;"><span
+                            style="font-family: Times New Roman, Times,
+                            serif;"><span style="font-family: Times New
+                              Roman, Times, serif;"><span
+                                style="caret-color: rgb(0, 0, 0); color:
+                                rgb(0, 0, 0); font-size: medium;
+                                font-style: normal; font-variant-caps:
+                                normal; font-weight: 400;
+                                letter-spacing: normal; text-align:
+                                start; text-indent: 0px; text-transform:
+                                none; white-space: normal; word-spacing:
+                                0px; -moz-text-size-adjust: auto;
+                                -webkit-text-stroke-width: 0px;
+                                text-decoration: none; display: inline
+                                !important; float: none;"><span
+                                  style="font-weight: bold;"> SEQ:cancel</span></span></span></span></span>
+                        binary-out record.<br>
+                        <br>
+                        If no table entry holds an event value of 255
+                        the 4096-entry sequence will be emitted
+                        continuously until the</span></span></span></span></span></span></span></span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"> </span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"></span></span></span></span><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-family: Times New Roman, Times, serif;"><span
+                style="font-family: Times New Roman, Times, serif;"><span
+                  style="font-family: Times New Roman, Times, serif;"><span
+                    style="font-family: Times New Roman, Times, serif;"><span
+                      style="font-family: Times New Roman, Times,
+                      serif;"><span style="font-family: Times New Roman,
+                        Times, serif;"><span style="font-family: Times
+                          New Roman, Times, serif;"><span
+                            style="font-family: Times New Roman, Times,
+                            serif;"><span style="font-family: Times New
+                              Roman, Times, serif;"><span
+                                style="caret-color: rgb(0, 0, 0); color:
+                                rgb(0, 0, 0); font-size: medium;
+                                font-style: normal; font-variant-caps:
+                                normal; font-weight: 400;
+                                letter-spacing: normal; text-align:
+                                start; text-indent: 0px; text-transform:
+                                none; white-space: normal; word-spacing:
+                                0px; -moz-text-size-adjust: auto;
+                                -webkit-text-stroke-width: 0px;
+                                text-decoration: none; display: inline
+                                !important; float: none;"><span
+                                  style="font-weight: bold;"> SEQ:cancel</span></span></span></span></span>
+                        binary-out record is processed.</span></span></span></span></span></span></span></span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"><span
+          style="font-family: Times New Roman, Times, serif;"><span
+            style="font-family: Times New Roman, Times, serif;"><span
+              style="font-weight: bold;"></span></span></span></span></span><span
+      style="font-family: Times New Roman, Times, serif;"><span
+        style="font-family: Times New Roman, Times, serif;"></span></span>
+  </body>
+</html>

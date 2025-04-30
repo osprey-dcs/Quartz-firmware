@@ -1,7 +1,7 @@
 /*
  * MIT License
  *
- * Copyright (c) 2023 Osprey DCS
+ * Copyright (c) 2025 Osprey DCS
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,50 +30,63 @@
  *      evsXXXX   -- Event source (generator or fanout) out
  *      mpsXXXX   -- Machine protection out (EVR MGT)
  *      mpfXXXX   -- Merged Machine protection out (EVF MGT)
+ *
+ * Fibers:
+ *  1 (QSFP1-1), All nodes
+ *          Event stream in, local MPS status out.
+ *          For leaf notes this is the only fiber.
+ *
+ *  2 (QSFP1-2), Event generator node
+ *          Merged MPS status from event fanout in, event stream out.
+ *  2 (QSFP1-2), Event fanout nodes
+ *          Event stream from generator in, event stream out.
+ *
+ *  3-8 (QSFP1-3:4, QSFP2-1:4), Event generator and event fanout nodes
+ *          MPS status in, event stream out.
  */
 `default_nettype none
 module fiberLinks #(
     parameter MGT_COUNT          = 1,
     parameter MGT_DATA_WIDTH     = 16,
+    parameter MGT_BYTE_COUNT     = (MGT_DATA_WIDTH + 7) / 8,
     parameter MPS_OUTPUT_COUNT   = 8,
     parameter TIMESTAMP_WIDTH    = 64,
     parameter EVR_ACQ_START_CODE = 1,
     parameter EVR_ACQ_STOP_CODE  = 1,
     parameter EVR_MPS_CLEAR_CODE = 1,
+    parameter SYS_CLK_RATE       = 100000000,
+    parameter EVG_CLK_RATE       = 125000000,
     parameter DEBUG_MGT          = "false",
     parameter DEBUG_EVR          = "false",
     parameter DEBUG_EVF          = "false",
     parameter DEBUG_EVG          = "false",
+    parameter DEBUG_MPS          = "false",
     parameter DEBUG              = "false"
     ) (
                          input  wire                       sysClk,
-    (*MARK_DEBUG=DEBUG*) input  wire                       sysCsrStrobe,
+    (*MARK_DEBUG=DEBUG*) input  wire                       sysMgtCsrStrobe,
     (*MARK_DEBUG=DEBUG*) input  wire                [31:0] sysGPIO_OUT,
-    (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysStatus,
+    (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysMgtStatus,
     (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysLinkStatus,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] sysTimestamp,
+                         input  wire                       isEVG,
 
                          input  wire                       sysMPSmergeStrobe,
                          output wire                [31:0] sysMPSmergeStatus,
 
                          output wire                       evrRxClk,
+    (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
                          output wire                       evrRxStartACQstrobe,
                          output wire                       evrRxStopACQstrobe,
                          output wire                       evrRxClearMPSstrobe,
                          output wire                       evfRxClk,
-    (*MARK_DEBUG=DEBUG*) input  wire                       sysEVGsetTimeStrobe,
-    (*MARK_DEBUG=DEBUG*) output wire                [31:0] sysEVGstatus,
 
-    (*MARK_DEBUG=DEBUG*) input  wire                       ppsValid,
-    (*MARK_DEBUG=DEBUG*) input  wire                       hwPPSmarker_a,
-    (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
-                         output reg                        isEVG = 0,
-
-                         output wire                       mgtTxClk,
-                         input  wire                 [7:0] evgTxCode,
-                         input  wire                       evgTxCodeValid,
-                         input  wire  [MGT_DATA_WIDTH-1:0] mpsTxChars,
-                         input  wire                       mpsTxCharIsK,
+                         output wire                         mgtTxClk,
+                         input  wire    [MGT_DATA_WIDTH-1:0] evgTxChars,
+                         input  wire    [MGT_BYTE_COUNT-1:0] evgTxCharIsK,
+                         input  wire    [MGT_DATA_WIDTH-1:0] mpsTxChars,
+                         input  wire                         mpsTxCharIsK,
+                         output wire [MPS_OUTPUT_COUNT-1:0 ] mpsTrippedOutputs,
 
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) output reg  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
@@ -86,15 +99,13 @@ module fiberLinks #(
     output wire [MGT_COUNT-1:0] txP,
     output wire [MGT_COUNT-1:0] txN);
 
-localparam MGT_BYTE_COUNT = (MGT_DATA_WIDTH + 7) / 8;
-
 ///////////////////////////////////////////////////////////////////////////////
 // Forward reference to MGT receivers
 wire [63:0] evrRxTimestamp;
-wire                  [MGT_COUNT-1:0] mgtRxClks;
-wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
-wire                  [MGT_COUNT-1:0] mgtRxCharIsK;
-wire                  [MGT_COUNT-1:0] mgtRxLinkUp;
+wire                                       [MGT_COUNT-1:0] mgtRxClks;
+(*MARK_DEBUG=DEBUG*) wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
+(*MARK_DEBUG=DEBUG*) wire                  [MGT_COUNT-1:0] mgtRxCharIsK;
+(*MARK_DEBUG=DEBUG*) wire                  [MGT_COUNT-1:0] mgtRxLinkUp;
 
 assign                    evrRxClk = mgtRxClks[0];
 wire                      evrRxLinkUp = mgtRxLinkUp[0];
@@ -125,7 +136,7 @@ tinyEVR #(
   tinyEVR_i (
     .evrRxClk(evrRxClk),
     .evrRxWord(evrRxChars & {MGT_DATA_WIDTH{evrRxLinkUp}}),
-    .evrCharIsK({1'b0, evrRxCharIsK}),
+    .evrCharIsK({evrRxCharIsK, 1'b0}),
     .ppsMarker(evrPPSstrobe),
     .timestampValid(evrTimestampValid),
     .timestamp(evrTimestamp),
@@ -190,15 +201,15 @@ wire                      mpfTxCharIsK;
 wire [MGT_DATA_WIDTH-1:0] evfTxChars;
 wire                      evfTxCharIsK;
 wire [MGT_DATA_WIDTH-1:0] evsTxChars;
-wire                      evsTxCharIsK;
-wire [MGT_DATA_WIDTH-1:0] evgTxChars;
-wire [MGT_BYTE_COUNT-1:0] evgTxCharIsK;
+wire [MGT_BYTE_COUNT-1:0] evsTxCharIsK;
 always @(posedge mgtTxClk) begin
     mgtIsEVG_m <= isEVG;
     mgtIsEVG   <= mgtIsEVG_m;
 end
 assign evsTxChars =   mgtIsEVG ? evgTxChars   : evfTxChars;
-assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : evfTxCharIsK;
+assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : {evfTxCharIsK, 1'b0};
+assign mpsTrippedOutputs = isEVG ? mpfTxChars[0+:MPS_OUTPUT_COUNT]
+                                 : {MPS_OUTPUT_COUNT{1'b1}};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceivers
@@ -208,9 +219,9 @@ mgtWrapper #(
     .DEBUG(DEBUG_MGT))
   mgtWrapper_i (
     .sysClk(sysClk),
-    .sysCsrStrobe(sysCsrStrobe),
+    .sysCsrStrobe(sysMgtCsrStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
-    .sysStatus(sysStatus),
+    .sysStatus(sysMgtStatus),
     .gtRefClkP(gtRefClkP),
     .gtRefClkN(gtRefClkN),
     .gtRefClkDiv2(),
@@ -232,76 +243,10 @@ mgtWrapper #(
     .evsTxCharIsK(evsTxCharIsK));
 
 ///////////////////////////////////////////////////////////////////////////////
-// Minimal event generator
-// Heartbeat and PPS events only.
-reg sysEVG_PPStoggle = 0;
-reg secondsValid = 0;
-assign sysEVGstatus = {sysEVG_PPStoggle, {28{1'b0}},
-                       isEVG, secondsValid, ppsValid};
-localparam HEARTBEAT_INTERVAL= 124800000;
-localparam HEARTBEAT_RELOAD = HEARTBEAT_INTERVAL - 2;
-localparam HEARTBEAT_COUNTER_WIDTH = $clog2(HEARTBEAT_RELOAD+1)+1;
-reg [HEARTBEAT_COUNTER_WIDTH-1:0] heartbeatCounter = HEARTBEAT_RELOAD;
-wire heartbeatCounterDone = heartbeatCounter[HEARTBEAT_COUNTER_WIDTH-1];
-reg sysSecondsToggle = 0;
-reg [31:0] sysSeconds;
-(*ASYNC_REG="true"*) reg evgSecondsToggle_m = 0;
-reg evgSecondsToggle = 0, evgSecondsToggle_d = 0;
-(*ASYNC_REG="true"*) reg evgPPSmarker_m = 0;
-reg evgPPSmarker = 0, evgPPSmarker_d = 0;
-always @(posedge sysClk) begin
-    if (sysEVGsetTimeStrobe) begin
-        isEVG <= 1;
-        if (sysGPIO_OUT != 0) begin
-            sysSeconds <= sysGPIO_OUT;
-            sysSecondsToggle <= !sysSecondsToggle;
-        end
-    end
-end
-always @(posedge mgtTxClk) begin
-    if (heartbeatCounterDone) begin
-        heartbeatCounter <= HEARTBEAT_RELOAD;
-    end
-    else begin
-        heartbeatCounter <= heartbeatCounter - 1;
-    end
-    evgSecondsToggle_m <= sysSecondsToggle;
-    evgSecondsToggle   <= evgSecondsToggle_m;
-    evgSecondsToggle_d <= evgSecondsToggle;
-    if (ppsValid) begin
-        if (evgSecondsToggle != evgSecondsToggle_d) begin
-            secondsValid <= 1;
-        end
-    end
-    else begin
-        secondsValid <= 0;
-    end
-    evgPPSmarker_m <= hwPPSmarker_a;
-    evgPPSmarker   <= evgPPSmarker_m;
-    evgPPSmarker_d <= evgPPSmarker;
-    if (evgPPSmarker && !evgPPSmarker_d) begin
-        sysEVG_PPStoggle <= !sysEVG_PPStoggle;
-    end
-end
-tinyEVG #(.DEBUG(DEBUG_EVG))
-  tinyEVG (
-    .evgTxClk(mgtTxClk),
-    .evgTxWord(evgTxChars),
-    .evgTxIsK(evgTxCharIsK),
-    .eventCode(evgTxCode),
-    .eventStrobe(evgTxCodeValid),
-    .heartbeatRequest(heartbeatCounterDone),
-    .ppsStrobe(evgPPSmarker && !evgPPSmarker_d),
-    .secondsStrobe(evgSecondsToggle != evgSecondsToggle_d),
-    .seconds(sysSeconds),
-    .distributedBus(8'h00),
-    .sysClk(sysClk),
-    .sysSendStrobe(1'b0),
-    .sysWriteStrobe(1'b0),
-    .sysWriteAddress(11'h000),
-    .sysWriteData(8'h00),
-    .sysBufferBusy());
-
+// Measure clocks
+wire [29:0] measuredFrequency;
+wire measuredUsingInteralAcqMarker;
+reg [2:0] frequencyChannelSelect = 0;
 ///////////////////////////////////////////////////////////////////////////////
 // Minimal event fanout
 wire pad;
@@ -310,22 +255,24 @@ evf #(.DEBUG(DEBUG_EVF))
     .rxClk(evfRxClk),
     .rxLinkUp(evfRxLinkUp && !isEVG),
     .rxChars(evfRxChars),
-    .rxCharIsK({1'b0, evfRxCharIsK}),
+    .rxCharIsK({evfRxCharIsK, 1'b0}),
     .txClk(mgtTxClk),
     .txChars(evfTxChars),
-    .txCharIsK({pad, evfTxCharIsK}));
+    .txCharIsK({evfTxCharIsK, pad}));
 
 ///////////////////////////////////////////////////////////////////////////////
 // Merge MPS uplinks
 mpsMerge #(
     .MGT_COUNT(MGT_COUNT),
     .MGT_DATA_WIDTH(MGT_DATA_WIDTH),
-    .MPS_OUTPUT_COUNT(MPS_OUTPUT_COUNT))
+    .MPS_OUTPUT_COUNT(MPS_OUTPUT_COUNT),
+    .DEBUG(DEBUG_MPS))
   mpsMerge_i (
     .sysClk(sysClk),
     .sysCsrStrobe(sysMPSmergeStrobe),
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysMPSmergeStatus),
+    .sysIsEVG(isEVG),
     .mgtRxChars(mgtRxChars),
     .mgtRxLinkUp(mgtRxLinkUp),
     .mgtTxClk(mgtTxClk),

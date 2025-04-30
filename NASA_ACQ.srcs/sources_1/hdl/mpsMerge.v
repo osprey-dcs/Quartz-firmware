@@ -29,27 +29,30 @@
 module mpsMerge #(
     parameter MGT_COUNT        = -1,
     parameter MGT_DATA_WIDTH   = -1,
-    parameter MPS_OUTPUT_COUNT = -1
+    parameter MPS_OUTPUT_COUNT = -1,
+    parameter DEBUG            = "false"
     ) (
     input  wire        sysClk,
     input  wire        sysCsrStrobe,
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
+    input  wire        sysIsEVG,
 
-    input  wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars,
-    input  wire                  [MGT_COUNT-1:0] mgtRxLinkUp,
+    (*MARK_DEBUG=DEBUG*)input wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars,
+    (*MARK_DEBUG=DEBUG*)input wire                  [MGT_COUNT-1:0] mgtRxLinkUp,
 
-    input  wire                     mgtTxClk,
-    output reg [MGT_DATA_WIDTH-1:0] mpfTxChars,
-    output reg                      mpfTxCharIsK);
+                         input  wire                     mgtTxClk,
+    (*MARK_DEBUG=DEBUG*) output reg [MGT_DATA_WIDTH-1:0] mpfTxChars,
+    (*MARK_DEBUG=DEBUG*) output reg                      mpfTxCharIsK);
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
-reg [MPS_OUTPUT_COUNT-1:0] required = 0;
+(*MARK_DEBUG=DEBUG*) reg [MGT_COUNT-1:0] linkImportant = 0;
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        required <= sysGPIO_OUT[0+:MPS_OUTPUT_COUNT];
+        linkImportant <= sysGPIO_OUT[0+:MGT_COUNT] &
+                         {{MGT_COUNT-2{1'b1}}, sysIsEVG, 1'b0};
     end
 end
 
@@ -58,19 +61,19 @@ end
 // "To iterate is human, to recurse, divine." -- Attributed to L Peter Deutsch
 
 function [MPS_OUTPUT_COUNT-1:0] merge;
-    input            [MPS_OUTPUT_COUNT-1:0] required;
+    input            [MPS_OUTPUT_COUNT-1:0] linkImportant;
     input                   [MGT_COUNT-1:0] mgtRxLinkUp;
     input  [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
     input                             [7:0] i;
     merge = (i == 0) ? 0 :
-             (({MPS_OUTPUT_COUNT{required[i]}} &
-                       (mgtRxChars[(i*MGT_DATA_WIDTH)+8+:MPS_OUTPUT_COUNT] |
-                                      {MPS_OUTPUT_COUNT{!mgtRxLinkUp[i]}})) |
-                                 merge(required, mgtRxLinkUp, mgtRxChars, i-1));
+             (({MPS_OUTPUT_COUNT{linkImportant[i]}} &
+                         (mgtRxChars[(i*MGT_DATA_WIDTH)+:MPS_OUTPUT_COUNT] |
+                                     {MPS_OUTPUT_COUNT{!mgtRxLinkUp[i]}})) |
+                            merge(linkImportant, mgtRxLinkUp, mgtRxChars, i-1));
 endfunction
 
 wire [MPS_OUTPUT_COUNT-1:0] mpsTripped_a =
-                          merge(required, mgtRxLinkUp, mgtRxChars, MGT_COUNT-1);
+                     merge(linkImportant, mgtRxLinkUp, mgtRxChars, MGT_COUNT-1);
 
 ///////////////////////////////////////////////////////////////////////////////
 // MGT transmit clock domain
@@ -80,15 +83,15 @@ reg [MPS_OUTPUT_COUNT-1:0] mpsTripped;
 always @(posedge mgtTxClk) begin
     mpsTripped_m <= mpsTripped_a;
     mpsTripped   <= mpsTripped_m;
-    mpfTxChars[8+:MPS_OUTPUT_COUNT] <= mpsTripped;
+    mpfTxChars[0+:MPS_OUTPUT_COUNT] <= mpsTripped;
     if (mpfTxPhase[2]) begin
         mpfTxPhase <= 1;
-        mpfTxChars[0+:8] <= 8'hBC;
+        mpfTxChars[8+:8] <= 8'hBC;
         mpfTxCharIsK <= 1;
     end
     else begin
         mpfTxPhase <= mpfTxPhase + 1;
-        mpfTxChars[0+:8] <= 8'h00;
+        mpfTxChars[8+:8] <= 8'h00;
         mpfTxCharIsK <= 0;
     end
 end
@@ -96,6 +99,6 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
 assign sysStatus = { {16-MPS_OUTPUT_COUNT{1'b0}}, mpsTripped_a,
-                     {16-MGT_COUNT{1'b0}}, required };
+                     {16-MGT_COUNT{1'b0}}, linkImportant };
 endmodule
 `default_nettype wire

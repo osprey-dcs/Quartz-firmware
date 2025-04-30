@@ -1,0 +1,67 @@
+[*]
+[*] GTKWave Analyzer v3.4.0 (w)1999-2022 BSI
+[*] Fri Mar 28 21:15:33 2025
+[*]
+[dumpfile] "evgSequencer_tb.fst"
+[dumpfile_mtime] "Fri Mar 28 21:12:39 2025"
+[dumpfile_size] 2299
+[savefile] "evgSequencer_tb.gtkw"
+[timestart] 1116400
+[size] 1792 714
+[pos] 1895 9
+*-15.000000 1255600 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
+[markername] AA
+[markername] BB
+[markername] CC
+[markername] DD
+[markername] EE
+[markername] FF
+[markername] GG
+[markername] HH
+[markername] II
+[markername] JJ
+[markername] KK
+[markername] LL
+[markername] MM
+[markername] NN
+[markername] OO
+[markername] PP
+[markername] QQ
+[markername] RR
+[markername] SS
+[markername] TT
+[markername] UU
+[markername] VV
+[markername] WW
+[markername] XX
+[markername] YY
+[markername] ZZ
+[treeopen] evgSequencer_tb.
+[sst_width] 255
+[signals_width] 248
+[sst_expanded] 1
+[sst_vpaned_height] 199
+@28
+evgSequencer_tb.sysClk
+evgSequencer_tb.sysWriteStrobe
+@22
+evgSequencer_tb.sysWriteData[31:0]
+@24
+evgSequencer_tb.ospreyEVGsequencer.sysOpcode[1:0]
+@22
+evgSequencer_tb.ospreyEVGsequencer.sysWriteAddress[11:0]
+evgSequencer_tb.sysStatus[31:0]
+@28
+evgSequencer_tb.evgClk
+evgSequencer_tb.eventCodeTVALID
+@22
+evgSequencer_tb.eventCode[7:0]
+evgSequencer_tb.ospreyEVGsequencer.rAddr[11:0]
+evgSequencer_tb.ospreyEVGsequencer.seqramQ[35:0]
+evgSequencer_tb.ospreyEVGsequencer.eventCodePending[7:0]
+@23
+evgSequencer_tb.ospreyEVGsequencer.delayCounter[33:0]
+@28
+evgSequencer_tb.ospreyEVGsequencer.delayCounterDone
+[pattern_trace] 1
+[pattern_trace] 0

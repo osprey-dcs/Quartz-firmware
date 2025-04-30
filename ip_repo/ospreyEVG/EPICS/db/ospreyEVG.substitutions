@@ -1,0 +1,23 @@
+file "perEVG.template" {
+  pattern { P, PORT }
+  { \$(P),\$(PORT), }
+}
+
+file "perEVGtimer.template" {
+  pattern {P, PORT, N }
+  { \$(P),\$(PORT), 1 }
+  { \$(P),\$(PORT), 2 }
+}
+
+file "perEVGinputTrigger.template" {
+  pattern {P, PORT, N, EDGE,  I }
+  { \$(P),\$(PORT), 1, rise,  0 }
+  { \$(P),\$(PORT), 1, fall,  1 }
+  { \$(P),\$(PORT), 2, rise,  2 }
+  { \$(P),\$(PORT), 2, fall,  3 }
+  { \$(P),\$(PORT), 3, rise,  4 }
+  { \$(P),\$(PORT), 3, fall,  5 }
+  { \$(P),\$(PORT), 4, rise,  6 }
+  { \$(P),\$(PORT), 4, fall,  7 }
+}
+

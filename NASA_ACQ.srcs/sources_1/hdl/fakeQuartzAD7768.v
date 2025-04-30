@@ -52,7 +52,7 @@ reg shiftReg1Neg = 0;
 reg [SHIFTREG_WIDTH-1:0] shiftReg1 = 4096;
 wire dout1 = shiftReg1[SHIFTREG_WIDTH-1];
 
-localparam BITCOUNTER_LOAD = HEADER_WIDTH + ADC_WIDTH - 2; 
+localparam BITCOUNTER_LOAD = HEADER_WIDTH + ADC_WIDTH - 2;
 localparam BITCOUNTER_WIDTH = $clog2(BITCOUNTER_LOAD+1) + 1;
 reg [BITCOUNTER_WIDTH-1:0] bitCounter = BITCOUNTER_LOAD;
 wire bitCounterDone = bitCounter[BITCOUNTER_WIDTH-1];

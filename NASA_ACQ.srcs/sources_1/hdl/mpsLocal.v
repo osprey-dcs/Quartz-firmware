@@ -43,15 +43,15 @@ module mpsLocal #(
     input  wire evrClk,
     input  wire evrClearMPSstrobe,
 
-    input  wire                       acqClk,
-    input  wire   [(4*ADC_COUNT)-1:0] acqLimitExcursions,
-    input  wire                       acqLimitExcursionsTVALID,
-    input  wire [TIMESTAMP_WIDTH-1:0] acqTimestamp,
-    input  wire [MPS_INPUT_COUNT-1:0] mpsInputStates_a,
+                         input  wire                       acqClk,
+    (*MARK_DEBUG=DEBUG*) input  wire   [(4*ADC_COUNT)-1:0] acqLimitExcursions,
+    (*MARK_DEBUG=DEBUG*) input  wire                   acqLimitExcursionsTVALID,
+    (*MARK_DEBUG=DEBUG*) input  wire [TIMESTAMP_WIDTH-1:0] acqTimestamp,
+    (*MARK_DEBUG=DEBUG*) input  wire [MPS_INPUT_COUNT-1:0] mpsInputStates_a,
 
-    input  wire                       mgtTxClk,
-    output reg                 [15:0] mpsTxChars = 0,
-    output reg                        mpsTxCharIsK = 0);
+                         input  wire        mgtTxClk,
+    (*MARK_DEBUG=DEBUG*) output reg  [15:0] mpsTxChars = 0,
+    (*MARK_DEBUG=DEBUG*) output reg         mpsTxCharIsK = 0);
 
 localparam MPS_SEL_WIDTH = $clog2(MPS_OUTPUT_COUNT);
 localparam REG_SEL_WIDTH = 4;
@@ -59,20 +59,25 @@ localparam REG_SEL_WIDTH = 4;
 reg [MPS_SEL_WIDTH-1:0] sysMPSsel = 0;
 reg [REG_SEL_WIDTH-1:0] sysREGsel = 0;
 
-wire [(MPS_OUTPUT_COUNT*32)-1:0] acqPerChannelData;
-wire      [MPS_OUTPUT_COUNT-1:0] acqPerChannelTripped;
+(*MARK_DEBUG=DEBUG*) wire [(MPS_OUTPUT_COUNT*32)-1:0] acqPerChannelData;
+(*MARK_DEBUG=DEBUG*) wire      [MPS_OUTPUT_COUNT-1:0] acqPerChannelTripped;
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
+(*MARK_DEBUG=DEBUG*) reg [MPS_INPUT_COUNT-1:0] invert = 0;
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
         sysMPSsel <= sysGPIO_OUT[0+:MPS_SEL_WIDTH];
         sysREGsel <= sysGPIO_OUT[8+:REG_SEL_WIDTH];
+        if (sysGPIO_OUT[24]) begin
+            invert <= sysGPIO_OUT[16+:MPS_INPUT_COUNT];
+        end
     end
     sysData <= acqPerChannelData[sysMPSsel*32+:32];
 end
-assign sysStatus = { {24-REG_SEL_WIDTH{1'b0}}, sysREGsel,
-                      {8-REG_SEL_WIDTH{1'b0}}, sysMPSsel };
+assign sysStatus = { {16-MPS_INPUT_COUNT{1'b0}}, invert,
+                        {8-REG_SEL_WIDTH{1'b0}}, sysREGsel,
+                        {8-REG_SEL_WIDTH{1'b0}}, sysMPSsel };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event receiver clock domain
@@ -91,7 +96,8 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock domain
 (*ASYN_REG="*true"*) reg acqClear_m = 0;
-reg acqClear_d0 = 0, acqClear_d1 = 0, acqClearTrip = 0;
+                     reg acqClear_d0 = 0, acqClear_d1 = 0;
+(*MARK_DEBUG=DEBUG*) reg acqClearTrip = 0;
 
 reg [(4*ADC_COUNT)-1:0] acqLimitExcursionsLatched = 0;
 
@@ -124,7 +130,7 @@ for (i = 0 ; i < MPS_OUTPUT_COUNT ; i = i + 1) begin : mpsChan
         .sysData(acqPerChannelData[i*32+:32]),
         .acqClk(acqClk),
         .acqTimestamp(acqTimestamp),
-        .mpsInputs_a(mpsInputStates_a),
+        .mpsInputs_a(mpsInputStates_a ^ invert),
         .acqLimitExcursions(acqLimitExcursionsLatched),
         .acqTripped(acqPerChannelTripped[i]),
         .acqClearTrip(acqClearTrip));
@@ -135,19 +141,19 @@ endgenerate
 // MGT transmit clock domain
 reg [2:0] mpsTxPhase = 0;
 (*ASYNC_REG="true"*)  reg [MPS_OUTPUT_COUNT-1:0] mpsTripped_m;
-reg [MPS_OUTPUT_COUNT-1:0] mpsTripped;
+(*MARK_DEBUG=DEBUG*) reg [MPS_OUTPUT_COUNT-1:0] mpsTripped;
 always @(posedge mgtTxClk) begin
     mpsTripped_m <= acqPerChannelTripped;
     mpsTripped   <= mpsTripped_m;
-    mpsTxChars[8+:MPS_OUTPUT_COUNT] <= mpsTripped;
+    mpsTxChars[0+:MPS_OUTPUT_COUNT] <= mpsTripped;
     if (mpsTxPhase[2]) begin
         mpsTxPhase <= 1;
-        mpsTxChars[0+:8] <= 8'hBC;
+        mpsTxChars[8+:8] <= 8'hBC;
         mpsTxCharIsK <= 1;
     end
     else begin
         mpsTxPhase <= mpsTxPhase + 1;
-        mpsTxChars[0+:8] <= 8'h00;
+        mpsTxChars[8+:8] <= 8'h00;
         mpsTxCharIsK <= 0;
     end
 end
@@ -167,12 +173,12 @@ module mpsLocalChannel #(
     input  wire              [31:0] sysGPIO_OUT,
     output reg               [31:0] sysData,
 
-    input  wire                        acqClk,
-    input  wire  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
-    input  wire  [MPS_INPUT_COUNT-1:0] mpsInputs_a,
-    input  wire    [(4*ADC_COUNT)-1:0] acqLimitExcursions,
-    output reg                         acqTripped = 0,
-    input  wire                        acqClearTrip);
+                         input  wire                        acqClk,
+    (*MARK_DEBUG=DEBUG*) input  wire  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
+    (*MARK_DEBUG=DEBUG*) input  wire  [MPS_INPUT_COUNT-1:0] mpsInputs_a,
+    (*MARK_DEBUG=DEBUG*) input  wire    [(4*ADC_COUNT)-1:0] acqLimitExcursions,
+    (*MARK_DEBUG=DEBUG*) output reg                         acqTripped = 0,
+    (*MARK_DEBUG=DEBUG*) input  wire                        acqClearTrip);
 
 reg [ADC_COUNT-1:0] importantHIHI = 0, firstFaultHIHI = 0;
 reg [ADC_COUNT-1:0] importantHI   = 0, firstFaultHI   = 0;
@@ -180,7 +186,7 @@ reg [ADC_COUNT-1:0] importantLO   = 0, firstFaultLO   = 0;
 reg [ADC_COUNT-1:0] importantLOLO = 0, firstFaultLOLO = 0;
 reg [MPS_INPUT_COUNT-1:0] importantDiscrete = 0, firstFaultDiscrete = 0;
 reg [MPS_INPUT_COUNT-1:0] discreteGoodState = 0;
-reg [TIMESTAMP_WIDTH-1:0] whenFaulted = 0;
+(*MARK_DEBUG=DEBUG*) reg [TIMESTAMP_WIDTH-1:0] whenFaulted = 0;
 reg [MPS_INPUT_COUNT-1:0] mpsInputs = 0, discrete = 0;
 
 /*
@@ -189,37 +195,37 @@ reg [MPS_INPUT_COUNT-1:0] mpsInputs = 0, discrete = 0;
  * values should be stable and write transients will be
  * cleared up on the next acqClk.
  */
-wire trip;  // In other domain, but read here.
+(*MARK_DEBUG=DEBUG*) wire trip;  // In other domain, but read here.
 always @(posedge sysClk) begin
     if (sysDataStrobe) begin
         case (sysREGsel)
-        0:  importantHIHI      <= sysGPIO_OUT[ADC_COUNT-1:0];
-        1:  importantHI        <= sysGPIO_OUT[ADC_COUNT-1:0];
-        2:  importantLO        <= sysGPIO_OUT[ADC_COUNT-1:0];
-        3:  importantLOLO      <= sysGPIO_OUT[ADC_COUNT-1:0];
-        4:  importantDiscrete  <= sysGPIO_OUT[MPS_INPUT_COUNT-1:0];
-        5:  discreteGoodState  <= sysGPIO_OUT[MPS_INPUT_COUNT-1:0];
+        4'h0: importantHIHI      <= sysGPIO_OUT[ADC_COUNT-1:0];
+        4'h1: importantHI        <= sysGPIO_OUT[ADC_COUNT-1:0];
+        4'h2: importantLO        <= sysGPIO_OUT[ADC_COUNT-1:0];
+        4'h3: importantLOLO      <= sysGPIO_OUT[ADC_COUNT-1:0];
+        4'h4: importantDiscrete  <= sysGPIO_OUT[MPS_INPUT_COUNT-1:0];
+        4'h5: discreteGoodState  <= sysGPIO_OUT[MPS_INPUT_COUNT-1:0];
         default: ;
         endcase
     end
-    sysData <= (sysREGsel ==  0) ? importantHIHI :
-               (sysREGsel ==  1) ? importantHI   :
-               (sysREGsel ==  2) ? importantLO   :
-               (sysREGsel ==  3) ? importantLOLO :
-               (sysREGsel ==  4) ? {{32-MPS_INPUT_COUNT{1'b0}},
+    sysData <= (sysREGsel == 4'h0) ? importantHIHI :
+               (sysREGsel == 4'h1) ? importantHI   :
+               (sysREGsel == 4'h2) ? importantLO   :
+               (sysREGsel == 4'h3) ? importantLOLO :
+               (sysREGsel == 4'h4) ? {{32-MPS_INPUT_COUNT{1'b0}},
                                                             importantDiscrete} :
-               (sysREGsel ==  5) ? {{32-MPS_INPUT_COUNT{1'b0}},
+               (sysREGsel == 4'h5) ? {{32-MPS_INPUT_COUNT{1'b0}},
                                                             discreteGoodState} :
-               (sysREGsel ==  6) ? firstFaultHIHI :
-               (sysREGsel ==  7) ? firstFaultHI   :
-               (sysREGsel ==  8) ? firstFaultLO   :
-               (sysREGsel ==  9) ? firstFaultLOLO :
-               (sysREGsel == 10) ? {
-                               {16-MPS_INPUT_COUNT{1'b0}}, mpsInputs,
-                               {16-MPS_INPUT_COUNT{1'b0}}, firstFaultDiscrete} :
-               (sysREGsel == 11) ? whenFaulted[32+:32] :
-               (sysREGsel == 12) ? whenFaulted[ 0+:32] :
-               (sysREGsel == 13) ? {{30{1'b0}}, trip, acqTripped} : 0;
+               (sysREGsel == 4'h6) ? firstFaultHIHI :
+               (sysREGsel == 4'h7) ? firstFaultHI   :
+               (sysREGsel == 4'h8) ? firstFaultLO   :
+               (sysREGsel == 4'h9) ? firstFaultLOLO :
+               (sysREGsel == 4'hA) ? {
+                               {32-MPS_INPUT_COUNT{1'b0}}, firstFaultDiscrete} :
+               (sysREGsel == 4'hB) ? whenFaulted[32+:32] :
+               (sysREGsel == 4'hC) ? whenFaulted[ 0+:32] :
+               (sysREGsel == 4'hD) ? {{16-MPS_INPUT_COUNT{1'b0}}, mpsInputs,
+                                      {14{1'b0}}, trip, acqTripped} : 0;
 end
 
 /*
@@ -259,7 +265,7 @@ always @(posedge acqClk) begin
         firstFaultLOLO     <= faultsLOLO;
         firstFaultDiscrete <= faultsDiscrete;
         whenFaulted        <= acqTimestamp;
-        acqTripped <= 1;
+        acqTripped         <= 1;
     end
 end
 endmodule

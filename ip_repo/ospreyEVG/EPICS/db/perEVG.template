@@ -1,0 +1,61 @@
+record(longin, "$(P)status") {
+    field(DESC, "Firmware status register")
+    field(DTYP, "FEED Register Read")
+    field(INP,  "@name=$(PORT) reg=EVG:status")
+    field(SCAN, "2 second")
+}
+
+record(longout, "$(P)hbDivisor") {
+    field(DESC, "Set heartbeat event rate")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:heartbeatDivisor")
+    info(autosaveFields_pass0, "VAL")
+}
+
+record(longout, "$(P)swEvent") {
+    field(DESC, "Software-initiated event request")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:swEvent")
+    field(LOPR, "1")
+    field(HOPR, "127")
+}
+
+record(bo, "$(P)SEQ:arm") {
+    field(DESC, "Arm event sequencer when processed")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:SEQ:arm")
+    field(ZNAM, "Arm")
+    field(ONAM, "Arm")
+}
+record(bo, "$(P)SEQ:cancel") {
+    field(DESC, "Stop/disarm event sequencer when process")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:SEQ:cancel")
+    field(ZNAM, "Cancel")
+    field(ONAM, "Cancel")
+}
+record(bo, "$(P)SEQ:swTrig") {
+    field(DESC, "Trigger event sequencer when processed")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:SEQ:swTrig")
+    field(ZNAM, "Trigger")
+    field(ONAM, "Trigger")
+}
+record(longout, "$(P)SEQ:latchDelay") {
+    field(DESC, "Write to sequence delay latch")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:SEQ:latchDelay")
+    field(LOPR, "0")
+    field(HOPR, "0xFFFFFFF")
+    field(DRVL, "0")
+    field(DRVH, "0xFFFFFFF")
+}
+record(longout, "$(P)SEQ:write") {
+    field(DESC, "Write sequence RAM address:Event")
+    field(DTYP, "FEED Register Write")
+    field(OUT,  "@name=$(PORT) reg=EVG:SEQ:write")
+    field(LOPR, "0")
+    field(HOPR, "0xFFFFFFF")
+    field(DRVL, "0")
+    field(DRVH, "0xFFFFFFF")
+}

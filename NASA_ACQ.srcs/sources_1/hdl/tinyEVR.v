@@ -1,6 +1,6 @@
 // MIT License
 //
-// Copyright (c) 2023 Osprey DCS
+// Copyright (c) 2024 Osprey DCS
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -19,6 +19,8 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
+
+`timescale 1ns / 1ns
 
 ////////////////////////////////////////////////////////////////////////////////
 // Very small subset of MRF event receiver
@@ -71,16 +73,16 @@ module smallEVR #(
     (*mark_debug=DEBUG*) input [15:0] evrRxWord,
     (*mark_debug=DEBUG*) input  [1:0] evrCharIsK,
 
-    output wire                       ppsMarker,
-    output wire                       timestampValid,
-    output wire [TIMESTAMP_WIDTH-1:0] timestamp,
-    output wire                 [7:0] distributedDataBus,
-    output wire    [ACTION_WIDTH-1:0] action,
+    (*mark_debug=DEBUG*) output wire                       ppsMarker,
+    (*mark_debug=DEBUG*) output wire                       timestampValid,
+    (*mark_debug=DEBUG*) output wire [TIMESTAMP_WIDTH-1:0] timestamp,
+    (*mark_debug=DEBUG*) output wire                 [7:0] distributedDataBus,
+    (*mark_debug=DEBUG*) output wire    [ACTION_WIDTH-1:0] action,
 
-    input                    sysClk,
-    input                    sysActionWriteEnable,
-    input              [7:0] sysActionAddress,
-    input [ACTION_WIDTH-1:0] sysActionData);
+                         input                    sysClk,
+    (*mark_debug=DEBUG*) input                    sysActionWriteEnable,
+    (*mark_debug=DEBUG*) input              [7:0] sysActionAddress,
+    (*mark_debug=DEBUG*) input [ACTION_WIDTH-1:0] sysActionData);
 
 tinyEVRcommon #(.ACTION_RAM_WIDTH(ACTION_WIDTH),
                 .EVSTROBE_COUNT(0),
@@ -119,7 +121,7 @@ module tinyEVRcommon #(
     (*mark_debug=DEBUG*) output wire                       ppsMarker,
     (*mark_debug=DEBUG*) output reg                        timestampValid = 0,
     (*mark_debug=DEBUG*) output wire [TIMESTAMP_WIDTH-1:0] timestamp,
-    (*mark_debug=DEBUG*) output wire                 [7:0] distributedDataBus,
+    (*mark_debug=DEBUG*) output reg                  [7:0] distributedDataBus=0,
     output wire [ACT_MSB:ACT_LSB]                          action,
 
     input                                             sysClk,
@@ -136,19 +138,22 @@ assign timestamp = {tsSeconds, tsTicks};
 localparam EVCODE_SHIFT_ZERO     = 8'h70;
 localparam EVCODE_SHIFT_ONE      = 8'h71;
 localparam EVCODE_SECONDS_MARKER = 8'h7D;
+localparam EVCODE_K28_5          = 8'hBC;
 
 (*mark_debug=DEBUG*) reg           [SECONDS_WIDTH-1:0] shiftReg;
 (*mark_debug=DEBUG*) reg [$clog2(SECONDS_WIDTH)-1:0] bitsLeft = SECONDS_WIDTH - 1;
 (*mark_debug=DEBUG*) reg enoughBits = 0, tooManyBits = 0;
 
-wire [7:0] evCode = evrRxWord[7:0];
-assign distributedDataBus = evrRxWord[15:8];
-wire evCodeValid = !evrCharIsK[0];
+wire [7:0] evCode = evrRxWord[15:8];
+wire evCodeIsK = evrCharIsK[1];
+wire [7:0] dbus = evrRxWord[7:0];
+reg distributedBusPhaseValid = 0;
+reg distributedBusPhase = 0;
 
 always @(posedge evrRxClk) begin
     // Update time stamp seconds and clear time stamp ticks
     // on arrival of 'pulse per second' marker event code.
-    if (evCodeValid && (evCode == EVCODE_SECONDS_MARKER)) begin
+    if (!evCodeIsK && (evCode == EVCODE_SECONDS_MARKER)) begin
         if (enoughBits && !tooManyBits) begin
             tsSeconds <= shiftReg;
             timestampValid <= 1;
@@ -169,12 +174,25 @@ always @(posedge evrRxClk) begin
     end
 
     // Shift in another bit of upcoming seconds
-    if (evCodeValid
+    if (!evCodeIsK
      && ((evCode == EVCODE_SHIFT_ZERO) || (evCode == EVCODE_SHIFT_ONE))) begin
         bitsLeft <= bitsLeft - 1;
         if (enoughBits) tooManyBits <= 1;
         if (bitsLeft == 0) enoughBits <= 1;
         shiftReg <= {shiftReg[SECONDS_WIDTH-2:0], evCode[0]};
+    end
+
+    // Update distributed bus
+    if (evCodeIsK && (evCode == EVCODE_K28_5)) begin
+        distributedBusPhaseValid <= 1;
+        distributedBusPhase <= 0;
+        distributedDataBus <= dbus;
+    end
+    else begin
+        distributedBusPhase <= !distributedBusPhase;
+        if (distributedBusPhaseValid && distributedBusPhase) begin
+            distributedDataBus <= dbus;
+        end
     end
 end
 
@@ -185,7 +203,7 @@ assign ppsMarker = evStrobe[EVCODE_SECONDS_MARKER];
 for (e = 1 ; e <= 254 ; e = e + 1) begin : evstr
     reg evs;
     always @(posedge evrRxClk) begin
-        evs <= (evCodeValid && (evCode == e));
+        evs <= (!evCodeIsK && (evCode == e));
     end
     assign evStrobe[e] = evs;
 end
@@ -203,7 +221,7 @@ if (ACTION_RAM_WIDTH > 0) begin
     end
  end
  always @(posedge evrRxClk) begin
-    ramQisValid <= evCodeValid;
+    ramQisValid <= !evCodeIsK;
     actionRAMQ <= actionRAM[evCode];
     actionBus <= ramQisValid ? actionRAMQ : 0;
  end

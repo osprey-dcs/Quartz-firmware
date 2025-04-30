@@ -22,7 +22,7 @@
         "C_LMB_AWIDTH": [ { "value": "32", "value_src": "propagated", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_LMB_DWIDTH": [ { "value": "32", "value_src": "propagated", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_LMB_PROTOCOL": [ { "value": "0", "value_src": "propagated", "resolve_type": "user", "format": "long", "usage": "all" } ],
-        "C_ARBITRATION": [ { "value": "0", "resolve_type": "user", "format": "long", "usage": "all" } ],
+        "C_ARBITRATION": [ { "value": "0", "resolve_type": "user", "format": "long", "enabled": false, "usage": "all" } ],
         "C_ECC": [ { "value": "0", "value_src": "user", "resolve_type": "user", "format": "long", "usage": "all" } ],
         "C_INTERCONNECT": [ { "value": "0", "resolve_type": "user", "format": "long", "enabled": false, "usage": "all" } ],
         "C_FAULT_INJECT": [ { "value": "0", "resolve_type": "user", "format": "long", "enabled": false, "usage": "all" } ],
