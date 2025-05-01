@@ -2,12 +2,19 @@
 set -e -x
 
 die() {
+    cat <<EOF >&2
+Usage: $0 <project.xpr>
+
+EOF
     echo "Error: $1" >&2
     exit 1
 }
 
-[ -f "NASA_ACQ.xpr" ] \
-|| die "Must run in git checkout containing NASA_ACQ.xpr"
+XPR="$1"
+BASE="${XPR%.xpr}"
+
+[ -f "${XPR}" ] \
+|| die "Must by XPR: ${XPR}"
 
 [ -f "Workspace/NASA_ACQ/src/nasaAcq.json" ] \
 || die "Must checkout sub-module at: Workspace/NASA_ACQ"
@@ -24,14 +31,26 @@ trap 'rm -rf "$SCRATCH"' INT QUIT EXIT
 # vivado: Generate .XSA file
 
 cat <<EOF > "$SCRATCH/xsa.tcl"
-open_project "NASA_ACQ.xpr"
+open_project "${XPR}"
+
+# The first time through, the DCP files are not present.
+# However, vivado will barf if they are still referenced :(
+# Will be automatically re-added after a successful run.
+foreach dcp [get_files -quiet -filter file_type=="Design\ Checkpoint"] {
+    if {[get_property IS_AVAILABLE \$dcp] == 0} {
+        puts "Remove reference to missing DCP \$dcp"
+        remove_files \$dcp
+    } else {
+        puts "Found DCP: \$dcp"
+    }
+}
 
 validate_ip -verbose [get_ips]
 
 generate_target all [get_files *.bd]
 generate_target all [get_files "*/NASA_ACQ.srcs/sources_1/ip/*/*.xci"]
 
-write_hw_platform -minimal -fixed NASA_ACQ.xsa
+write_hw_platform -minimal -fixed ${BASE}.xsa
 EOF
 
 vivado -mode batch -source "$SCRATCH/xsa.tcl"
@@ -40,12 +59,12 @@ vivado -mode batch -source "$SCRATCH/xsa.tcl"
 
 cat <<EOF > "$SCRATCH/platform.tcl"
 setws Workspace
-platform create -name NASA_ACQ_platform -hw NASA_ACQ.xsa
+platform create -name ${BASE}_platform -hw ${BASE}.xsa
 domain create -name foo -os standalone -proc microblaze_0
-app create -name bar -platform NASA_ACQ_platform -domain foo -template "Empty Application(C)"
-importsources -name bar -path Workspace/NASA_ACQ/src -linker-script
-app config -name bar build-config Release
-app build -name bar
+app create -name ${BASE}_app -platform ${BASE}_platform -domain foo -template "Empty Application(C)"
+importsources -name ${BASE}_app -path Workspace/NASA_ACQ/src -linker-script
+app config -name ${BASE}_app build-config Release
+app build -name ${BASE}_app
 EOF
 
 xsct "$SCRATCH/platform.tcl"
@@ -53,7 +72,7 @@ xsct "$SCRATCH/platform.tcl"
 # vivado: generate .BIT file
 
 cat <<EOF > "$SCRATCH/bit.tcl"
-open_project "NASA_ACQ.xpr"
+open_project "${XPR}"
 
 reset_run synth_1
 reset_run impl_1
@@ -68,14 +87,18 @@ wait_on_run -verbose impl_1
 
 # insert .elf into ublaze BRAM for final .bit
 exec updatemem \
- --meminfo ./NASA_ACQ.runs/impl_1/NASA_ACQ.mmi \
+ --meminfo ${BASE}.runs/impl_1/NASA_ACQ.mmi \
  --proc bd_i/microblaze_0 \
- --data Workspace/bar/Release/bar.elf \
- --bit NASA_ACQ.runs/impl_1/NASA_ACQ.bit \
+ --data Workspace/${BASE}_app/Release/${BASE}_app.elf \
+ --bit ${BASE}.runs/impl_1/NASA_ACQ.bit \
  --force \
  --out "quartzV2-$CNAME.bit"
 
 EOF
+
+# updatemem exits with 0 on error :(
+# so absense of output is the only sign of failure
+rm -f "quartzV2-$CNAME.bit"
 
 vivado -mode batch -source "$SCRATCH/bit.tcl"
 
