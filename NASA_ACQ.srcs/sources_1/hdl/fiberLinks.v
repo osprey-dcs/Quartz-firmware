@@ -209,7 +209,7 @@ end
 assign evsTxChars =   mgtIsEVG ? evgTxChars   : evfTxChars;
 assign evsTxCharIsK = mgtIsEVG ? evgTxCharIsK : {evfTxCharIsK, 1'b0};
 assign mpsTrippedOutputs = isEVG ? mpfTxChars[0+:MPS_OUTPUT_COUNT]
-                                 : {MPS_OUTPUT_COUNT{1'b1}};
+                                 : mpsTxChars[0+:MPS_OUTPUT_COUNT];
 
 ///////////////////////////////////////////////////////////////////////////////
 // Instantiate the multi gigabit transceivers

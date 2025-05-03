@@ -177,7 +177,7 @@ module mpsLocalChannel #(
     (*MARK_DEBUG=DEBUG*) input  wire  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
     (*MARK_DEBUG=DEBUG*) input  wire  [MPS_INPUT_COUNT-1:0] mpsInputs_a,
     (*MARK_DEBUG=DEBUG*) input  wire    [(4*ADC_COUNT)-1:0] acqLimitExcursions,
-    (*MARK_DEBUG=DEBUG*) output reg                         acqTripped = 0,
+    (*MARK_DEBUG=DEBUG*) output reg                         acqTripped = 1,
     (*MARK_DEBUG=DEBUG*) input  wire                        acqClearTrip);
 
 reg [ADC_COUNT-1:0] importantHIHI = 0, firstFaultHIHI = 0;
