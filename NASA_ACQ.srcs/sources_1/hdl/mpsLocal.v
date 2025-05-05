@@ -65,19 +65,26 @@ reg [REG_SEL_WIDTH-1:0] sysREGsel = 0;
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
 (*MARK_DEBUG=DEBUG*) reg [MPS_INPUT_COUNT-1:0] invert = 0;
+(*MARK_DEBUG=DEBUG*) reg [MPS_OUTPUT_COUNT-1:0] sysForceTrip = 0;
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
-        sysMPSsel <= sysGPIO_OUT[0+:MPS_SEL_WIDTH];
-        sysREGsel <= sysGPIO_OUT[8+:REG_SEL_WIDTH];
         if (sysGPIO_OUT[24]) begin
-            invert <= sysGPIO_OUT[16+:MPS_INPUT_COUNT];
+            invert <= sysGPIO_OUT[0+:MPS_INPUT_COUNT];
+        end
+        else if (sysGPIO_OUT[25]) begin
+            sysForceTrip <= sysGPIO_OUT[0+:MPS_OUTPUT_COUNT];
+        end
+        else begin
+            sysMPSsel <= sysGPIO_OUT[0+:MPS_SEL_WIDTH];
+            sysREGsel <= sysGPIO_OUT[4+:REG_SEL_WIDTH];
         end
     end
     sysData <= acqPerChannelData[sysMPSsel*32+:32];
 end
-assign sysStatus = { {16-MPS_INPUT_COUNT{1'b0}}, invert,
-                        {8-REG_SEL_WIDTH{1'b0}}, sysREGsel,
-                        {8-REG_SEL_WIDTH{1'b0}}, sysMPSsel };
+assign sysStatus = { {16-MPS_OUTPUT_COUNT{1'b0}}, sysForceTrip,
+                     {8-MPS_INPUT_COUNT{1'b0}}, invert,
+                     {4-REG_SEL_WIDTH{1'b0}}, sysREGsel,
+                     {4-MPS_SEL_WIDTH{1'b0}}, sysMPSsel };
 
 ///////////////////////////////////////////////////////////////////////////////
 // Event receiver clock domain
@@ -132,6 +139,7 @@ for (i = 0 ; i < MPS_OUTPUT_COUNT ; i = i + 1) begin : mpsChan
         .acqTimestamp(acqTimestamp),
         .mpsInputs_a(mpsInputStates_a ^ invert),
         .acqLimitExcursions(acqLimitExcursionsLatched),
+        .sysForceTrip(sysForceTrip[i]),
         .acqTripped(acqPerChannelTripped[i]),
         .acqClearTrip(acqClearTrip));
 end
@@ -177,6 +185,7 @@ module mpsLocalChannel #(
     (*MARK_DEBUG=DEBUG*) input  wire  [TIMESTAMP_WIDTH-1:0] acqTimestamp,
     (*MARK_DEBUG=DEBUG*) input  wire  [MPS_INPUT_COUNT-1:0] mpsInputs_a,
     (*MARK_DEBUG=DEBUG*) input  wire    [(4*ADC_COUNT)-1:0] acqLimitExcursions,
+    (*MARK_DEBUG=DEBUG*) input  wire                        sysForceTrip,
     (*MARK_DEBUG=DEBUG*) output reg                         acqTripped = 1,
     (*MARK_DEBUG=DEBUG*) input  wire                        acqClearTrip);
 
@@ -188,6 +197,7 @@ reg [MPS_INPUT_COUNT-1:0] importantDiscrete = 0, firstFaultDiscrete = 0;
 reg [MPS_INPUT_COUNT-1:0] discreteGoodState = 0;
 (*MARK_DEBUG=DEBUG*) reg [TIMESTAMP_WIDTH-1:0] whenFaulted = 0;
 reg [MPS_INPUT_COUNT-1:0] mpsInputs = 0, discrete = 0;
+reg                       forceTrip;
 
 /*
  * Registers to and from processor
@@ -224,7 +234,8 @@ always @(posedge sysClk) begin
                                {32-MPS_INPUT_COUNT{1'b0}}, firstFaultDiscrete} :
                (sysREGsel == 4'hB) ? whenFaulted[32+:32] :
                (sysREGsel == 4'hC) ? whenFaulted[ 0+:32] :
-               (sysREGsel == 4'hD) ? {{16-MPS_INPUT_COUNT{1'b0}}, mpsInputs,
+               (sysREGsel == 4'hD) ? {{16-1-MPS_INPUT_COUNT{1'b0}},
+                                      sysForceTrip, mpsInputs,
                                       {14{1'b0}}, trip, acqTripped} : 0;
 end
 
@@ -232,6 +243,7 @@ end
  * MPS
  */
 (*ASYNC_REG="true"*) reg [MPS_INPUT_COUNT-1:0] mpsInputs_m = 0;
+(*ASYNC_REG="true"*) reg                       forceTrip_m = 0;
 
 wire[ADC_COUNT-1:0] excursionsHIHI = acqLimitExcursions[ADC_COUNT*0+:ADC_COUNT];
 wire[ADC_COUNT-1:0] excursionsHI   = acqLimitExcursions[ADC_COUNT*1+:ADC_COUNT];
@@ -248,12 +260,15 @@ assign trip = (faultsHIHI     != 0)
            || (faultsHI       != 0)
            || (faultsLO       != 0)
            || (faultsLOLO     != 0)
-           || (faultsDiscrete != 0);
+           || (faultsDiscrete != 0)
+           || forceTrip;
 
 always @(posedge acqClk) begin
     mpsInputs_m <= mpsInputs_a;
     mpsInputs   <= mpsInputs_m;
     discrete    <= mpsInputs ^ discreteGoodState;
+    forceTrip_m <= sysForceTrip;
+    forceTrip   <= forceTrip_m;
 
     if (acqClearTrip && !trip) begin
         acqTripped <= 0;

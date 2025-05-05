@@ -48,16 +48,12 @@ module mpsMerge #(
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
 (*MARK_DEBUG=DEBUG*) reg [MGT_COUNT-1:0] linkImportant = 0;
-(*MARK_DEBUG=DEBUG*) reg [MPS_OUTPUT_COUNT-1:0] forceTrip = 0;
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
         if (sysGPIO_OUT[12]) begin
             linkImportant <= sysGPIO_OUT[0+:MGT_COUNT] &
                              {{MGT_COUNT-2{1'b1}}, sysIsEVG, 1'b0};
-        end
-        if (sysGPIO_OUT[13]) begin
-            forceTrip <= sysGPIO_OUT[0+:MGT_COUNT];
         end
     end
 end
@@ -71,7 +67,7 @@ function [MPS_OUTPUT_COUNT-1:0] merge;
     input                   [MGT_COUNT-1:0] mgtRxLinkUp;
     input  [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars;
     input                             [7:0] i;
-    merge = (i == 0) ? forceTrip :
+    merge = (i == 0) ? 0 :
              (({MPS_OUTPUT_COUNT{linkImportant[i]}} &
                          (mgtRxChars[(i*MGT_DATA_WIDTH)+:MPS_OUTPUT_COUNT] |
                                      {MPS_OUTPUT_COUNT{!mgtRxLinkUp[i]}})) |
@@ -105,7 +101,6 @@ end
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
 assign sysStatus = { {16-MPS_OUTPUT_COUNT{1'b0}}, mpsTripped_a,
-                     {8-MPS_OUTPUT_COUNT{1'b0}}, forceTrip,
-                     {8-MGT_COUNT{1'b0}}, linkImportant };
+                     {16-MGT_COUNT{1'b0}}, linkImportant };
 endmodule
 `default_nettype wire
