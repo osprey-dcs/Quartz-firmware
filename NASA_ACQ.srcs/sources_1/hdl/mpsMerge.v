@@ -47,7 +47,7 @@ module mpsMerge #(
 
 ///////////////////////////////////////////////////////////////////////////////
 // System clock domain
-(*MARK_DEBUG=DEBUG*) reg [MGT_COUNT-1:0] linkImportant = 0;
+(*MARK_DEBUG=DEBUG*) reg [MGT_COUNT-1:0] linkImportant = ~0;
 
 always @(posedge sysClk) begin
     if (sysCsrStrobe) begin
