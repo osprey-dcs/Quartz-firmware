@@ -38,6 +38,8 @@ module mpsMerge #(
     output wire [31:0] sysStatus,
     input  wire        sysIsEVG,
 
+    input  wire        evrClear,
+
     (*MARK_DEBUG=DEBUG*)input wire [(MGT_COUNT*MGT_DATA_WIDTH)-1:0] mgtRxChars,
     (*MARK_DEBUG=DEBUG*)input wire                  [MGT_COUNT-1:0] mgtRxLinkUp,
 
@@ -79,13 +81,16 @@ wire [MPS_OUTPUT_COUNT-1:0] mpsTripped_a =
 
 ///////////////////////////////////////////////////////////////////////////////
 // MGT transmit clock domain
-// FIXME: Should there be a latch here? (set by mpsTripped, cleared by evrRxClearMPSstrobe
 reg [2:0] mpfTxPhase = 0;
-(*ASYNC_REG="true"*)  reg [MPS_OUTPUT_COUNT-1:0] mpsTripped_m;
-reg [MPS_OUTPUT_COUNT-1:0] mpsTripped;
+(*ASYNC_REG="true"*) reg [MPS_OUTPUT_COUNT-1:0] mpsTripped_m = 0;
+reg [MPS_OUTPUT_COUNT-1:0] mpsTripped = 0;
+(*ASYNC_REG="true"*) reg mpsClear_m = 0;
+reg mpsClear = 0;
 always @(posedge mgtTxClk) begin
+    mpsClear_m <= evrClear;
+    mpsClear   <= mpsClear_m;
     mpsTripped_m <= mpsTripped_a;
-    mpsTripped   <= mpsTripped_m;
+    mpsTripped   <= mpsTripped_m | (mpsTripped & ~{MPS_OUTPUT_COUNT{mpsClear}});
     mpfTxChars[0+:MPS_OUTPUT_COUNT] <= mpsTripped;
     if (mpfTxPhase[2]) begin
         mpfTxPhase <= 1;

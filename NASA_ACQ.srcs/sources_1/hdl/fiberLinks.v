@@ -284,6 +284,7 @@ mpsMerge #(
     .sysGPIO_OUT(sysGPIO_OUT),
     .sysStatus(sysMPSmergeStatus),
     .sysIsEVG(isEVG),
+    .evrClear(evrRxClearMPS),
     .mgtRxChars(mgtRxChars),
     .mgtRxLinkUp(mgtRxLinkUp),
     .mgtTxClk(mgtTxClk),
