@@ -78,7 +78,7 @@ module fiberLinks #(
     (*MARK_DEBUG=DEBUG*) output wire                       evrPPSmarker,
                          output wire                       evrRxStartACQstrobe,
                          output wire                       evrRxStopACQstrobe,
-                         output wire                       evrRxClearMPSstrobe,
+                         output wire                       evrRxClearMPS,
                          output wire                       evfRxClk,
 
                          output wire                         mgtTxClk,
@@ -144,19 +144,30 @@ tinyEVR #(
     .evStrobe(evrStrobes));
 assign evrRxStartACQstrobe = evrStrobes[EVR_ACQ_START_CODE];
 assign evrRxStopACQstrobe  = evrStrobes[EVR_ACQ_STOP_CODE];
-assign evrRxClearMPSstrobe = evrStrobes[EVR_MPS_CLEAR_CODE];
+wire evrRxClearMPSstrobe = evrStrobes[EVR_MPS_CLEAR_CODE];
 
-// Stretch PPS strobe to marker sure to be seen in other clock domains
+// Stretch strobes to markers so as to be seen in other clock domains and
+// to give time for the 'no-trip' status to propagate from the leaf nodes.
 localparam PPS_STRETCH_COUNTER_WIDTH = 5;
 (*MARK_DEBUG=DEBUG_EVR*) reg [PPS_STRETCH_COUNTER_WIDTH-1:0]
                                                        evrPPSstretchCounter = 0;
 assign evrPPSmarker = evrPPSstretchCounter[PPS_STRETCH_COUNTER_WIDTH-1];
+localparam MPS_STRETCH_COUNTER_WIDTH = 10;
+(*MARK_DEBUG=DEBUG_EVR*) reg [MPS_STRETCH_COUNTER_WIDTH-1:0]
+                                                       evrMPSstretchCounter = 0;
+assign evrRxClearMPS = evrMPSstretchCounter[MPS_STRETCH_COUNTER_WIDTH-1];
 always @(posedge evrRxClk) begin
     if (evrPPSstrobe) begin
         evrPPSstretchCounter <= {PPS_STRETCH_COUNTER_WIDTH{1'b1}};
     end
     else if (evrPPSmarker) begin
         evrPPSstretchCounter <= evrPPSstretchCounter - 1;
+    end
+    if (evrRxClearMPSstrobe) begin
+        evrMPSstretchCounter <= {MPS_STRETCH_COUNTER_WIDTH{1'b1}};
+    end
+    else if (evrRxClearMPS) begin
+        evrMPSstretchCounter <= evrMPSstretchCounter - 1;
     end
 end
 

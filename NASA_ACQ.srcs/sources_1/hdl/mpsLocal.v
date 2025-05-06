@@ -39,10 +39,9 @@ module mpsLocal #(
     input  wire [31:0] sysGPIO_OUT,
     output wire [31:0] sysStatus,
     output reg  [31:0] sysData,
-  
-    input  wire evrClk,
-    input  wire evrClearMPSstrobe,
 
+    input  wire        evrClear,
+  
                          input  wire                       acqClk,
     (*MARK_DEBUG=DEBUG*) input  wire   [(4*ADC_COUNT)-1:0] acqLimitExcursions,
     (*MARK_DEBUG=DEBUG*) input  wire                   acqLimitExcursionsTVALID,
@@ -85,20 +84,6 @@ assign sysStatus = { {16-MPS_OUTPUT_COUNT{1'b0}}, sysForceTrip,
                      {8-MPS_INPUT_COUNT{1'b0}}, invert,
                      {4-REG_SEL_WIDTH{1'b0}}, sysREGsel,
                      {4-MPS_SEL_WIDTH{1'b0}}, sysMPSsel };
-
-///////////////////////////////////////////////////////////////////////////////
-// Event receiver clock domain
-// Stretch event strobe to ensure it's seen in the acquisition clock domain.
-reg [4:0] evrEventStretch = 0;
-wire evrClear = evrEventStretch[4];
-always @(posedge evrClk) begin
-    if (evrClearMPSstrobe) begin
-        evrEventStretch <= ~0;
-    end
-    else if (evrClear) begin
-        evrEventStretch <= evrEventStretch - 1;
-    end
-end
 
 ///////////////////////////////////////////////////////////////////////////////
 // Acquisition clock domain

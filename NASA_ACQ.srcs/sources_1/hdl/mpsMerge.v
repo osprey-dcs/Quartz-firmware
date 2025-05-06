@@ -79,6 +79,7 @@ wire [MPS_OUTPUT_COUNT-1:0] mpsTripped_a =
 
 ///////////////////////////////////////////////////////////////////////////////
 // MGT transmit clock domain
+// FIXME: Should there be a latch here? (set by mpsTripped, cleared by evrRxClearMPSstrobe
 reg [2:0] mpfTxPhase = 0;
 (*ASYNC_REG="true"*)  reg [MPS_OUTPUT_COUNT-1:0] mpsTripped_m;
 reg [MPS_OUTPUT_COUNT-1:0] mpsTripped;

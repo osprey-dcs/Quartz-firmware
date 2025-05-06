@@ -270,7 +270,7 @@ evgPPSsource #(
 localparam TIMESTAMP_WIDTH = 64;
 wire [TIMESTAMP_WIDTH-1:0] sysTimestamp, acqTimestamp;
 wire acqPPSstrobe;
-wire evrRxStartACQstrobe, evrRxStopACQstrobe, evrRxClearMPSstrobe;
+wire evrRxStartACQstrobe, evrRxStopACQstrobe, evrRxClearMPS;
 wire [15:0] evgTxChars;
 wire  [1:0] evgTxCharIsK;
 wire [15:0] mpsTxChars;
@@ -303,7 +303,7 @@ fiberLinks #(
     .evrRxClk(evrRxClk),
     .evrRxStartACQstrobe(evrRxStartACQstrobe),
     .evrRxStopACQstrobe(evrRxStopACQstrobe),
-    .evrRxClearMPSstrobe(evrRxClearMPSstrobe),
+    .evrRxClearMPS(evrRxClearMPS),
     .evfRxClk(evfRxClk),
     .evrPPSmarker(evrPPSmarker),
     .isEVG(isEVG),
@@ -695,8 +695,7 @@ mpsLocal #(
     .sysGPIO_OUT(GPIO_OUT),
     .sysStatus(GPIO_IN[GPIO_IDX_MPS_CSR]),
     .sysData(GPIO_IN[GPIO_IDX_MPS_DATA]),
-    .evrClk(evrRxClk),
-    .evrClearMPSstrobe(evrRxClearMPSstrobe),
+    .evrClear(evrRxClearMPS),
     .acqClk(acqClk),
     .acqLimitExcursions(acqLimitExcursions),
     .acqLimitExcursionsTVALID(acqStrobe),
