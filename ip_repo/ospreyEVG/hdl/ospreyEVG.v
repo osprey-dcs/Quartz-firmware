@@ -378,7 +378,7 @@ ospreyEVGsequencer #(
   ospreyEVGsequencer (
     .sysClk(s_axi_aclk),
     .sysWriteData(s_axi_wdata),
-    .sysWriteStrobe(s_axi_wready && (s_wRegIndex & REG_IDX_SEQUENCER)),
+    .sysWriteStrobe(s_axi_wready && (s_wRegIndex == REG_IDX_SEQUENCER)),
     .sysStatus(sequencerStatus),
     .evgClk(evgClk),
     .trigger(1'b0),
