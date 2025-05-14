@@ -521,7 +521,9 @@ ad7768 #(
     .adcRESETn(ad7768reset_n));
 
 // Need different MCLK values to get the sampling rates we need.
-mclkSelect #(.DEBUG("false"))
+mclkSelect #(
+    .AD7768_SYNC_LATENCY(`QUARTZ_AD7768_SYNC_LATENCY),
+    .DEBUG("false"))
   mclkSelect (
     .sysClk(sysClk),
     .sysCsrStrobe(GPIO_STROBES[GPIO_IDX_MCLK_SELECT_CSR]),

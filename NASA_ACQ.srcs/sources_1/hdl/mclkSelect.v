@@ -27,8 +27,9 @@
  */
 `default_nettype none
 module mclkSelect #(
-    parameter SYSCLK_RATE = 100000000,
-    parameter DEBUG       = "false"
+    parameter SYSCLK_RATE         = 100000000,
+    parameter AD7768_SYNC_LATENCY = 0,
+    parameter DEBUG               = "false"
     ) (
     input  wire        sysClk,
     input  wire        sysCsrStrobe,
@@ -117,7 +118,10 @@ assign MCLK = |{ clk16p384, clk20p48, clk25p6, clk32 };
 (*MARK_DEBUG=DEBUG*) wire sync16p384, sync20p48, sync25p6, sync32;
 assign SYNC_n = ~(|{ sync16p384, sync20p48, sync25p6, sync32 });
 
-mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen32 (
+mclkSelectClockGen #(
+    .AD7768_SYNC_LATENCY(AD7768_SYNC_LATENCY),
+    .DEBUG(DEBUG))
+  mclkSelectClockGen32 (
     .clkIn(clk64),
     .en_a(activeClock[0]),
     .ppsMarker_a(acqPPSstretch),
@@ -125,7 +129,10 @@ mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen32 (
     .syncAcknowledgeToggle(syncAcknowledgeToggles[0]),
     .clkOut(clk32),
     .sync(sync32));
-mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen25p6 (
+mclkSelectClockGen #(
+    .AD7768_SYNC_LATENCY(AD7768_SYNC_LATENCY),
+    .DEBUG(DEBUG))
+  mclkSelectClockGen25p6 (
     .clkIn(clk51p2),
     .en_a(activeClock[1]),
     .ppsMarker_a(acqPPSstretch),
@@ -133,7 +140,10 @@ mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen25p6 (
     .syncAcknowledgeToggle(syncAcknowledgeToggles[1]),
     .clkOut(clk25p6),
     .sync(sync25p6));
-mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen20p48 (
+mclkSelectClockGen #(
+    .AD7768_SYNC_LATENCY(AD7768_SYNC_LATENCY),
+    .DEBUG(DEBUG))
+  mclkSelectClockGen20p48 (
     .clkIn(clk40p96),
     .en_a(activeClock[2]),
     .ppsMarker_a(acqPPSstretch),
@@ -141,7 +151,10 @@ mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen20p48 (
     .syncAcknowledgeToggle(syncAcknowledgeToggles[2]),
     .clkOut(clk20p48),
     .sync(sync20p48));
-mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen16p384 (
+mclkSelectClockGen #(
+    .AD7768_SYNC_LATENCY(AD7768_SYNC_LATENCY),
+    .DEBUG(DEBUG))
+  mclkSelectClockGen16p384 (
     .clkIn(clk32p768),
     .en_a(activeClock[3]),
     .ppsMarker_a(acqPPSstretch),
@@ -152,6 +165,7 @@ mclkSelectClockGen #(.DEBUG(DEBUG)) mclkSelectClockGen16p384 (
 endmodule
 
 module mclkSelectClockGen #(
+    parameter AD7768_SYNC_LATENCY = 0,
     parameter DEBUG = "false"
     ) (
     input  wire clkIn,
@@ -161,6 +175,15 @@ module mclkSelectClockGen #(
     output reg  syncAcknowledgeToggle = 0,
     output reg  clkOut = 0,
     output reg  sync = 0);
+
+/*
+ * Attempt to match the START* to SYNC_OUT* latency
+ * Works for zero latency -- $clog2(0) is 0....
+ */
+localparam LATENCY_COUNTER_RELOAD = AD7768_SYNC_LATENCY - 1;
+localparam LATENCY_COUNTER_WIDTH = $clog2(LATENCY_COUNTER_RELOAD+1) + 1;
+reg [LATENCY_COUNTER_WIDTH-1:0] latencyCounter = LATENCY_COUNTER_RELOAD;
+wire latencyCounterDone = latencyCounter[LATENCY_COUNTER_WIDTH-1];
 
 (*ASYNC_REG="true"*) reg en_m = 0;
 (*MARK_DEBUG=DEBUG*) reg en = 0;
@@ -197,6 +220,7 @@ always @(posedge clkIn) begin
     case (state)
     ST_IDLE: begin
         sync <= 0;
+        latencyCounter <= LATENCY_COUNTER_RELOAD;
         if (syncRequestToggle != syncAcknowledgeToggle) begin
             state <= ST_AWAIT_PPS;
         end
@@ -214,8 +238,11 @@ always @(posedge clkIn) begin
             state <= ST_DONE;
         end
         else if (clkOut) begin
-            sync <= 1;
-            state <= ST_DONE;
+            latencyCounter <= latencyCounter - 1;
+            if (latencyCounterDone) begin
+                sync <= 1;
+                state <= ST_DONE;
+            end
         end
     end
     ST_DONE: begin
