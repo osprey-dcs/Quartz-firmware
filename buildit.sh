@@ -92,16 +92,16 @@ exec updatemem \
  --data Workspace/${BASE}_app/Release/${BASE}_app.elf \
  --bit ${BASE}.runs/impl_1/NASA_ACQ.bit \
  --force \
- --out "quartzV2-$CNAME.bit"
+ --out "${BASE}-$CNAME.bit"
 
 EOF
 
 # updatemem exits with 0 on error :(
 # so absense of output is the only sign of failure
-rm -f "quartzV2-$CNAME.bit"
+rm -f "$BASE-$CNAME.bit"
 
 vivado -mode batch -source "$SCRATCH/bit.tcl"
 
 echo "All done!"
 
-ls -lh quartzV2*.bit
+ls -lh ${BASE}*.bit
