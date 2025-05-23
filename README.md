@@ -15,6 +15,17 @@
         cd ~/src
         git clone git@github.com:osprey-dcs/nasa-fpga-fw.git NASA_ACQ
 
+## Scripted firmware build
+
+Scripted build of firmware.
+Either `NASA_ACQ_Q1.xpr` or `NASA_ACQ_Q2.xpr` for version 1.x or 2.x hardware variants.
+
+```sh
+. path/to/settings64.sh
+cd NASA_ACQ
+./buildit.sh NASA_ACQ_Q1.xpr
+```
+
 ## Application firmware – part 1
 
 1. Start Vivado and in the **Quick Start** pane click the `Open Project` link.  In the window that pops up navigate to the **NASA_ACQ** directory created in the previous step.  Select the `NASA_ACQ.xpr` project file and click `OK`.  A window with ominous 'Critical Warnings' may pop up.  Don't worry, the following step fixes them.
