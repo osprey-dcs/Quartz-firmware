@@ -1,5 +1,6 @@
 // Minimal code to instantiate Quartz-specific firmware
 
+`define QUARTZ_TOP QUARTZ_V1
 `define QUARTZ_VERSION_1
 `define QUARTZ_COMPATABILITY_BITMAP 32'b00000101
 `define QUARTZ_AD7768_SYNC_LATENCY  0

@@ -11,6 +11,8 @@ EOF
 }
 
 XPR="$1"
+NPROC="$2"
+
 BASE="${XPR%.xpr}"
 
 [ -f "${XPR}" ] \
@@ -18,6 +20,9 @@ BASE="${XPR%.xpr}"
 
 [ -f "Workspace/NASA_ACQ/src/nasaAcq.json" ] \
 || die "Must checkout sub-module at: Workspace/NASA_ACQ"
+
+[ "$NPROC" ] || NPROC="$(nproc)"
+echo "Using $NPROC CPUs"
 
 CNAME="$(git log -n1 --format=format:%cd-%h HEAD --date=format:%Y%m%d)"
 
@@ -78,19 +83,19 @@ reset_run synth_1
 reset_run impl_1
 
 # slow part...
-launch_runs synth_1 -jobs 2
+launch_runs synth_1 -jobs $NPROC
 wait_on_run -verbose synth_1
 
 # zzzz....
-launch_runs impl_1 -jobs 2 -to_step write_bitstream
+launch_runs impl_1 -jobs $NPROC -to_step write_bitstream
 wait_on_run -verbose impl_1
 
 # insert .elf into ublaze BRAM for final .bit
 exec updatemem \
- --meminfo ${BASE}.runs/impl_1/NASA_ACQ.mmi \
+ --meminfo ${BASE}.runs/impl_1/${BASE}.mmi \
  --proc bd_i/microblaze_0 \
  --data Workspace/${BASE}_app/Release/${BASE}_app.elf \
- --bit ${BASE}.runs/impl_1/NASA_ACQ.bit \
+ --bit ${BASE}.runs/impl_1/${BASE}.bit \
  --force \
  --out "${BASE}-$CNAME.bit"
 
@@ -104,4 +109,4 @@ vivado -mode batch -source "$SCRATCH/bit.tcl"
 
 echo "All done!"
 
-ls -lh ${BASE}*.bit
+ls -lh "$BASE-$CNAME.bit"

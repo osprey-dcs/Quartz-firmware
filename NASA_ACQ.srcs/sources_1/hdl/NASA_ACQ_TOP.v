@@ -26,7 +26,7 @@
  * Top level module
  */
 `default_nettype none
-module NASA_ACQ #(
+module `QUARTZ_TOP #(
     `include "gpio.v"
     parameter DEBUG = "false"
     ) (
