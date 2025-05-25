@@ -18,15 +18,23 @@
 ## Scripted firmware build
 
 Scripted build of firmware.
-Either `NASA_ACQ_Q1.xpr` or `NASA_ACQ_Q2.xpr` for version 1.x or 2.x hardware variants.
+Either `QUARTZ_V1.xpr` or `QUARTZ_V2.xpr` for version 1.x or 2.x hardware variants.
 
-```sh
-. path/to/settings64.sh
-cd NASA_ACQ
-./buildit.sh NASA_ACQ_Q1.xpr
+```
+./buildit.sh <xpr> [#jobs]
 ```
 
-## Application firmware – part 1
+eg.
+
+```sh
+. path/to/Vivado/2023.1/settings64.sh
+cd NASA_ACQ
+./buildit.sh QUARTZ_V1.xpr
+```
+
+## Manual build
+
+### Application firmware – part 1
 
 1. Start Vivado and in the **Quick Start** pane click the `Open Project` link.  In the window that pops up navigate to the **NASA_ACQ** directory created in the previous step.  Select the `NASA_ACQ.xpr` project file and click `OK`.  A window with ominous 'Critical Warnings' may pop up.  Don't worry, the following step fixes them.
 1. In the **Project Manager** pane click `Settings`.  In the **Project Settings** of the window that pops up expand the IP entry and ensure that an **IP Repositories** value identifies the locations of the support modules in the ip_repo directory in the project top-level directory.  If not, select the incorrect entries and click the `-` button, then click the `+` button and navigate to and select the correct location.
@@ -38,7 +46,7 @@ Once the repository path is correct, click `OK` to close the window.
 4. In the 'Output' pane that appears, ensure that the 'Pre-synthesis' menu item is selected, then click `Next`.
 5. In the 'Files' pane, set the 'XSA file name' to `NASA_ACQ` and the 'Export to' to the top directory of your Vivado project.
 
-## Application software
+### Application software
 
 1. Start Vitis and create a **Workspace** directory in the Vivado project top-level directory as its workspace.
 1. Click `Create Application Project`.
@@ -63,13 +71,13 @@ Once the repository path is correct, click `OK` to close the window.
 1. Back in the Explorer tab of the Vitis window, right click on `NASA_ACQ_platform` and select `Build Project`.  Wait....
 1. Right click on `NASA_ACQ_system` and select `Build Project`.  Wait....
 
-## Application firmware – part 2
+### Application firmware – part 2
 
 Now that the application software `createVerilogHeader.sh` script has been run, it is possible to finish building the firmware.  Get back into Vivado and:
 
 1. Click `Generate Bitstream` in the **Project Manager** pane.  In the window that pops up agree to running **Synthesis and Implementation**.  Wait....
 
-## Create the bootable image:
+### Create the bootable image:
 
 1. In a shell window, cd to the **NASA_ACQ/build directory** and run `make`.  The result should be a **download.bit** file ready to transfer to the Marble bootstrap flash memory.
 

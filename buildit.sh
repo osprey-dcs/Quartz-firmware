@@ -21,7 +21,7 @@ BASE="${XPR%.xpr}"
 [ -f "Workspace/NASA_ACQ/src/nasaAcq.json" ] \
 || die "Must checkout sub-module at: Workspace/NASA_ACQ"
 
-[ "$NPROC" ] || NPROC="$(nproc)"
+[ "$NPROC" ] || NPROC="2"
 echo "Using $NPROC CPUs"
 
 CNAME="$(git log -n1 --format=format:%cd-%h HEAD --date=format:%Y%m%d)"
@@ -30,12 +30,20 @@ CNAME="$(git log -n1 --format=format:%cd-%h HEAD --date=format:%Y%m%d)"
 SCRATCH="$(mktemp -d)"
 trap 'rm -rf "$SCRATCH"' INT QUIT EXIT
 
-# Run code generators
-( cd Workspace/NASA_ACQ/src && sh createVerilogHeader.sh && make)
+if [ -e "${BASE}.xsa" ]
+then
+    echo "Use existing HDL from ${BASE}.xsa"
+    echo "  To regenerate, delete that file and re-run."
+
+else
+    echo "Build HDL into ${BASE}.xsa"
+
+    # Run code generators
+    ( cd Workspace/NASA_ACQ/src && sh createVerilogHeader.sh && make)
 
 # vivado: Generate .XSA file
 
-cat <<EOF > "$SCRATCH/xsa.tcl"
+    cat <<EOF > "$SCRATCH/xsa.tcl"
 open_project "${XPR}"
 
 # The first time through, the DCP files are not present.
@@ -55,12 +63,33 @@ validate_ip -verbose [get_ips]
 generate_target all [get_files *.bd]
 generate_target all [get_files "*/NASA_ACQ.srcs/sources_1/ip/*/*.xci"]
 
-write_hw_platform -minimal -fixed ${BASE}.xsa
+reset_run synth_1
+reset_run impl_1
+
+# slow part...
+launch_runs synth_1 -jobs $NPROC
+wait_on_run -verbose synth_1
+
+# zzzz....
+launch_runs impl_1 -jobs $NPROC -to_step write_bitstream
+wait_on_run -verbose impl_1
+
+write_hw_platform -force -include_bit -fixed -verbose ${BASE}.xsa
 EOF
 
-vivado -mode batch -source "$SCRATCH/xsa.tcl"
+    vivado -mode batch -source "$SCRATCH/xsa.tcl"
+
+    [ -f "${BASE}.xsa" ] || die "${BASE}.xsa successfully not created?!?"
+fi
 
 # vitis: build ublaze application (.ELF file)
+
+# difficult to make vitis idempotent, so remove and recreate the project meta-data.
+rm -rf \
+ "Workspace/.metadata" \
+ "Workspace/${BASE}_platform" \
+ "Workspace/${BASE}_app_system" \
+ "Workspace/${BASE}_app"
 
 cat <<EOF > "$SCRATCH/platform.tcl"
 setws Workspace
@@ -74,38 +103,19 @@ EOF
 
 xsct "$SCRATCH/platform.tcl"
 
-# vivado: generate .BIT file
+# insert ELF into ublaze ROM for final BIT file
 
-cat <<EOF > "$SCRATCH/bit.tcl"
-open_project "${XPR}"
+# updatemem exits with 0 on error :(
+# so absense of output is the only sign of failure
+rm -f "$BASE-$CNAME.bit"
 
-reset_run synth_1
-reset_run impl_1
-
-# slow part...
-launch_runs synth_1 -jobs $NPROC
-wait_on_run -verbose synth_1
-
-# zzzz....
-launch_runs impl_1 -jobs $NPROC -to_step write_bitstream
-wait_on_run -verbose impl_1
-
-# insert .elf into ublaze BRAM for final .bit
-exec updatemem \
+updatemem \
  --meminfo ${BASE}.runs/impl_1/${BASE}.mmi \
  --proc bd_i/microblaze_0 \
  --data Workspace/${BASE}_app/Release/${BASE}_app.elf \
  --bit ${BASE}.runs/impl_1/${BASE}.bit \
  --force \
  --out "${BASE}-$CNAME.bit"
-
-EOF
-
-# updatemem exits with 0 on error :(
-# so absense of output is the only sign of failure
-rm -f "$BASE-$CNAME.bit"
-
-vivado -mode batch -source "$SCRATCH/bit.tcl"
 
 echo "All done!"
 
