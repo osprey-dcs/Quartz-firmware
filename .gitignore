@@ -1,1 +1,21 @@
 src/softwareBuildDate.h
+
+# Python cache/backup files that accumulate under scripts/ and bedrock/
+# during hardware testing/development.
+__pycache__/
+*.before-*
+
+# Internal-use-only functional-test suite (health/calibration/coupling/MPS/
+# streaming/console round-trip tests and their orchestrator). Kept locally
+# for development use but deliberately not part of this repository --
+# too broad in scope for the firmware submission itself. See
+# scripts/README_sample_rate_test.md for the test that *is* tracked.
+scripts/quartz_test_common.py
+scripts/run_functional_tests.py
+scripts/test_calibration_roundtrip.py
+scripts/test_console_tftp.py
+scripts/test_health_check.py
+scripts/test_input_coupling.py
+scripts/test_mps_protection.py
+scripts/test_streaming_data.py
+scripts/README_functional_tests.md

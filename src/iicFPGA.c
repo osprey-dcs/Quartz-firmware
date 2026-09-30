@@ -112,7 +112,7 @@ showIPMI(int device)
     uint8_t cbuf[128];
     char strBuf[64];
     int i, field;
-    int offset, length;
+    int offset, length, areaEnd;
     int index = device - IIC_FPGA_IDX_FMC1_EEPROM;
     uint8_t sum;
     int hardwareMatches = 1;
@@ -138,6 +138,7 @@ showIPMI(int device)
         printf("WARNING -- FMC EEPROM has bad board information.\n");
         return;
     }
+    areaEnd = offset + length;
     offset += 6;    /* Skip over language and date/time */
     for (field = 0 ; field < 4 ; field++) {
         uint8_t type_length = cbuf[offset];
@@ -145,7 +146,7 @@ showIPMI(int device)
         const char *cp;
         int32_t number = 0;
         if (((type_length & 0xC0) != 0xC0)
-         || (((fieldLength = (type_length & 0x3F)) + offset) > length)) {
+         || ((offset + 1 + (fieldLength = (type_length & 0x3F))) > areaEnd)) {
             printf("WARNING -- FMC EEPROM has bad board information.\n");
             return;
         }

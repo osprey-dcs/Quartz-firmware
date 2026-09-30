@@ -102,14 +102,19 @@ downsampleInfo(int rate)
      * Table is small, linear search is fine.
      */
     int i;
-    static const struct downSampleInfo downSampleTable[] = {
-      { 250000, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32,   POWER_MODE_MCLK_DIV_4 },
-      {  50000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128,  POWER_MODE_MCLK_DIV_4 },
-      {  25000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_256,  POWER_MODE_MCLK_DIV_4 },
-      {   5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
-      {   1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512,  POWER_MODE_MCLK_DIV_32 },
+    static struct downSampleInfo const downSampleTable[] = {
+       { 250000, MCLK_CSR_W_32p000, CHAN_MODE_DEC_32, POWER_MODE_MCLK_DIV_4 },
+       /* 20.48 MHz / 32 / 4 = 160 kSPS */
+       { 160000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_32, POWER_MODE_MCLK_DIV_4 },
+        /* 25.6 MHz / 64 / 4 = 100 kSPS */
+       { 100000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_64, POWER_MODE_MCLK_DIV_4 },
+       { 50000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_128, POWER_MODE_MCLK_DIV_4 },
+       { 25000, MCLK_CSR_W_25p600, CHAN_MODE_DEC_256, POWER_MODE_MCLK_DIV_4 },
+       { 5000, MCLK_CSR_W_20p480, CHAN_MODE_DEC_1024, POWER_MODE_MCLK_DIV_4 },
+       { 1000, MCLK_CSR_W_16p384, CHAN_MODE_DEC_512, POWER_MODE_MCLK_DIV_32 },
     };
-    static struct downSampleInfo const * dpOld = &downSampleTable[1];
+    /* Keep the legacy reset default at 50 kSPS after adding faster rates. */
+    static struct downSampleInfo const * dpOld = &downSampleTable[3];
     if (rate <= 0) {
         return dpOld;
     }
@@ -125,7 +130,14 @@ downsampleInfo(int rate)
         }
     }
     printf("CRITICAL WARNING -- %d samples/second not supported.\n", rate);
-    dpOld = NULL;
+    /*
+     * Leave dpOld pointing at the last successfully-applied rate (or the
+     * legacy default, if none has been applied yet) rather than NULLing it
+     * out here. This call's own caller still gets NULL and rejects this
+     * particular bad rate, but a later AD7768 reset -- which calls
+     * ad7768SetSamplingRate(0) to reapply "the last known good rate" -- must
+     * not be permanently broken by one bad write from a misbehaving client.
+     */
     return NULL;
 }
 
